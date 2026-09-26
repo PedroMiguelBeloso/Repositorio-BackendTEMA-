@@ -14,8 +14,7 @@ public class ProblemDetailsFactory {
                 ex.httpStatus(),
                 ex.safeMessage()
         );
-
-        problem.setProperty("code", ex.code());
+        problem.setProperty("code", ex.code().name());
 
         if (!ex.details().isEmpty()) {
             problem.setProperty("details", ex.details());
@@ -29,20 +28,17 @@ public class ProblemDetailsFactory {
             ProblemCode code,
             String detail
     ) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                status,
-                detail
-        );
-
-        problem.setProperty("code", code);
-
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
+        problem.setProperty("code", code.name());
         return problem;
     }
 
     public ProblemDetail forUnexpected(Exception ex) {
-        return ProblemDetail.forStatusAndDetail(
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred"
         );
+        problem.setProperty("code", ProblemCode.INTERNAL_ERROR.name());
+        return problem;
     }
 }
