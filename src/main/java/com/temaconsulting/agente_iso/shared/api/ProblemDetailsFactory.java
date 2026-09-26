@@ -1,7 +1,7 @@
 package com.temaconsulting.agente_iso.shared.api;
 
-import com.temaconsulting.agente_iso.shared.applicacion.ApiException;
-import com.temaconsulting.agente_iso.shared.applicacion.ProblemCode;
+import com.temaconsulting.agente_iso.shared.application.ApiException;
+import com.temaconsulting.agente_iso.shared.application.ProblemCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.stereotype.Component;
@@ -14,8 +14,7 @@ public class ProblemDetailsFactory {
                 ex.httpStatus(),
                 ex.safeMessage()
         );
-
-        problem.setProperty("code", ex.code());
+        problem.setProperty("code", ex.code().name());
 
         if (!ex.details().isEmpty()) {
             problem.setProperty("details", ex.details());
@@ -29,20 +28,17 @@ public class ProblemDetailsFactory {
             ProblemCode code,
             String detail
     ) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-                status,
-                detail
-        );
-
-        problem.setProperty("code", code);
-
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
+        problem.setProperty("code", code.name());
         return problem;
     }
 
     public ProblemDetail forUnexpected(Exception ex) {
-        return ProblemDetail.forStatusAndDetail(
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 "An unexpected error occurred"
         );
+        problem.setProperty("code", ProblemCode.INTERNAL_ERROR.name());
+        return problem;
     }
 }

@@ -1,14 +1,14 @@
-package com.temaconsulting.agente_iso.shared.applicacion;
+package com.temaconsulting.agente_iso.shared.application;
 
 import org.springframework.http.HttpStatus;
 
 import java.util.List;
 
 public class ApiException extends RuntimeException {
-    private ProblemCode problemCode;
-    private HttpStatus httpStatus;
-    private String safeMessage;
-    private List<FieldProblem> details;
+    private final ProblemCode problemCode;
+    private final HttpStatus httpStatus;
+    private final String safeMessage;
+    private final List<FieldProblem> details;
 
     public ApiException(
             ProblemCode problemCode,

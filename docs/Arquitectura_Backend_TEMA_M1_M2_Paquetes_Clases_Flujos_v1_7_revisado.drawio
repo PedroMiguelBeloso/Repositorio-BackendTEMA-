@@ -1,0 +1,1014 @@
+<?xml version='1.0' encoding='utf-8'?>
+<mxfile host="app.diagrams.net" agent="Codex" version="24.7.17" type="device">
+  <diagram id="00-mapa-del-backend" name="00 Mapa del backend">
+    <mxGraphModel dx="2800" dy="1600" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="2800" pageHeight="1600" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c2" value="TEMA · backend M1 + M2 · mapa de módulos" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#203044;fontSize=29;fontStyle=1;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="70" y="35" width="2400" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="Un Spring Boot + PostgreSQL/Flyway. Cada pestaña siguiente contiene subpaquetes, clases, atributos y métodos. Flecha = dependencia de código." style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#203044;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="70" y="93" width="2510" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="&lt;b&gt;shared&lt;/b&gt;&lt;br&gt;&lt;font color='#485466'&gt;Errores, paginación, CORS, Clock y traceId.&lt;/font&gt;&lt;br&gt;&lt;br&gt;Subpaquetes: api, api.dto, application, config, infrastructure&lt;br&gt;12 tipos en inventario" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF2FB;strokeColor=#3B6EAD;strokeWidth=2;fontColor=#203044;fontSize=17;align=left;verticalAlign=top;spacing=12;" vertex="1" parent="1">
+          <mxGeometry x="100" y="220" width="720" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="&lt;b&gt;identity&lt;/b&gt;&lt;br&gt;&lt;font color='#485466'&gt;Usuarios, login, JWT, BCrypt y permisos.&lt;/font&gt;&lt;br&gt;&lt;br&gt;Subpaquetes: api, api.dto, api.mapper, application, domain, infrastructure&lt;br&gt;20 tipos en inventario" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F2EAFB;strokeColor=#7350A2;strokeWidth=2;fontColor=#203044;fontSize=17;align=left;verticalAlign=top;spacing=12;" vertex="1" parent="1">
+          <mxGeometry x="970" y="220" width="720" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" value="&lt;b&gt;catalog&lt;/b&gt;&lt;br&gt;&lt;font color='#485466'&gt;Definiciones de registros reutilizables.&lt;/font&gt;&lt;br&gt;&lt;br&gt;Subpaquetes: api, api.dto, api.mapper, application, domain, infrastructure&lt;br&gt;10 tipos en inventario" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF7F4;strokeColor=#238269;strokeWidth=2;fontColor=#203044;fontSize=17;align=left;verticalAlign=top;spacing=12;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="220" width="720" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" value="&lt;b&gt;process&lt;/b&gt;&lt;br&gt;&lt;font color='#485466'&gt;Procesos, versiones, árbol, reglas, publicación.&lt;/font&gt;&lt;br&gt;&lt;br&gt;Subpaquetes: api, api.dto, api.mapper, application, domain, infrastructure&lt;br&gt;38 tipos en inventario" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFF1E8;strokeColor=#C46529;strokeWidth=2;fontColor=#203044;fontSize=17;align=left;verticalAlign=top;spacing=12;" vertex="1" parent="1">
+          <mxGeometry x="100" y="630" width="720" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" value="&lt;b&gt;service&lt;/b&gt;&lt;br&gt;&lt;font color='#485466'&gt;Servicio, fuentes y versiones asignadas.&lt;/font&gt;&lt;br&gt;&lt;br&gt;Subpaquetes: api, api.dto, api.mapper, application, domain, infrastructure&lt;br&gt;19 tipos en inventario" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FDF5DA;strokeColor=#AA8120;strokeWidth=2;fontColor=#203044;fontSize=17;align=left;verticalAlign=top;spacing=12;" vertex="1" parent="1">
+          <mxGeometry x="970" y="630" width="720" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" value="&lt;b&gt;verification&lt;/b&gt;&lt;br&gt;&lt;font color='#485466'&gt;Preview, selección, run, evaluación y decisión humana.&lt;/font&gt;&lt;br&gt;&lt;br&gt;Subpaquetes: api, api.dto, api.mapper, application, application.port, domain, infrastructure&lt;br&gt;59 tipos en inventario" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF0FF;strokeColor=#4265B9;strokeWidth=2;fontColor=#203044;fontSize=17;align=left;verticalAlign=top;spacing=12;" vertex="1" parent="1">
+          <mxGeometry x="1840" y="630" width="720" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c10" value="&lt;b&gt;integration&lt;/b&gt;&lt;br&gt;&lt;font color='#485466'&gt;Adaptadores Drive, Redmine, GPT y fixtures.&lt;/font&gt;&lt;br&gt;&lt;br&gt;Subpaquetes: api, api.dto, drive, redmine, ai, imputations, tracking&lt;br&gt;15 tipos en inventario" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F4EBEB;strokeColor=#A45353;strokeWidth=2;fontColor=#203044;fontSize=17;align=left;verticalAlign=top;spacing=12;" vertex="1" parent="1">
+          <mxGeometry x="970" y="1060" width="720" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" value="referencias" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="c7" target="c6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" value="versiones publicadas" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="c8" target="c7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" value="definición" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="c9" target="c7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e14" value="snapshot" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="c9" target="c8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" value="implementa puertos" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;dashed=1;dashPattern=6 4;" edge="1" parent="1" source="c10" target="c9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c16" value="Lectura: api → application → domain/puertos; infrastructure implementa repositorios/puertos. Ningún controlador llama a JDBC o APIs externas directamente." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#F5F7FA;strokeColor=#D9E0E8;fontColor=#203044;fontSize=16;fontStyle=0;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1430" width="2520" height="80" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="01-shared" name="01 shared">
+    <mxGraphModel dx="3180" dy="1784" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3180" pageHeight="1784" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c2" value="shared · subpaquetes, tipos y firmas mínimas" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#203044;fontSize=28;fontStyle=1;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="65" y="35" width="3050" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="Propuesta de implementación basada en arquitectura v1.5. Los DTO record generan un accesor por componente; sus campos deben cotejarse con OpenAPI antes de codificar." style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#203044;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="65" y="99" width="3050" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="&lt;b&gt;shared.api&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF2FB;strokeColor=#3B6EAD;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="65" y="195" width="650" height="955" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="&lt;b&gt;ApiExceptionHandler&lt;/b&gt; &lt;font color='#687789'&gt;«@RestControllerAdvice»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- problems: ProblemDetailsFactory&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ handleApiException(ex: ApiException): ResponseEntity&amp;lt;ProblemDetail&amp;gt;&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Delegates application errors to ProblemDetailsFactory; Spring Boot handles built-in MVC errors.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B6EAD;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="250" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" value="&lt;b&gt;ProblemDetailsFactory&lt;/b&gt; &lt;font color='#687789'&gt;«component»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- traceIdProvider: TraceIdProvider&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ forApiException(ex: ApiException): ProblemDetail&lt;br&gt;+ forSecurity(status: HttpStatus, code: ProblemCode, detail: String): ProblemDetail&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Adds optional code/traceId/details extensions to Spring ProblemDetail.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B6EAD;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="435" width="618" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" value="&lt;b&gt;PageMapper&lt;/b&gt; &lt;font color='#687789'&gt;«utility»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ toPageInfo(page: int, size: int, totalElements: long): PageInfo&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B6EAD;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="662" width="618" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" value="&lt;b&gt;shared.api.dto&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF2FB;strokeColor=#3B6EAD;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="743" y="195" width="650" height="955" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" value="&lt;b&gt;PageInfo&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;page: int&lt;br&gt;size: int&lt;br&gt;totalElements: long&lt;br&gt;totalPages: int&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B6EAD;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="250" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c10" value="&lt;b&gt;PageResponse&amp;lt;T&amp;gt;&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;items: List&amp;lt;T&amp;gt;&lt;br&gt;page: PageInfo&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Use only when list JSON matches the OpenAPI.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B6EAD;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="456" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c11" value="&lt;b&gt;shared.application&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF2FB;strokeColor=#3B6EAD;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="1421" y="195" width="650" height="955" as="geometry" />
+        </mxCell>
+        <mxCell id="c12" value="&lt;b&gt;ProblemCode&lt;/b&gt; &lt;font color='#687789'&gt;«enum»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;VALIDATION_ERROR, INTERNAL_ERROR&lt;br&gt;NOT_FOUND, FORBIDDEN, UNAUTHORIZED&lt;br&gt;CONFLICT, STALE_REVISION&lt;br&gt;SOURCE_UNAVAILABLE, SOURCE_PERMISSION_DENIED&lt;br&gt;UNSUPPORTED_SCOPE, TICKET_SELECTION_INVALID&lt;br&gt;TICKET_OUTSIDE_PROJECT, RUN_NOT_COMPLETE&lt;br&gt;APPLICABILITY_NOT_PENDING&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ name(): String&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Optional code extension in OpenAPI ProblemDetail.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B6EAD;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1437" y="250" width="618" height="296" as="geometry" />
+        </mxCell>
+        <mxCell id="c13" value="&lt;b&gt;FieldProblem&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;field: String&lt;br&gt;message: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Application value; serialized only when details extension is present.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B6EAD;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1437" y="561" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c14" value="&lt;b&gt;ApiException&lt;/b&gt; &lt;font color='#687789'&gt;«exception»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- code: ProblemCode&lt;br&gt;- httpStatus: HttpStatus&lt;br&gt;- safeMessage: String&lt;br&gt;- details: List&amp;lt;FieldProblem&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ ApiException(code: ProblemCode, status: HttpStatus, message: String, details: List&amp;lt;FieldProblem&amp;gt;)&lt;br&gt;+ code(): ProblemCode&lt;br&gt;+ httpStatus(): HttpStatus&lt;br&gt;+ safeMessage(): String&lt;br&gt;+ details(): List&amp;lt;FieldProblem&amp;gt;&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Accessors match the agreed ProblemDetailsFactory API.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B6EAD;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1437" y="767" width="618" height="338" as="geometry" />
+        </mxCell>
+        <mxCell id="c15" value="&lt;b&gt;shared.config&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF2FB;strokeColor=#3B6EAD;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="2099" y="195" width="650" height="955" as="geometry" />
+        </mxCell>
+        <mxCell id="c16" value="&lt;b&gt;CorsConfig&lt;/b&gt; &lt;font color='#687789'&gt;«@Configuration»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- allowedOrigin: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ corsConfigurationSource(): UrlBasedCorsConfigurationSource&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Shared CORS bean; SecurityConfig enables it with cors().&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B6EAD;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="250" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c17" value="&lt;b&gt;TimeConfig&lt;/b&gt; &lt;font color='#687789'&gt;«@Configuration»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ clock(): Clock&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;One Clock bean, not two Clock classes.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B6EAD;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="435" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c18" value="&lt;b&gt;shared.infrastructure&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF2FB;strokeColor=#3B6EAD;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="65" y="1193" width="650" height="476" as="geometry" />
+        </mxCell>
+        <mxCell id="c19" value="&lt;b&gt;TraceIdFilter&lt;/b&gt; &lt;font color='#687789'&gt;«OncePerRequestFilter»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ doFilterInternal(request: HttpServletRequest, response: HttpServletResponse, chain: FilterChain): void&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Creates/propagates traceId and clears MDC.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B6EAD;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="1248" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c20" value="&lt;b&gt;TraceIdProvider&lt;/b&gt; &lt;font color='#687789'&gt;«component»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ currentTraceId(): String&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Small adapter for shared error mapping.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#3B6EAD;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="1454" width="618" height="170" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="02-identity" name="02 identity">
+    <mxGraphModel dx="3180" dy="2934" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3180" pageHeight="2934" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c2" value="identity · subpaquetes, tipos y firmas mínimas" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#203044;fontSize=28;fontStyle=1;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="65" y="35" width="3050" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="Propuesta de implementación revisada. La capa application depende de puertos; infrastructure implementa esos puertos. Los DTO y firmas se cotejan con OpenAPI antes de codificar." style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#203044;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="65" y="99" width="3050" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="&lt;b&gt;identity.api&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F2EAFB;strokeColor=#7350A2;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="65" y="195" width="650" height="1052" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="&lt;b&gt;AuthController&lt;/b&gt; &lt;font color='#687789'&gt;«@RestController»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- authService: AuthService&lt;br&gt;- mapper: UserApiMapper&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ login(request: LoginRequest): TokenResponse&lt;br&gt;+ me(): UserResponse&lt;br&gt;+ changePassword(request: ChangePasswordRequest): void&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="250" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" value="&lt;b&gt;UserController&lt;/b&gt; &lt;font color='#687789'&gt;«@RestController»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- userService: UserService&lt;br&gt;- mapper: UserApiMapper&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ listUsers(page: int, size: int): PageResponse&amp;lt;UserResponse&amp;gt;&lt;br&gt;+ createReader(request: CreateReaderRequest): UserResponse&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="435" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" value="&lt;b&gt;identity.api.dto&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F2EAFB;strokeColor=#7350A2;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="743" y="195" width="650" height="1052" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" value="&lt;b&gt;LoginRequest&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;email: String&lt;br&gt;password: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="250" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" value="&lt;b&gt;TokenResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;accessToken: String&lt;br&gt;tokenType: String&lt;br&gt;expiresAt: Instant&lt;br&gt;user: UserResponse&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="414" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c10" value="&lt;b&gt;UserResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;email: String&lt;br&gt;displayName: String&lt;br&gt;role: Role&lt;br&gt;active: boolean&lt;br&gt;createdAt: Instant&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="620" width="618" height="233" as="geometry" />
+        </mxCell>
+        <mxCell id="c11" value="&lt;b&gt;CreateReaderRequest&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;email: String&lt;br&gt;displayName: String&lt;br&gt;initialPassword: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="868" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c12" value="&lt;b&gt;ChangePasswordRequest&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;currentPassword: String&lt;br&gt;newPassword: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="1053" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c13" value="&lt;b&gt;identity.api.mapper&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F2EAFB;strokeColor=#7350A2;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="1421" y="195" width="650" height="1052" as="geometry" />
+        </mxCell>
+        <mxCell id="c14" value="&lt;b&gt;UserApiMapper&lt;/b&gt; &lt;font color='#687789'&gt;«mapper»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ toResponse(user: User): UserResponse&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1437" y="250" width="618" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c15" value="&lt;b&gt;identity.application&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F2EAFB;strokeColor=#7350A2;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="2099" y="195" width="650" height="1052" as="geometry" />
+        </mxCell>
+        <mxCell id="c16" value="&lt;b&gt;AuthService&lt;/b&gt; &lt;font color='#687789'&gt;«service»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- users: UserRepository&lt;br&gt;- passwords: PasswordEncoder&lt;br&gt;- tokens: JwtTokenIssuer&lt;br&gt;- clock: Clock&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ login(email: String, password: String): TokenResponse&lt;br&gt;+ currentUser(userId: UUID): User&lt;br&gt;+ changePassword(userId: UUID, current: String, new: String): void&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="250" width="618" height="233" as="geometry" />
+        </mxCell>
+        <mxCell id="c17" value="&lt;b&gt;UserService&lt;/b&gt; &lt;font color='#687789'&gt;«service»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- users: UserRepository&lt;br&gt;- passwords: PasswordEncoder&lt;br&gt;- clock: Clock&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ list(page: int, size: int): Page&amp;lt;User&amp;gt;&lt;br&gt;+ createReader(email: String, name: String, password: String): User&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="498" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c18" value="&lt;b&gt;UserRepository&lt;/b&gt; &lt;font color='#687789'&gt;«interface»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ findByEmail(email: String): Optional&amp;lt;User&amp;gt;&lt;br&gt;+ findById(id: UUID): Optional&amp;lt;User&amp;gt;&lt;br&gt;+ list(page: int, size: int): Page&amp;lt;User&amp;gt;&lt;br&gt;+ existsAdmin(): boolean&lt;br&gt;+ insert(user: User): User&lt;br&gt;+ updatePassword(id: UUID, hash: String): void&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="704" width="618" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="c19" value="&lt;b&gt;identity.domain&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F2EAFB;strokeColor=#7350A2;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="65" y="1290" width="650" height="1529" as="geometry" />
+        </mxCell>
+        <mxCell id="c20" value="&lt;b&gt;User&lt;/b&gt; &lt;font color='#687789'&gt;«domain»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;email: String&lt;br&gt;displayName: String&lt;br&gt;passwordHash: String&lt;br&gt;role: Role&lt;br&gt;active: boolean&lt;br&gt;createdAt: Instant&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ canLogin(): boolean&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="1345" width="618" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="c21" value="&lt;b&gt;Role&lt;/b&gt; &lt;font color='#687789'&gt;«enum»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;ADMIN&lt;br&gt;READER&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ name(): String&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="1614" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c22" value="&lt;b&gt;identity.infrastructure&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F2EAFB;strokeColor=#7350A2;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="743" y="1290" width="650" height="1529" as="geometry" />
+        </mxCell>
+        <mxCell id="c23" value="&lt;b&gt;JdbcUserRepository&lt;/b&gt; &lt;font color='#687789'&gt;«implements UserRepository»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- jdbc: JdbcTemplate&lt;br&gt;- mapper: UserRowMapper&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ findByEmail(email: String): Optional&amp;lt;User&amp;gt;&lt;br&gt;+ findById(id: UUID): Optional&amp;lt;User&amp;gt;&lt;br&gt;+ list(page: int, size: int): Page&amp;lt;User&amp;gt;&lt;br&gt;+ existsAdmin(): boolean&lt;br&gt;+ insert(user: User): User&lt;br&gt;+ updatePassword(id: UUID, hash: String): void&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="1345" width="618" height="233" as="geometry" />
+        </mxCell>
+        <mxCell id="c24" value="&lt;b&gt;UserRowMapper&lt;/b&gt; &lt;font color='#687789'&gt;«RowMapper&amp;lt;User&amp;gt;»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ mapRow(rs: ResultSet, rowNum: int): User&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="1593" width="618" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c25" value="&lt;b&gt;SecurityConfig&lt;/b&gt; &lt;font color='#687789'&gt;«@Configuration»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- corsSource: CorsConfigurationSource&lt;br&gt;- jwtRoleConverter: JwtRoleConverter&lt;br&gt;- authenticationEntryPoint: JsonAuthenticationEntryPoint&lt;br&gt;- accessDeniedHandler: JsonAccessDeniedHandler&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ filterChain(http: HttpSecurity): SecurityFilterChain&lt;br&gt;+ passwordEncoder(): PasswordEncoder&lt;br&gt;+ jwtEncoder(): JwtEncoder&lt;br&gt;+ jwtDecoder(): JwtDecoder&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Auth + route roles; consumes shared CORS bean.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="1738" width="618" height="233" as="geometry" />
+        </mxCell>
+        <mxCell id="c26" value="&lt;b&gt;JwtTokenService&lt;/b&gt; &lt;font color='#687789'&gt;«component / implements JwtTokenIssuer»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- encoder: JwtEncoder&lt;br&gt;- clock: Clock&lt;br&gt;- ttl: Duration&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ issue(user: User): TokenResponse&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="1986" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c27" value="&lt;b&gt;JwtRoleConverter&lt;/b&gt; &lt;font color='#687789'&gt;«component»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ convert(jwt: Jwt): Collection&amp;lt;GrantedAuthority&amp;gt;&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Maps ADMIN to ROLE_ADMIN, READER to ROLE_READER.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="2192" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c28" value="&lt;b&gt;JsonAuthenticationEntryPoint&lt;/b&gt; &lt;font color='#687789'&gt;«AuthenticationEntryPoint»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- problems: ProblemDetailsFactory&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ commence(request: HttpServletRequest, response: HttpServletResponse, ex: AuthenticationException): void&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;401 UNAUTHORIZED as application/problem+json.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="2377" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c29" value="&lt;b&gt;JsonAccessDeniedHandler&lt;/b&gt; &lt;font color='#687789'&gt;«AccessDeniedHandler»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- problems: ProblemDetailsFactory&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ handle(request: HttpServletRequest, response: HttpServletResponse, ex: AccessDeniedException): void&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;403 FORBIDDEN as application/problem+json.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="2583" width="618" height="191" as="geometry" />
+        </mxCell>
+      <mxCell id="c30" value="&lt;b&gt;JwtTokenIssuer&lt;/b&gt; &lt;font color='#687789'&gt;«interface»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;puerto de aplicación&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ issue(user: User): TokenResponse&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7350A2;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1"><mxGeometry x="2115" y="934" width="618" height="130" as="geometry" /></mxCell></root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="03-catalog" name="03 catalog">
+    <mxGraphModel dx="3180" dy="1410" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3180" pageHeight="1410" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c2" value="catalog · subpaquetes, tipos y firmas mínimas" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#203044;fontSize=28;fontStyle=1;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="65" y="35" width="3050" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="Propuesta de implementación basada en arquitectura v1.5. Los DTO record generan un accesor por componente; sus campos deben cotejarse con OpenAPI antes de codificar." style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#203044;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="65" y="99" width="3050" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="&lt;b&gt;catalog.api&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF7F4;strokeColor=#238269;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="65" y="195" width="650" height="518" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="&lt;b&gt;RegistryDefinitionController&lt;/b&gt; &lt;font color='#687789'&gt;«@RestController»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- catalog: RegistryCatalogService&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ list(page: int, size: int, query: String): PageResponse&amp;lt;RegistryDefinitionResponse&amp;gt;&lt;br&gt;+ create(request: CreateRegistryRequest): RegistryDefinitionResponse&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#238269;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="250" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" value="&lt;b&gt;catalog.api.dto&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF7F4;strokeColor=#238269;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="743" y="195" width="650" height="518" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" value="&lt;b&gt;CreateRegistryRequest&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;canonicalName: String&lt;br&gt;evidenceType: EvidenceType&lt;br&gt;officialNomenclature: String?&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#238269;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="250" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" value="&lt;b&gt;RegistryDefinitionResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;key: String&lt;br&gt;canonicalName: String&lt;br&gt;evidenceType: EvidenceType&lt;br&gt;officialNomenclature: String?&lt;br&gt;preloaded: boolean&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#238269;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="435" width="618" height="233" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" value="&lt;b&gt;catalog.api.mapper&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF7F4;strokeColor=#238269;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="1421" y="195" width="650" height="518" as="geometry" />
+        </mxCell>
+        <mxCell id="c10" value="&lt;b&gt;RegistryApiMapper&lt;/b&gt; &lt;font color='#687789'&gt;«mapper»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ toResponse(definition: RegistryDefinition): RegistryDefinitionResponse&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#238269;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1437" y="250" width="618" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c11" value="&lt;b&gt;catalog.application&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF7F4;strokeColor=#238269;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="2099" y="195" width="650" height="518" as="geometry" />
+        </mxCell>
+        <mxCell id="c12" value="&lt;b&gt;RegistryCatalogService&lt;/b&gt; &lt;font color='#687789'&gt;«service»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- registry: RegistryDefinitionRepository&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ list(page: int, size: int, query: String): Page&amp;lt;RegistryDefinition&amp;gt;&lt;br&gt;+ get(id: UUID): RegistryDefinition&lt;br&gt;+ create(request: CreateRegistryRequest): RegistryDefinition&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#238269;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="250" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c13" value="&lt;b&gt;RegistryDefinitionRepository&lt;/b&gt; &lt;font color='#687789'&gt;«interface»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ findById(id: UUID): Optional&amp;lt;RegistryDefinition&amp;gt;&lt;br&gt;+ findByKey(key: String): Optional&amp;lt;RegistryDefinition&amp;gt;&lt;br&gt;+ list(page: int, size: int, query: String): Page&amp;lt;RegistryDefinition&amp;gt;&lt;br&gt;+ insert(definition: RegistryDefinition): RegistryDefinition&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#238269;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="435" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c14" value="&lt;b&gt;catalog.domain&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF7F4;strokeColor=#238269;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="65" y="756" width="650" height="539" as="geometry" />
+        </mxCell>
+        <mxCell id="c15" value="&lt;b&gt;RegistryDefinition&lt;/b&gt; &lt;font color='#687789'&gt;«domain»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;key: String&lt;br&gt;canonicalName: String&lt;br&gt;evidenceType: EvidenceType&lt;br&gt;officialNomenclature: String?&lt;br&gt;preloaded: boolean&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ requiresNomenclature(): boolean&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#238269;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="811" width="618" height="233" as="geometry" />
+        </mxCell>
+        <mxCell id="c16" value="&lt;b&gt;EvidenceType&lt;/b&gt; &lt;font color='#687789'&gt;«enum»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;DOCUMENT, FOLDER, TICKET&lt;br&gt;IMPUTATIONS, TOOL_RECORD&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ name(): String&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Check exact wire values in OpenAPI before coding.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#238269;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="1059" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c17" value="&lt;b&gt;catalog.infrastructure&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF7F4;strokeColor=#238269;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="743" y="756" width="650" height="539" as="geometry" />
+        </mxCell>
+        <mxCell id="c18" value="&lt;b&gt;JdbcRegistryDefinitionRepository&lt;/b&gt; &lt;font color='#687789'&gt;«implements RegistryDefinitionRepository»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- jdbc: JdbcTemplate&lt;br&gt;- mapper: RegistryDefinitionRowMapper&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ findById(id: UUID): Optional&amp;lt;RegistryDefinition&amp;gt;&lt;br&gt;+ findByKey(key: String): Optional&amp;lt;RegistryDefinition&amp;gt;&lt;br&gt;+ list(page: int, size: int, query: String): Page&amp;lt;RegistryDefinition&amp;gt;&lt;br&gt;+ insert(definition: RegistryDefinition): RegistryDefinition&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#238269;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="811" width="618" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="c19" value="&lt;b&gt;RegistryDefinitionRowMapper&lt;/b&gt; &lt;font color='#687789'&gt;«RowMapper&amp;lt;RegistryDefinition&amp;gt;»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ mapRow(rs: ResultSet, rowNum: int): RegistryDefinition&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#238269;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="1038" width="618" height="130" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="04-process" name="04 process">
+    <mxGraphModel dx="3180" dy="6332" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3180" pageHeight="6332" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c2" value="process · subpaquetes, tipos y firmas mínimas" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#203044;fontSize=28;fontStyle=1;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="65" y="35" width="3050" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="Propuesta de implementación basada en arquitectura v1.5. Los DTO record generan un accesor por componente; sus campos deben cotejarse con OpenAPI antes de codificar." style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#203044;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="65" y="99" width="3050" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="&lt;b&gt;process.api&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFF1E8;strokeColor=#C46529;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="65" y="195" width="650" height="3309" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="&lt;b&gt;ProcessController&lt;/b&gt; &lt;font color='#687789'&gt;«@RestController»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- processes: ProcessService&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ list(page: int, size: int): PageResponse&amp;lt;ProcessDefinitionResponse&amp;gt;&lt;br&gt;+ create(request: CreateProcessRequest): ProcessDefinitionResponse&lt;br&gt;+ get(processId: UUID): ProcessDefinitionResponse&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="250" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" value="&lt;b&gt;ProcessVersionController&lt;/b&gt; &lt;font color='#687789'&gt;«@RestController»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- drafts: ProcessDraftService&lt;br&gt;- publications: ProcessPublicationService&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ listVersions(processId: UUID, page: int, size: int): PageResponse&amp;lt;ProcessVersionResponse&amp;gt;&lt;br&gt;+ createVersion(processId: UUID, request: CreateVersionRequest): ProcessVersionResponse&lt;br&gt;+ getVersion(processId: UUID, versionId: UUID): ProcessVersionResponse&lt;br&gt;+ saveDraft(processId: UUID, versionId: UUID, request: SaveDraftRequest): ProcessVersionResponse&lt;br&gt;+ publish(processId: UUID, versionId: UUID, revision: int): ProcessVersionResponse&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="435" width="618" height="317" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" value="&lt;b&gt;process.api.dto&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFF1E8;strokeColor=#C46529;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="743" y="195" width="650" height="3309" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" value="&lt;b&gt;CreateProcessRequest&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;code: ProcessCode&lt;br&gt;name: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="250" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" value="&lt;b&gt;CreateVersionRequest&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;officialVersion: String&lt;br&gt;versionDate: LocalDate&lt;br&gt;copyFromVersionId: UUID?&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="414" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c10" value="&lt;b&gt;SaveDraftRequest&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;revision: int&lt;br&gt;officialVersion: String&lt;br&gt;versionDate: LocalDate&lt;br&gt;objective: String&lt;br&gt;owner: String&lt;br&gt;policies: List&amp;lt;ProcessPolicyInput&amp;gt;&lt;br&gt;macroActivities: List&amp;lt;MacroActivityInput&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="599" width="618" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="c11" value="&lt;b&gt;ProcessPolicyInput&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID?&lt;br&gt;order: int&lt;br&gt;text: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="868" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c12" value="&lt;b&gt;MacroActivityInput&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID?&lt;br&gt;name: String&lt;br&gt;description: String?&lt;br&gt;order: int&lt;br&gt;inputs: List&amp;lt;EvidenceExpectationInput&amp;gt;&lt;br&gt;activities: List&amp;lt;ActivityInput&amp;gt;&lt;br&gt;outputs: List&amp;lt;EvidenceExpectationInput&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="1053" width="618" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="c13" value="&lt;b&gt;ActivityInput&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID?&lt;br&gt;name: String&lt;br&gt;responsible: String?&lt;br&gt;instructions: String&lt;br&gt;etaText: String?&lt;br&gt;order: int&lt;br&gt;records: List&amp;lt;EvidenceExpectationInput&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="1322" width="618" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="c14" value="&lt;b&gt;EvidenceExpectationInput&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID?&lt;br&gt;registryDefinitionId: UUID&lt;br&gt;displayName: String&lt;br&gt;applicability: ApplicabilityMode&lt;br&gt;cardinality: Cardinality&lt;br&gt;order: int&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="1591" width="618" height="233" as="geometry" />
+        </mxCell>
+        <mxCell id="c15" value="&lt;b&gt;ProcessDefinitionResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;code: ProcessCode&lt;br&gt;name: String&lt;br&gt;m2Enabled: boolean&lt;br&gt;createdAt: Instant&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="1839" width="618" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="c16" value="&lt;b&gt;ProcessVersionResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;processId: UUID&lt;br&gt;officialVersion: String&lt;br&gt;versionDate: LocalDate&lt;br&gt;status: ProcessStatus&lt;br&gt;revision: int&lt;br&gt;objective: String&lt;br&gt;owner: String&lt;br&gt;policies: List&amp;lt;ProcessPolicyResponse&amp;gt;&lt;br&gt;macroActivities: List&amp;lt;MacroActivityResponse&amp;gt;&lt;br&gt;publishedAt: Instant?&lt;br&gt;createdAt: Instant&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="2066" width="618" height="359" as="geometry" />
+        </mxCell>
+        <mxCell id="c17" value="&lt;b&gt;ProcessPolicyResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;order: int&lt;br&gt;text: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="2440" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c18" value="&lt;b&gt;MacroActivityResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;name: String&lt;br&gt;description: String?&lt;br&gt;order: int&lt;br&gt;inputs: List&amp;lt;EvidenceExpectationResponse&amp;gt;&lt;br&gt;activities: List&amp;lt;ActivityResponse&amp;gt;&lt;br&gt;outputs: List&amp;lt;EvidenceExpectationResponse&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="2625" width="618" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="c19" value="&lt;b&gt;ActivityResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;name: String&lt;br&gt;responsible: String?&lt;br&gt;instructions: String&lt;br&gt;etaText: String?&lt;br&gt;order: int&lt;br&gt;records: List&amp;lt;EvidenceExpectationResponse&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="2894" width="618" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="c20" value="&lt;b&gt;EvidenceExpectationResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;registryDefinitionId: UUID&lt;br&gt;displayName: String&lt;br&gt;applicability: ApplicabilityMode&lt;br&gt;cardinality: Cardinality&lt;br&gt;location: EvidenceLocation&lt;br&gt;evidenceType: EvidenceType&lt;br&gt;officialNomenclature: String?&lt;br&gt;order: int&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="3163" width="618" height="296" as="geometry" />
+        </mxCell>
+        <mxCell id="c21" value="&lt;b&gt;process.api.mapper&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFF1E8;strokeColor=#C46529;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="1421" y="195" width="650" height="3309" as="geometry" />
+        </mxCell>
+        <mxCell id="c22" value="&lt;b&gt;ProcessApiMapper&lt;/b&gt; &lt;font color='#687789'&gt;«mapper»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ toResponse(process: ProcessDefinition): ProcessDefinitionResponse&lt;br&gt;+ toResponse(version: ProcessVersion): ProcessVersionResponse&lt;br&gt;+ toDomainInput(request: SaveDraftRequest): ProcessVersion&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1437" y="250" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c23" value="&lt;b&gt;process.application&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFF1E8;strokeColor=#C46529;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="2099" y="195" width="650" height="3309" as="geometry" />
+        </mxCell>
+        <mxCell id="c24" value="&lt;b&gt;ProcessService&lt;/b&gt; &lt;font color='#687789'&gt;«service»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- processes: ProcessRepository&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ list(page: int, size: int): Page&amp;lt;ProcessDefinition&amp;gt;&lt;br&gt;+ create(code: ProcessCode, name: String): ProcessDefinition&lt;br&gt;+ get(id: UUID): ProcessDefinition&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="250" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c25" value="&lt;b&gt;ProcessDraftService&lt;/b&gt; &lt;font color='#687789'&gt;«service»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- versions: ProcessVersionRepository&lt;br&gt;- registry: RegistryDefinitionRepository&lt;br&gt;- clock: Clock&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ createDraft(processId: UUID, request: CreateVersionRequest): ProcessVersion&lt;br&gt;+ saveDraft(processId: UUID, versionId: UUID, request: SaveDraftRequest): ProcessVersion&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;@Transactional on saveDraft.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="435" width="618" height="275" as="geometry" />
+        </mxCell>
+        <mxCell id="c26" value="&lt;b&gt;ProcessPublicationService&lt;/b&gt; &lt;font color='#687789'&gt;«service»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- versions: ProcessVersionRepository&lt;br&gt;- registry: RegistryDefinitionRepository&lt;br&gt;- validator: PublicationValidator&lt;br&gt;- clock: Clock&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ publish(processId: UUID, versionId: UUID, revision: int): ProcessVersion&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;@Transactional; published versions immutable.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="725" width="618" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="c27" value="&lt;b&gt;PublicationValidator&lt;/b&gt; &lt;font color='#687789'&gt;«policy»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ validate(version: ProcessVersion, definitions: List&amp;lt;RegistryDefinition&amp;gt;): List&amp;lt;Violation&amp;gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="994" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c28" value="&lt;b&gt;ProcessPublicationQuery&lt;/b&gt; &lt;font color='#687789'&gt;«implements PublishedProcessReader»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- versions: ProcessVersionRepository&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ getPublished(versionId: UUID): ProcessVersion&lt;br&gt;+ isPublished(versionId: UUID): boolean&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="1158" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c29" value="&lt;b&gt;ProcessRepository&lt;/b&gt; &lt;font color='#687789'&gt;«interface»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ findById(id: UUID): Optional&amp;lt;ProcessDefinition&amp;gt;&lt;br&gt;+ findByCode(code: ProcessCode): Optional&amp;lt;ProcessDefinition&amp;gt;&lt;br&gt;+ list(page: int, size: int): Page&amp;lt;ProcessDefinition&amp;gt;&lt;br&gt;+ insert(process: ProcessDefinition): ProcessDefinition&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="1322" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c30" value="&lt;b&gt;ProcessVersionRepository&lt;/b&gt; &lt;font color='#687789'&gt;«interface»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ findWithTree(id: UUID): Optional&amp;lt;ProcessVersion&amp;gt;&lt;br&gt;+ listByProcess(processId: UUID, page: int, size: int): Page&amp;lt;ProcessVersion&amp;gt;&lt;br&gt;+ insertDraft(version: ProcessVersion): ProcessVersion&lt;br&gt;+ replaceDraft(version: ProcessVersion, expectedRevision: int): ProcessVersion&lt;br&gt;+ publish(id: UUID, expectedRevision: int, at: Instant): ProcessVersion&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="1528" width="618" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="c31" value="&lt;b&gt;PublishedProcessReader&lt;/b&gt; &lt;font color='#687789'&gt;«interface»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ getPublished(versionId: UUID): ProcessVersion&lt;br&gt;+ isPublished(versionId: UUID): boolean&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="1797" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c32" value="&lt;b&gt;Violation&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;field: String&lt;br&gt;message: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Internal value, not a table.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="1961" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c33" value="&lt;b&gt;process.domain&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFF1E8;strokeColor=#C46529;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="65" y="3547" width="650" height="2670" as="geometry" />
+        </mxCell>
+        <mxCell id="c34" value="&lt;b&gt;ProcessDefinition&lt;/b&gt; &lt;font color='#687789'&gt;«domain»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;code: ProcessCode&lt;br&gt;name: String&lt;br&gt;m2Enabled: boolean&lt;br&gt;createdAt: Instant&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ isVerifiable(): boolean&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="3602" width="618" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="c35" value="&lt;b&gt;ProcessVersion&lt;/b&gt; &lt;font color='#687789'&gt;«domain»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;processId: UUID&lt;br&gt;officialVersion: String&lt;br&gt;versionDate: LocalDate&lt;br&gt;status: ProcessStatus&lt;br&gt;revision: int&lt;br&gt;objective: String&lt;br&gt;owner: String&lt;br&gt;policies: List&amp;lt;ProcessPolicy&amp;gt;&lt;br&gt;macroActivities: List&amp;lt;MacroActivity&amp;gt;&lt;br&gt;publishedAt: Instant?&lt;br&gt;createdAt: Instant&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ isEditable(): boolean&lt;br&gt;+ publish(at: Instant): ProcessVersion&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="3829" width="618" height="380" as="geometry" />
+        </mxCell>
+        <mxCell id="c36" value="&lt;b&gt;ProcessPolicy&lt;/b&gt; &lt;font color='#687789'&gt;«domain»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;order: int&lt;br&gt;text: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ text(): String&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="4224" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c37" value="&lt;b&gt;MacroActivity&lt;/b&gt; &lt;font color='#687789'&gt;«domain»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;processVersionId: UUID&lt;br&gt;name: String&lt;br&gt;description: String?&lt;br&gt;order: int&lt;br&gt;inputs: List&amp;lt;EvidenceExpectation&amp;gt;&lt;br&gt;activities: List&amp;lt;Activity&amp;gt;&lt;br&gt;outputs: List&amp;lt;EvidenceExpectation&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ expectations(): List&amp;lt;EvidenceExpectation&amp;gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="4409" width="618" height="275" as="geometry" />
+        </mxCell>
+        <mxCell id="c38" value="&lt;b&gt;Activity&lt;/b&gt; &lt;font color='#687789'&gt;«domain»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;macroActivityId: UUID&lt;br&gt;name: String&lt;br&gt;responsible: String?&lt;br&gt;instructions: String&lt;br&gt;etaText: String?&lt;br&gt;order: int&lt;br&gt;records: List&amp;lt;EvidenceExpectation&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ records(): List&amp;lt;EvidenceExpectation&amp;gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="4699" width="618" height="275" as="geometry" />
+        </mxCell>
+        <mxCell id="c39" value="&lt;b&gt;EvidenceExpectation&lt;/b&gt; &lt;font color='#687789'&gt;«domain»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;macroActivityId: UUID&lt;br&gt;activityId: UUID?&lt;br&gt;registryDefinitionId: UUID&lt;br&gt;displayName: String&lt;br&gt;applicability: ApplicabilityMode&lt;br&gt;cardinality: Cardinality&lt;br&gt;location: EvidenceLocation&lt;br&gt;order: int&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ requiresTicketSelection(type: EvidenceType): boolean&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="4989" width="618" height="296" as="geometry" />
+        </mxCell>
+        <mxCell id="c40" value="&lt;b&gt;ProcessCode&lt;/b&gt; &lt;font color='#687789'&gt;«enum»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;START_UP, TAKE_OVER&lt;br&gt;SUPPORT_SOFTWARE_FACTORY&lt;br&gt;QUALITY_CONTINUOUS_IMPROVEMENT&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ name(): String&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Check actual enum literals in OpenAPI.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="5300" width="618" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="c41" value="&lt;b&gt;ProcessStatus&lt;/b&gt; &lt;font color='#687789'&gt;«enum»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;DRAFT, PUBLISHED, ARCHIVED&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ name(): String&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="5527" width="618" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c42" value="&lt;b&gt;EvidenceLocation&lt;/b&gt; &lt;font color='#687789'&gt;«enum»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;INPUT, ACTIVITY_RECORD, OUTPUT&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ name(): String&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="5672" width="618" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c43" value="&lt;b&gt;ApplicabilityMode&lt;/b&gt; &lt;font color='#687789'&gt;«enum»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;ALWAYS, CASE_DEPENDENT&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ name(): String&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Check actual enum literals in OpenAPI.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="5817" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c44" value="&lt;b&gt;Cardinality&lt;/b&gt; &lt;font color='#687789'&gt;«enum»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;ONE, MULTIPLE&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ name(): String&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;MULTIPLE means one or more selected tickets.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="6002" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c45" value="&lt;b&gt;process.infrastructure&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FFF1E8;strokeColor=#C46529;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="743" y="3547" width="650" height="2670" as="geometry" />
+        </mxCell>
+        <mxCell id="c46" value="&lt;b&gt;JdbcProcessRepository&lt;/b&gt; &lt;font color='#687789'&gt;«implements ProcessRepository»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- jdbc: JdbcTemplate&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ findById(id: UUID): Optional&amp;lt;ProcessDefinition&amp;gt;&lt;br&gt;+ findByCode(code: ProcessCode): Optional&amp;lt;ProcessDefinition&amp;gt;&lt;br&gt;+ list(page: int, size: int): Page&amp;lt;ProcessDefinition&amp;gt;&lt;br&gt;+ insert(process: ProcessDefinition): ProcessDefinition&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="3602" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c47" value="&lt;b&gt;JdbcProcessVersionRepository&lt;/b&gt; &lt;font color='#687789'&gt;«implements ProcessVersionRepository»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- jdbc: JdbcTemplate&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ findWithTree(id: UUID): Optional&amp;lt;ProcessVersion&amp;gt;&lt;br&gt;+ listByProcess(processId: UUID, page: int, size: int): Page&amp;lt;ProcessVersion&amp;gt;&lt;br&gt;+ insertDraft(version: ProcessVersion): ProcessVersion&lt;br&gt;+ replaceDraft(version: ProcessVersion, expectedRevision: int): ProcessVersion&lt;br&gt;+ publish(id: UUID, expectedRevision: int, at: Instant): ProcessVersion&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Loads tree with batched queries, not N+1 RowMapper.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#C46529;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="3808" width="618" height="296" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="05-service" name="05 service">
+    <mxGraphModel dx="3180" dy="3022" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3180" pageHeight="3022" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c2" value="service · subpaquetes, tipos y firmas mínimas" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#203044;fontSize=28;fontStyle=1;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="65" y="35" width="3050" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="Propuesta de implementación basada en arquitectura v1.5. Los DTO record generan un accesor por componente; sus campos deben cotejarse con OpenAPI antes de codificar." style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#203044;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="65" y="99" width="3050" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="&lt;b&gt;service.api&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FDF5DA;strokeColor=#AA8120;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="65" y="195" width="650" height="1510" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="&lt;b&gt;ServiceController&lt;/b&gt; &lt;font color='#687789'&gt;«@RestController»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- configuration: ServiceConfigurationService&lt;br&gt;- queries: ServiceQueryService&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ list(page: int, size: int): PageResponse&amp;lt;ServiceResponse&amp;gt;&lt;br&gt;+ create(request: ServiceWriteRequest): ServiceResponse&lt;br&gt;+ get(serviceId: UUID): ServiceResponse&lt;br&gt;+ update(serviceId: UUID, request: ServiceWriteRequest): ServiceResponse&lt;br&gt;+ verifiableProcesses(serviceId: UUID): List&amp;lt;VerifiableProcessResponse&amp;gt;&lt;br&gt;+ tickets(serviceId: UUID, query: String): List&amp;lt;TicketSummaryResponse&amp;gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AA8120;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="250" width="618" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" value="&lt;b&gt;service.api.dto&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FDF5DA;strokeColor=#AA8120;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="743" y="195" width="650" height="1510" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" value="&lt;b&gt;ServiceWriteRequest&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;revision: int?&lt;br&gt;name: String&lt;br&gt;client: String&lt;br&gt;serviceType: ServiceType&lt;br&gt;status: ServiceStatus&lt;br&gt;processVersionIds: List&amp;lt;UUID&amp;gt;&lt;br&gt;driveFolderId: String?&lt;br&gt;redmineProjectId: String?&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AA8120;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="250" width="618" height="275" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" value="&lt;b&gt;ServiceResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;name: String&lt;br&gt;client: String&lt;br&gt;serviceType: ServiceType&lt;br&gt;status: ServiceStatus&lt;br&gt;revision: int&lt;br&gt;processes: List&amp;lt;ServiceProcessResponse&amp;gt;&lt;br&gt;sources: ServiceSourceResponse&lt;br&gt;createdAt: Instant&lt;br&gt;updatedAt: Instant&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AA8120;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="540" width="618" height="317" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" value="&lt;b&gt;ServiceProcessResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;processVersionId: UUID&lt;br&gt;processId: UUID&lt;br&gt;processName: String&lt;br&gt;officialVersion: String&lt;br&gt;m2Enabled: boolean&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AA8120;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="872" width="618" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="c10" value="&lt;b&gt;ServiceSourceResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;driveFolderId: String?&lt;br&gt;driveFolderName: String?&lt;br&gt;redmineProjectId: String?&lt;br&gt;redmineProjectName: String?&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AA8120;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="1099" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c11" value="&lt;b&gt;VerifiableProcessResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;processVersionId: UUID&lt;br&gt;processName: String&lt;br&gt;officialVersion: String&lt;br&gt;macroActivities: List&amp;lt;MacroActivitySummary&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AA8120;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="1305" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c12" value="&lt;b&gt;MacroActivitySummary&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;name: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AA8120;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="1511" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c13" value="&lt;b&gt;service.api.mapper&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FDF5DA;strokeColor=#AA8120;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="1421" y="195" width="650" height="1510" as="geometry" />
+        </mxCell>
+        <mxCell id="c14" value="&lt;b&gt;ServiceApiMapper&lt;/b&gt; &lt;font color='#687789'&gt;«mapper»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ toResponse(service: Service): ServiceResponse&lt;br&gt;+ toDomainInput(request: ServiceWriteRequest): Service&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AA8120;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1437" y="250" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c15" value="&lt;b&gt;service.application&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FDF5DA;strokeColor=#AA8120;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="2099" y="195" width="650" height="1510" as="geometry" />
+        </mxCell>
+        <mxCell id="c16" value="&lt;b&gt;ServiceConfigurationService&lt;/b&gt; &lt;font color='#687789'&gt;«service»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- services: ServiceRepository&lt;br&gt;- published: PublishedProcessReader&lt;br&gt;- clock: Clock&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ create(request: ServiceWriteRequest): Service&lt;br&gt;+ update(id: UUID, request: ServiceWriteRequest): Service&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Validates published versions and one version per process.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AA8120;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="250" width="618" height="233" as="geometry" />
+        </mxCell>
+        <mxCell id="c17" value="&lt;b&gt;ServiceQueryService&lt;/b&gt; &lt;font color='#687789'&gt;«service»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- services: ServiceRepository&lt;br&gt;- published: PublishedProcessReader&lt;br&gt;- tickets: RedmineTicketPort&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ list(page: int, size: int): Page&amp;lt;Service&amp;gt;&lt;br&gt;+ get(id: UUID): Service&lt;br&gt;+ verifiableProcesses(id: UUID): List&amp;lt;ProcessVersion&amp;gt;&lt;br&gt;+ searchTickets(id: UUID, query: String): List&amp;lt;TicketSummary&amp;gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AA8120;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="498" width="618" height="233" as="geometry" />
+        </mxCell>
+        <mxCell id="c18" value="&lt;b&gt;ServiceRepository&lt;/b&gt; &lt;font color='#687789'&gt;«interface»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ findById(id: UUID): Optional&amp;lt;Service&amp;gt;&lt;br&gt;+ list(page: int, size: int): Page&amp;lt;Service&amp;gt;&lt;br&gt;+ insert(service: Service): Service&lt;br&gt;+ replace(service: Service, expectedRevision: int): Service&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AA8120;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="746" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c19" value="&lt;b&gt;ServiceSnapshotReader&lt;/b&gt; &lt;font color='#687789'&gt;«interface»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ getSnapshot(serviceId: UUID): ServiceSnapshot&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AA8120;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="952" width="618" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c20" value="&lt;b&gt;ServiceSnapshot&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;serviceId: UUID&lt;br&gt;type: ServiceType&lt;br&gt;revision: int&lt;br&gt;sources: ServiceSource&lt;br&gt;assignments: List&amp;lt;ProcessAssignment&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Internal immutable M2 view.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AA8120;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="1097" width="618" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="c21" value="&lt;b&gt;service.domain&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FDF5DA;strokeColor=#AA8120;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="65" y="1748" width="650" height="1159" as="geometry" />
+        </mxCell>
+        <mxCell id="c22" value="&lt;b&gt;Service&lt;/b&gt; &lt;font color='#687789'&gt;«domain»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;name: String&lt;br&gt;client: String&lt;br&gt;type: ServiceType&lt;br&gt;status: ServiceStatus&lt;br&gt;revision: int&lt;br&gt;source: ServiceSource&lt;br&gt;assignments: List&amp;lt;ProcessAssignment&amp;gt;&lt;br&gt;createdAt: Instant&lt;br&gt;updatedAt: Instant&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ assignedVersion(processId: UUID): Optional&amp;lt;UUID&amp;gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AA8120;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="1803" width="618" height="317" as="geometry" />
+        </mxCell>
+        <mxCell id="c23" value="&lt;b&gt;ProcessAssignment&lt;/b&gt; &lt;font color='#687789'&gt;«domain»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;serviceId: UUID&lt;br&gt;processId: UUID&lt;br&gt;processVersionId: UUID&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ processVersionId(): UUID&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AA8120;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="2135" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c24" value="&lt;b&gt;ServiceSource&lt;/b&gt; &lt;font color='#687789'&gt;«domain»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;driveFolderId: String?&lt;br&gt;driveFolderName: String?&lt;br&gt;redmineProjectId: String?&lt;br&gt;redmineProjectName: String?&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ hasDrive(): boolean&lt;br&gt;+ hasRedmine(): boolean&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AA8120;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="2320" width="618" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="c25" value="&lt;b&gt;ServiceType&lt;/b&gt; &lt;font color='#687789'&gt;«enum»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;SUPPORT_ARIBA, SUPPORT_ERP&lt;br&gt;SOFTWARE_FACTORY, PROJECT_SAP_ARIBA&lt;br&gt;PROJECT_ERP&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ name(): String&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AA8120;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="2547" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c26" value="&lt;b&gt;ServiceStatus&lt;/b&gt; &lt;font color='#687789'&gt;«enum»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;ACTIVE, INACTIVE&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ name(): String&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AA8120;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="2732" width="618" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c27" value="&lt;b&gt;service.infrastructure&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#FDF5DA;strokeColor=#AA8120;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="743" y="1748" width="650" height="1159" as="geometry" />
+        </mxCell>
+        <mxCell id="c28" value="&lt;b&gt;JdbcServiceRepository&lt;/b&gt; &lt;font color='#687789'&gt;«implements ServiceRepository»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- jdbc: JdbcTemplate&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ findById(id: UUID): Optional&amp;lt;Service&amp;gt;&lt;br&gt;+ list(page: int, size: int): Page&amp;lt;Service&amp;gt;&lt;br&gt;+ insert(service: Service): Service&lt;br&gt;+ replace(service: Service, expectedRevision: int): Service&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#AA8120;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="1803" width="618" height="191" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="06-verification" name="06 verification">
+    <mxGraphModel dx="3180" dy="6897" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3180" pageHeight="6897" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c2" value="verification · subpaquetes, tipos y firmas mínimas" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#203044;fontSize=28;fontStyle=1;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="65" y="35" width="3050" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="Propuesta de implementación basada en arquitectura v1.5. Los DTO record generan un accesor por componente; sus campos deben cotejarse con OpenAPI antes de codificar." style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#203044;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="65" y="99" width="3050" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="&lt;b&gt;verification.api&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF0FF;strokeColor=#4265B9;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="65" y="195" width="650" height="3830" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="&lt;b&gt;VerificationPreviewController&lt;/b&gt; &lt;font color='#687789'&gt;«@RestController»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- previews: VerificationPreviewService&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ preview(target: VerificationTarget): VerificationPreviewResponse&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="250" width="618" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" value="&lt;b&gt;VerificationController&lt;/b&gt; &lt;font color='#687789'&gt;«@RestController»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- starts: VerificationStartService&lt;br&gt;- queries: VerificationQueryService&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ start(request: StartVerificationRequest): VerificationRunResponse&lt;br&gt;+ list(page: int, size: int): PageResponse&amp;lt;VerificationRunResponse&amp;gt;&lt;br&gt;+ get(runId: UUID): VerificationRunResponse&lt;br&gt;+ results(runId: UUID, page: int, size: int): PageResponse&amp;lt;VerificationResultResponse&amp;gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="395" width="618" height="233" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" value="&lt;b&gt;HumanDecisionController&lt;/b&gt; &lt;font color='#687789'&gt;«@RestController»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- decisions: HumanDecisionService&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ resolveApplicability(runId: UUID, resultId: UUID, request: ResolveApplicabilityRequest): VerificationResultResponse&lt;br&gt;+ decideResult(runId: UUID, resultId: UUID, request: DecideResultRequest): VerificationResultResponse&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="643" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" value="&lt;b&gt;verification.api.dto&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF0FF;strokeColor=#4265B9;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="743" y="195" width="650" height="3830" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" value="&lt;b&gt;VerificationTarget&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;serviceId: UUID&lt;br&gt;processVersionId: UUID&lt;br&gt;scope: VerificationScope&lt;br&gt;macroActivityId: UUID?&lt;br&gt;note: String?&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="250" width="618" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="c10" value="&lt;b&gt;StartVerificationRequest&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;serviceId: UUID&lt;br&gt;serviceRevision: int&lt;br&gt;processVersionId: UUID&lt;br&gt;scope: VerificationScope&lt;br&gt;macroActivityId: UUID?&lt;br&gt;note: String?&lt;br&gt;ticketSelections: List&amp;lt;TicketSelectionDto&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="477" width="618" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="c11" value="&lt;b&gt;TicketSelectionDto&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;groupId: String&lt;br&gt;ticketIds: List&amp;lt;String&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="746" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c12" value="&lt;b&gt;VerificationPreviewResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;serviceId: UUID&lt;br&gt;serviceRevision: int&lt;br&gt;processVersionId: UUID&lt;br&gt;scope: VerificationScope&lt;br&gt;macroActivityId: UUID?&lt;br&gt;expectations: List&amp;lt;ExpectationPreviewResponse&amp;gt;&lt;br&gt;ticketSelectionGroups: List&amp;lt;TicketSelectionGroupResponse&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="910" width="618" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="c13" value="&lt;b&gt;ExpectationPreviewResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;macroActivityId: UUID&lt;br&gt;activityId: UUID?&lt;br&gt;location: EvidenceLocation&lt;br&gt;displayName: String&lt;br&gt;evidenceType: EvidenceType&lt;br&gt;applicability: ApplicabilityMode&lt;br&gt;cardinality: Cardinality&lt;br&gt;ticketSelectionGroupId: String?&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="1179" width="618" height="296" as="geometry" />
+        </mxCell>
+        <mxCell id="c14" value="&lt;b&gt;TicketSelectionGroupResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: String&lt;br&gt;macroActivityId: UUID&lt;br&gt;label: String&lt;br&gt;cardinality: Cardinality&lt;br&gt;inputExpectationIds: List&amp;lt;UUID&amp;gt;&lt;br&gt;relatedExpectationIds: List&amp;lt;UUID&amp;gt;&lt;br&gt;required: boolean&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="1490" width="618" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="c15" value="&lt;b&gt;VerificationRunResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;serviceId: UUID&lt;br&gt;serviceTypeSnapshot: ServiceType&lt;br&gt;serviceRevisionSnapshot: int&lt;br&gt;processVersionId: UUID&lt;br&gt;sourceSnapshot: ServiceSourceResponse&lt;br&gt;scope: VerificationScope&lt;br&gt;macroActivityId: UUID?&lt;br&gt;note: String?&lt;br&gt;status: RunStatus&lt;br&gt;progress: RunProgressResponse&lt;br&gt;startedBy: UUID&lt;br&gt;startedAt: Instant&lt;br&gt;finishedAt: Instant?&lt;br&gt;failureMessage: String?&lt;br&gt;ticketSelections: List&amp;lt;TicketSelectionDto&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="1759" width="618" height="443" as="geometry" />
+        </mxCell>
+        <mxCell id="c16" value="&lt;b&gt;RunProgressResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;total: int&lt;br&gt;processed: int&lt;br&gt;reviewRequired: int&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="2217" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c17" value="&lt;b&gt;ResolveApplicabilityRequest&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;revision: int&lt;br&gt;decision: HumanApplicabilityDecision&lt;br&gt;rationale: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="2402" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c18" value="&lt;b&gt;DecideResultRequest&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;revision: int&lt;br&gt;finalStatus: ResultStatus&lt;br&gt;rationale: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="2587" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c19" value="&lt;b&gt;VerificationResultResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;runId: UUID&lt;br&gt;expectationId: UUID&lt;br&gt;macroActivityId: UUID&lt;br&gt;activityId: UUID?&lt;br&gt;displayName: String&lt;br&gt;evidenceType: EvidenceType&lt;br&gt;location: EvidenceLocation&lt;br&gt;subjectTicketId: String?&lt;br&gt;applicability: ApplicabilityAssessmentResponse&lt;br&gt;proposedStatus: ResultStatus&lt;br&gt;effectiveStatus: ResultStatus&lt;br&gt;rationale: String&lt;br&gt;limitations: List&amp;lt;String&amp;gt;&lt;br&gt;evidence: List&amp;lt;EvidenceReferenceResponse&amp;gt;&lt;br&gt;humanDecisions: List&amp;lt;HumanDecisionEventResponse&amp;gt;&lt;br&gt;revision: int&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="2772" width="618" height="464" as="geometry" />
+        </mxCell>
+        <mxCell id="c20" value="&lt;b&gt;ApplicabilityAssessmentResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;decision: ApplicabilityDecision&lt;br&gt;origin: DecisionOrigin&lt;br&gt;rationale: String&lt;br&gt;limitations: List&amp;lt;String&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="3251" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c21" value="&lt;b&gt;EvidenceReferenceResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;kind: EvidenceType&lt;br&gt;source: SourceType&lt;br&gt;externalId: String&lt;br&gt;displayName: String&lt;br&gt;webUrl: String?&lt;br&gt;ticketId: String?&lt;br&gt;observedAt: Instant&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="3457" width="618" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="c22" value="&lt;b&gt;HumanDecisionEventResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;decisionType: HumanDecisionType&lt;br&gt;applicabilityDecision: HumanApplicabilityDecision?&lt;br&gt;finalStatus: ResultStatus?&lt;br&gt;rationale: String&lt;br&gt;decidedBy: UUID&lt;br&gt;decidedAt: Instant&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="3726" width="618" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="c23" value="&lt;b&gt;verification.api.mapper&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF0FF;strokeColor=#4265B9;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="1421" y="195" width="650" height="3830" as="geometry" />
+        </mxCell>
+        <mxCell id="c24" value="&lt;b&gt;VerificationApiMapper&lt;/b&gt; &lt;font color='#687789'&gt;«mapper»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ toResponse(run: VerificationRun): VerificationRunResponse&lt;br&gt;+ toResponse(result: VerificationResult): VerificationResultResponse&lt;br&gt;+ toResponse(preview: VerificationPreview): VerificationPreviewResponse&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1437" y="250" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c25" value="&lt;b&gt;verification.application&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF0FF;strokeColor=#4265B9;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="2099" y="195" width="650" height="3830" as="geometry" />
+        </mxCell>
+        <mxCell id="c26" value="&lt;b&gt;VerificationPreviewService&lt;/b&gt; &lt;font color='#687789'&gt;«service»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- services: ServiceSnapshotReader&lt;br&gt;- processes: PublishedProcessReader&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ preview(target: VerificationTarget): VerificationPreview&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="250" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c27" value="&lt;b&gt;VerificationStartService&lt;/b&gt; &lt;font color='#687789'&gt;«service»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- services: ServiceSnapshotReader&lt;br&gt;- processes: PublishedProcessReader&lt;br&gt;- redmine: RedmineTicketPort&lt;br&gt;- runs: VerificationRunRepository&lt;br&gt;- clock: Clock&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ start(request: StartVerificationRequest, startedBy: UUID): VerificationRun&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Creates QUEUED run and immutable snapshots.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="414" width="618" height="275" as="geometry" />
+        </mxCell>
+        <mxCell id="c28" value="&lt;b&gt;VerificationQueryService&lt;/b&gt; &lt;font color='#687789'&gt;«service»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- runs: VerificationRunRepository&lt;br&gt;- results: VerificationResultRepository&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ list(page: int, size: int): Page&amp;lt;VerificationRun&amp;gt;&lt;br&gt;+ get(runId: UUID): VerificationRun&lt;br&gt;+ results(runId: UUID, page: int, size: int): Page&amp;lt;VerificationResult&amp;gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="704" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c29" value="&lt;b&gt;VerificationRunProcessor&lt;/b&gt; &lt;font color='#687789'&gt;«service»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- services: ServiceSnapshotReader&lt;br&gt;- processes: PublishedProcessReader&lt;br&gt;- evaluator: ExpectationEvaluator&lt;br&gt;- runs: VerificationRunRepository&lt;br&gt;- results: VerificationResultRepository&lt;br&gt;- clock: Clock&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ process(runId: UUID): void&lt;br&gt;- processExpectation(run: VerificationRun, expectation: EvidenceExpectation, ticketId: String): void&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;No SQL transaction across external API calls.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="910" width="618" height="317" as="geometry" />
+        </mxCell>
+        <mxCell id="c30" value="&lt;b&gt;ExpectationEvaluator&lt;/b&gt; &lt;font color='#687789'&gt;«service»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- applicability: ApplicabilityPolicy&lt;br&gt;- checks: EvidenceCheckRouter&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ evaluate(context: EvaluationContext): Evaluation&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="1242" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c31" value="&lt;b&gt;ApplicabilityPolicy&lt;/b&gt; &lt;font color='#687789'&gt;«policy»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- ai: ApplicabilityAiPort&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ assess(context: EvaluationContext): ApplicabilityAssessment&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Only CASE_DEPENDENT when structured data is insufficient.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="1406" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c32" value="&lt;b&gt;EvidenceCheckRouter&lt;/b&gt; &lt;font color='#687789'&gt;«router»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- drive: DriveEvidencePort&lt;br&gt;- redmine: RedmineTicketPort&lt;br&gt;- imputations: ImputationsPort&lt;br&gt;- tracking: TrackingPort&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ check(context: EvaluationContext): EvidenceCheck&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="1591" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c33" value="&lt;b&gt;HumanDecisionService&lt;/b&gt; &lt;font color='#687789'&gt;«service»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- results: VerificationResultRepository&lt;br&gt;- decisions: HumanDecisionRepository&lt;br&gt;- clock: Clock&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ resolveApplicability(runId: UUID, resultId: UUID, revision: int, decision: HumanApplicabilityDecision, rationale: String, actor: UUID): VerificationResult&lt;br&gt;+ decideResult(runId: UUID, resultId: UUID, revision: int, status: ResultStatus, rationale: String, actor: UUID): VerificationResult&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="1797" width="618" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="c34" value="&lt;b&gt;VerificationRunRepository&lt;/b&gt; &lt;font color='#687789'&gt;«interface»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ insertQueued(run: VerificationRun): VerificationRun&lt;br&gt;+ claimNextQueued(): Optional&amp;lt;VerificationRun&amp;gt;&lt;br&gt;+ findById(id: UUID): Optional&amp;lt;VerificationRun&amp;gt;&lt;br&gt;+ list(page: int, size: int): Page&amp;lt;VerificationRun&amp;gt;&lt;br&gt;+ complete(id: UUID, at: Instant): void&lt;br&gt;+ fail(id: UUID, reason: String, at: Instant): void&lt;br&gt;+ failInterruptedRunning(at: Instant): int&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="2066" width="618" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="c35" value="&lt;b&gt;VerificationResultRepository&lt;/b&gt; &lt;font color='#687789'&gt;«interface»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ insert(result: VerificationResult): VerificationResult&lt;br&gt;+ findByRun(runId: UUID, page: int, size: int): Page&amp;lt;VerificationResult&amp;gt;&lt;br&gt;+ findById(id: UUID): Optional&amp;lt;VerificationResult&amp;gt;&lt;br&gt;+ replaceEffectiveStatus(result: VerificationResult, expectedRevision: int): VerificationResult&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="2335" width="618" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="c36" value="&lt;b&gt;HumanDecisionRepository&lt;/b&gt; &lt;font color='#687789'&gt;«interface»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ append(event: HumanDecisionEvent): HumanDecisionEvent&lt;br&gt;+ listByResult(resultId: UUID): List&amp;lt;HumanDecisionEvent&amp;gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="2562" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c37" value="&lt;b&gt;EvaluationContext&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;run: VerificationRun&lt;br&gt;expectation: EvidenceExpectation&lt;br&gt;service: ServiceSnapshot&lt;br&gt;ticket: TicketSnapshot?&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Input assembled for evidence checks and case-dependent applicability.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="2726" width="618" height="233" as="geometry" />
+        </mxCell>
+        <mxCell id="c38" value="&lt;b&gt;VerificationPreview&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;target: VerificationTarget&lt;br&gt;expectations: List&amp;lt;EvidenceExpectation&amp;gt;&lt;br&gt;ticketGroups: List&amp;lt;TicketSelectionGroup&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Internal value.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="2974" width="618" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="c39" value="&lt;b&gt;Evaluation&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;applicability: ApplicabilityAssessment&lt;br&gt;proposedStatus: ResultStatus&lt;br&gt;rationale: String&lt;br&gt;evidence: List&amp;lt;EvidenceReference&amp;gt;&lt;br&gt;limitations: List&amp;lt;String&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Internal value.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="3201" width="618" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="c40" value="&lt;b&gt;EvidenceCheck&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;found: boolean&lt;br&gt;references: List&amp;lt;EvidenceReference&amp;gt;&lt;br&gt;limitations: List&amp;lt;String&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Internal value.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="3470" width="618" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="c41" value="&lt;b&gt;ApplicabilityAssessment&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;decision: ApplicabilityDecision&lt;br&gt;origin: DecisionOrigin&lt;br&gt;rationale: String&lt;br&gt;limitations: List&amp;lt;String&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Internal value.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="3697" width="618" height="233" as="geometry" />
+        </mxCell>
+        <mxCell id="c42" value="&lt;b&gt;verification.application.port&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF0FF;strokeColor=#4265B9;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="65" y="4068" width="650" height="2714" as="geometry" />
+        </mxCell>
+        <mxCell id="c43" value="&lt;b&gt;DriveEvidencePort&lt;/b&gt; &lt;font color='#687789'&gt;«interface»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ searchFolders(query: String): List&amp;lt;ExternalFolder&amp;gt;&lt;br&gt;+ checkFolder(folderId: String): SourceHealth&lt;br&gt;+ findByNomenclature(folderId: String, name: String): List&amp;lt;EvidenceReference&amp;gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="4123" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c44" value="&lt;b&gt;RedmineTicketPort&lt;/b&gt; &lt;font color='#687789'&gt;«interface»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ listProjects(): List&amp;lt;ExternalProject&amp;gt;&lt;br&gt;+ listTickets(projectId: String, query: String): List&amp;lt;TicketSummary&amp;gt;&lt;br&gt;+ getTicket(projectId: String, ticketId: String): TicketSnapshot&lt;br&gt;+ checkAccess(projectId: String): SourceHealth&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="4329" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c45" value="&lt;b&gt;ApplicabilityAiPort&lt;/b&gt; &lt;font color='#687789'&gt;«interface»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ assess(context: EvaluationContext): AiAssessment&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="4535" width="618" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c46" value="&lt;b&gt;ImputationsPort&lt;/b&gt; &lt;font color='#687789'&gt;«interface»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ findByService(serviceId: UUID): List&amp;lt;ImputationSnapshot&amp;gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="4680" width="618" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c47" value="&lt;b&gt;TrackingPort&lt;/b&gt; &lt;font color='#687789'&gt;«interface»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ findByService(serviceId: UUID): List&amp;lt;TrackingSnapshot&amp;gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="4825" width="618" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c48" value="&lt;b&gt;TicketSnapshot&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: String&lt;br&gt;projectId: String&lt;br&gt;status: String&lt;br&gt;description: String?&lt;br&gt;journals: List&amp;lt;TicketJournal&amp;gt;&lt;br&gt;updatedAt: Instant&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Only fields needed for checks; no editable local Ticket entity.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="4970" width="618" height="275" as="geometry" />
+        </mxCell>
+        <mxCell id="c49" value="&lt;b&gt;AiAssessment&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;decision: ApplicabilityDecision&lt;br&gt;rationale: String&lt;br&gt;model: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Untrusted proposal, evaluated by M2.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="5260" width="618" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="c50" value="&lt;b&gt;verification.domain&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF0FF;strokeColor=#4265B9;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="743" y="4068" width="650" height="2714" as="geometry" />
+        </mxCell>
+        <mxCell id="c51" value="&lt;b&gt;VerificationRun&lt;/b&gt; &lt;font color='#687789'&gt;«domain»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;serviceId: UUID&lt;br&gt;processVersionId: UUID&lt;br&gt;startedBy: UUID&lt;br&gt;serviceTypeSnapshot: ServiceType&lt;br&gt;serviceRevisionSnapshot: int&lt;br&gt;sourceSnapshot: ServiceSource&lt;br&gt;scope: VerificationScope&lt;br&gt;macroActivityId: UUID?&lt;br&gt;status: RunStatus&lt;br&gt;ticketSelections: List&amp;lt;TicketSelection&amp;gt;&lt;br&gt;startedAt: Instant&lt;br&gt;finishedAt: Instant?&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ markRunning(): void&lt;br&gt;+ complete(at: Instant): void&lt;br&gt;+ fail(reason: String, at: Instant): void&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="4123" width="618" height="422" as="geometry" />
+        </mxCell>
+        <mxCell id="c52" value="&lt;b&gt;TicketSelection&lt;/b&gt; &lt;font color='#687789'&gt;«domain»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;groupId: String&lt;br&gt;ticketIds: List&amp;lt;String&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ validate(cardinality: Cardinality): void&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="4560" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c53" value="&lt;b&gt;VerificationResult&lt;/b&gt; &lt;font color='#687789'&gt;«domain»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;runId: UUID&lt;br&gt;expectationId: UUID&lt;br&gt;macroActivityId: UUID&lt;br&gt;activityId: UUID?&lt;br&gt;subjectTicketId: String?&lt;br&gt;displayName: String&lt;br&gt;proposedStatus: ResultStatus&lt;br&gt;effectiveStatus: ResultStatus&lt;br&gt;applicability: ApplicabilityAssessment&lt;br&gt;revision: int&lt;br&gt;evidence: List&amp;lt;EvidenceReference&amp;gt;&lt;br&gt;limitations: List&amp;lt;String&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ applyHumanApplicability(decision: HumanApplicabilityDecision): void&lt;br&gt;+ applyHumanStatus(decision: ResultStatus): void&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="4724" width="618" height="401" as="geometry" />
+        </mxCell>
+        <mxCell id="c54" value="&lt;b&gt;EvidenceReference&lt;/b&gt; &lt;font color='#687789'&gt;«domain»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;kind: EvidenceType&lt;br&gt;source: SourceType&lt;br&gt;externalId: String&lt;br&gt;displayName: String&lt;br&gt;webUrl: String?&lt;br&gt;ticketId: String?&lt;br&gt;observedAt: Instant&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ externalId(): String&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="5140" width="618" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="c55" value="&lt;b&gt;HumanDecisionEvent&lt;/b&gt; &lt;font color='#687789'&gt;«domain»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: UUID&lt;br&gt;resultId: UUID&lt;br&gt;decidedBy: UUID&lt;br&gt;type: HumanDecisionType&lt;br&gt;applicabilityValue: HumanApplicabilityDecision?&lt;br&gt;statusValue: ResultStatus?&lt;br&gt;rationale: String&lt;br&gt;decidedAt: Instant&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ isApplicabilityDecision(): boolean&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="5409" width="618" height="275" as="geometry" />
+        </mxCell>
+        <mxCell id="c56" value="&lt;b&gt;VerificationScope&lt;/b&gt; &lt;font color='#687789'&gt;«enum»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;PROCESS, MACRO_ACTIVITY&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ name(): String&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="5699" width="618" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c57" value="&lt;b&gt;RunStatus&lt;/b&gt; &lt;font color='#687789'&gt;«enum»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;QUEUED, RUNNING, COMPLETED, FAILED&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ name(): String&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="5844" width="618" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c58" value="&lt;b&gt;ResultStatus&lt;/b&gt; &lt;font color='#687789'&gt;«enum»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;COMPLIES, DOES_NOT_COMPLY&lt;br&gt;REVIEW_REQUIRED, NOT_APPLICABLE&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ name(): String&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="5989" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c59" value="&lt;b&gt;ApplicabilityDecision&lt;/b&gt; &lt;font color='#687789'&gt;«enum»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;APPLIES, NOT_APPLICABLE, UNDETERMINED&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ name(): String&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="6153" width="618" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c60" value="&lt;b&gt;HumanApplicabilityDecision&lt;/b&gt; &lt;font color='#687789'&gt;«enum»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;APPLIES, NOT_APPLICABLE&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ name(): String&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="6298" width="618" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c61" value="&lt;b&gt;HumanDecisionType&lt;/b&gt; &lt;font color='#687789'&gt;«enum»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;APPLICABILITY, RESULT_STATUS&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ name(): String&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="6443" width="618" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c62" value="&lt;b&gt;DecisionOrigin&lt;/b&gt; &lt;font color='#687789'&gt;«enum»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;DETERMINISTIC, AI_APPLICABILITY&lt;br&gt;HUMAN, NOT_EVALUATED&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ name(): String&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="6588" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c63" value="&lt;b&gt;verification.infrastructure&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF0FF;strokeColor=#4265B9;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="1421" y="4068" width="650" height="2714" as="geometry" />
+        </mxCell>
+        <mxCell id="c64" value="&lt;b&gt;JdbcVerificationRunRepository&lt;/b&gt; &lt;font color='#687789'&gt;«implements VerificationRunRepository»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- jdbc: JdbcTemplate&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ insertQueued(run: VerificationRun): VerificationRun&lt;br&gt;+ claimNextQueued(): Optional&amp;lt;VerificationRun&amp;gt;&lt;br&gt;+ findById(id: UUID): Optional&amp;lt;VerificationRun&amp;gt;&lt;br&gt;+ list(page: int, size: int): Page&amp;lt;VerificationRun&amp;gt;&lt;br&gt;+ complete(id: UUID, at: Instant): void&lt;br&gt;+ fail(id: UUID, reason: String, at: Instant): void&lt;br&gt;+ failInterruptedRunning(at: Instant): int&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1437" y="4123" width="618" height="254" as="geometry" />
+        </mxCell>
+        <mxCell id="c65" value="&lt;b&gt;JdbcVerificationResultRepository&lt;/b&gt; &lt;font color='#687789'&gt;«implements VerificationResultRepository»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- jdbc: JdbcTemplate&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ insert(result: VerificationResult): VerificationResult&lt;br&gt;+ findByRun(runId: UUID, page: int, size: int): Page&amp;lt;VerificationResult&amp;gt;&lt;br&gt;+ findById(id: UUID): Optional&amp;lt;VerificationResult&amp;gt;&lt;br&gt;+ replaceEffectiveStatus(result: VerificationResult, revision: int): VerificationResult&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1437" y="4392" width="618" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="c66" value="&lt;b&gt;JdbcHumanDecisionRepository&lt;/b&gt; &lt;font color='#687789'&gt;«implements HumanDecisionRepository»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- jdbc: JdbcTemplate&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ append(event: HumanDecisionEvent): HumanDecisionEvent&lt;br&gt;+ listByResult(resultId: UUID): List&amp;lt;HumanDecisionEvent&amp;gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1437" y="4619" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c67" value="&lt;b&gt;VerificationRunPoller&lt;/b&gt; &lt;font color='#687789'&gt;«@Scheduled»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- runs: VerificationRunRepository&lt;br&gt;- processor: VerificationRunProcessor&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ poll(): void&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;One queued run per invocation; same app process.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1437" y="4783" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c68" value="&lt;b&gt;VerificationRunRecovery&lt;/b&gt; &lt;font color='#687789'&gt;«@EventListener»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- runs: VerificationRunRepository&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ onApplicationReady(): void&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Marks abandoned RUNNING runs FAILED.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1437" y="4989" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c69" value="&lt;b&gt;VerificationSchedulingConfig&lt;/b&gt; &lt;font color='#687789'&gt;«@Configuration»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;&lt;i&gt;sin estado propio&lt;/i&gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ enableScheduling(): framework annotation&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Uses @EnableScheduling, no external worker.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#4265B9;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1437" y="5174" width="618" height="170" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="07-integration" name="07 integration">
+    <mxGraphModel dx="3180" dy="2087" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3180" pageHeight="2087" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c2" value="integration · subpaquetes, tipos y firmas mínimas" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#203044;fontSize=28;fontStyle=1;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="65" y="35" width="3050" height="55" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="Propuesta de implementación basada en arquitectura v1.5. Los DTO record generan un accesor por componente; sus campos deben cotejarse con OpenAPI antes de codificar." style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#203044;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="65" y="99" width="3050" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="&lt;b&gt;integration.api&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F4EBEB;strokeColor=#A45353;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="65" y="195" width="650" height="1279" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="&lt;b&gt;IntegrationController&lt;/b&gt; &lt;font color='#687789'&gt;«@RestController»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- drive: DriveEvidencePort&lt;br&gt;- redmine: RedmineTicketPort&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ status(): List&amp;lt;IntegrationStatusResponse&amp;gt;&lt;br&gt;+ test(): List&amp;lt;IntegrationStatusResponse&amp;gt;&lt;br&gt;+ searchDriveFolders(query: String): List&amp;lt;ExternalFolderResponse&amp;gt;&lt;br&gt;+ listRedmineProjects(): List&amp;lt;ExternalProjectResponse&amp;gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A45353;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="250" width="618" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" value="&lt;b&gt;integration.api.dto&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F4EBEB;strokeColor=#A45353;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="743" y="195" width="650" height="1279" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" value="&lt;b&gt;IntegrationStatusResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;source: SourceType&lt;br&gt;status: SourceHealth&lt;br&gt;checkedAt: Instant&lt;br&gt;message: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A45353;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="250" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" value="&lt;b&gt;ExternalFolderResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: String&lt;br&gt;name: String&lt;br&gt;path: String?&lt;br&gt;webUrl: String?&lt;br&gt;parentId: String?&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A45353;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="456" width="618" height="212" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" value="&lt;b&gt;ExternalProjectResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: String&lt;br&gt;name: String&lt;br&gt;identifier: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A45353;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="683" width="618" height="170" as="geometry" />
+        </mxCell>
+        <mxCell id="c10" value="&lt;b&gt;TicketSummaryResponse&lt;/b&gt; &lt;font color='#687789'&gt;«record / DTO»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;id: String&lt;br&gt;subject: String&lt;br&gt;status: String&lt;br&gt;assignedTo: String?&lt;br&gt;updatedAt: Instant&lt;br&gt;projectId: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ accessors(): uno por componente&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A45353;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="868" width="618" height="233" as="geometry" />
+        </mxCell>
+        <mxCell id="c11" value="&lt;b&gt;SourceType&lt;/b&gt; &lt;font color='#687789'&gt;«enum»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;DRIVE, REDMINE&lt;br&gt;IMPUTATIONS, TOOL_RECORD&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ name(): String&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A45353;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="1116" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c12" value="&lt;b&gt;SourceHealth&lt;/b&gt; &lt;font color='#687789'&gt;«enum»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;AVAILABLE, AUTH_ERROR, PERMISSION_ERROR&lt;br&gt;UNAVAILABLE, NOT_CONFIGURED&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ name(): String&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A45353;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="1280" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c13" value="&lt;b&gt;integration.drive&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F4EBEB;strokeColor=#A45353;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="1421" y="195" width="650" height="1279" as="geometry" />
+        </mxCell>
+        <mxCell id="c14" value="&lt;b&gt;GoogleDriveAdapter&lt;/b&gt; &lt;font color='#687789'&gt;«implements DriveEvidencePort»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- client: RestClient&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ searchFolders(query: String): List&amp;lt;ExternalFolder&amp;gt;&lt;br&gt;+ checkFolder(folderId: String): SourceHealth&lt;br&gt;+ findByNomenclature(folderId: String, name: String): List&amp;lt;EvidenceReference&amp;gt;&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Presence/nomenclature only; no document content.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A45353;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1437" y="250" width="618" height="233" as="geometry" />
+        </mxCell>
+        <mxCell id="c15" value="&lt;b&gt;DriveClientConfig&lt;/b&gt; &lt;font color='#687789'&gt;«@Configuration»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- apiCredential: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ driveRestClient(): RestClient&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A45353;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1437" y="498" width="618" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c16" value="&lt;b&gt;integration.redmine&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F4EBEB;strokeColor=#A45353;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="2099" y="195" width="650" height="1279" as="geometry" />
+        </mxCell>
+        <mxCell id="c17" value="&lt;b&gt;RedmineAdapter&lt;/b&gt; &lt;font color='#687789'&gt;«implements RedmineTicketPort»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- client: RestClient&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ listProjects(): List&amp;lt;ExternalProject&amp;gt;&lt;br&gt;+ listTickets(projectId: String, query: String): List&amp;lt;TicketSummary&amp;gt;&lt;br&gt;+ getTicket(projectId: String, ticketId: String): TicketSnapshot&lt;br&gt;+ checkAccess(projectId: String): SourceHealth&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Read selected tickets and journals; no attachments.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A45353;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="250" width="618" height="233" as="geometry" />
+        </mxCell>
+        <mxCell id="c18" value="&lt;b&gt;RedmineClientConfig&lt;/b&gt; &lt;font color='#687789'&gt;«@Configuration»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- baseUrl: String&lt;br&gt;- apiKey: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ redmineRestClient(): RestClient&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A45353;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="2115" y="498" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c19" value="&lt;b&gt;integration.ai&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F4EBEB;strokeColor=#A45353;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="65" y="1517" width="650" height="455" as="geometry" />
+        </mxCell>
+        <mxCell id="c20" value="&lt;b&gt;OpenAiApplicabilityAdapter&lt;/b&gt; &lt;font color='#687789'&gt;«implements ApplicabilityAiPort»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- client: OpenAIClient&lt;br&gt;- model: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ assess(context: EvaluationContext): AiAssessment&lt;/font&gt;&lt;br&gt;&lt;font color='#6B7280'&gt;&lt;i&gt;Only CASE_DEPENDENT; never final compliance status.&lt;/i&gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A45353;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="1572" width="618" height="191" as="geometry" />
+        </mxCell>
+        <mxCell id="c21" value="&lt;b&gt;OpenAiClientConfig&lt;/b&gt; &lt;font color='#687789'&gt;«@Configuration»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- apiKey: String&lt;br&gt;- model: String&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ openAiClient(): OpenAIClient&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A45353;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="81" y="1778" width="618" height="149" as="geometry" />
+        </mxCell>
+        <mxCell id="c22" value="&lt;b&gt;integration.imputations&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F4EBEB;strokeColor=#A45353;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="743" y="1517" width="650" height="455" as="geometry" />
+        </mxCell>
+        <mxCell id="c23" value="&lt;b&gt;SimulatedImputationsAdapter&lt;/b&gt; &lt;font color='#687789'&gt;«implements ImputationsPort»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- fixture: List&amp;lt;ImputationSnapshot&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ findByService(serviceId: UUID): List&amp;lt;ImputationSnapshot&amp;gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A45353;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="759" y="1572" width="618" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="c24" value="&lt;b&gt;integration.tracking&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#F4EBEB;strokeColor=#A45353;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=13;" vertex="1" parent="1">
+          <mxGeometry x="1421" y="1517" width="650" height="455" as="geometry" />
+        </mxCell>
+        <mxCell id="c25" value="&lt;b&gt;SimulatedTrackingAdapter&lt;/b&gt; &lt;font color='#687789'&gt;«implements TrackingPort»&lt;/font&gt;&lt;hr&gt;&lt;font color='#485466'&gt;- fixture: List&amp;lt;TrackingSnapshot&amp;gt;&lt;/font&gt;&lt;hr&gt;&lt;font color='#1D5F64'&gt;+ findByService(serviceId: UUID): List&amp;lt;TrackingSnapshot&amp;gt;&lt;/font&gt;" style="rounded=1;arcSize=7;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#A45353;strokeWidth=1;fontColor=#203044;fontSize=12;align=left;verticalAlign=top;spacing=11;shadow=0;" vertex="1" parent="1">
+          <mxGeometry x="1437" y="1572" width="618" height="130" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="08-flujos-de-punta-a-punta" name="08 Flujos de punta a punta">
+    <mxGraphModel dx="3480" dy="3840" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="3480" pageHeight="3840" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c2" value="Flujos M1 + M2 · desde Flutter hasta persistencia y fuentes" style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#203044;fontSize=29;fontStyle=1;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="70" y="30" width="3250" height="58" as="geometry" />
+        </mxCell>
+        <mxCell id="c3" value="Cada fila es un flujo independiente. Las cajas muestran quién actúa y qué dato pasa; las excepciones relevantes quedan debajo." style="rounded=0;whiteSpace=wrap;html=1;fillColor=none;strokeColor=none;fontColor=#203044;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="70" y="94" width="3250" height="47" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" value="&lt;b&gt;1 · Login y autorización&lt;/b&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#F5F8FC;strokeColor=#CBD5E1;strokeWidth=2;fontSize=20;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="70" y="170" width="3330" height="490" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" value="&lt;b&gt;Flutter&lt;/b&gt;&lt;hr&gt;POST /auth/login&lt;br&gt;email + password" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#DCE8FA;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="125" y="270" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" value="&lt;b&gt;identity.api&lt;/b&gt;&lt;hr&gt;AuthController.login&lt;br&gt;valida request" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#EBE3F6;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="775" y="270" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" value="&lt;b&gt;identity.application&lt;/b&gt;&lt;hr&gt;AuthService.login&lt;br&gt;consulta usuario + BCrypt" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#E6F3ED;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="1425" y="270" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" value="&lt;b&gt;identity.infrastructure&lt;/b&gt;&lt;hr&gt;JdbcUserRepository&lt;br&gt;JwtTokenService.issue" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#FFF0DB;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="2075" y="270" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" value="&lt;b&gt;shared + Security&lt;/b&gt;&lt;hr&gt;JWT con ROLE_ADMIN/READER&lt;br&gt;SecurityFilterChain permite/deniega" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#E7EBFB;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="2725" y="270" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c5" target="c6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e11" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c6" target="c7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e12" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c7" target="c8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c8" target="c9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c14" value="401 sin token/credenciales · 403 cuando READER intenta escritura ADMIN" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D5DDE6;fontColor=#4C596C;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="125" y="544" width="3160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c15" value="&lt;b&gt;2 · Diseñar y publicar proceso M1&lt;/b&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#F5F8FC;strokeColor=#CBD5E1;strokeWidth=2;fontSize=20;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="70" y="770" width="3330" height="490" as="geometry" />
+        </mxCell>
+        <mxCell id="c16" value="&lt;b&gt;Flutter&lt;/b&gt;&lt;hr&gt;Crear proceso / versión&lt;br&gt;PUT borrador + revisión" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#DCE8FA;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="125" y="870" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c17" value="&lt;b&gt;process.api&lt;/b&gt;&lt;hr&gt;ProcessController&lt;br&gt;ProcessVersionController" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#EBE3F6;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="775" y="870" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c18" value="&lt;b&gt;process.application&lt;/b&gt;&lt;hr&gt;ProcessDraftService&lt;br&gt;PublicationValidator" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#E6F3ED;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="1425" y="870" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c19" value="&lt;b&gt;catalog + process.domain&lt;/b&gt;&lt;hr&gt;Resuelve registro por ID&lt;br&gt;valida árbol + cardinalidad" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#FFF0DB;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="2075" y="870" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c20" value="&lt;b&gt;process.infrastructure&lt;/b&gt;&lt;hr&gt;Jdbc repositorios&lt;br&gt;transacción y publicación" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#E7EBFB;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="2725" y="870" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="e21" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c16" target="c17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e22" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c17" target="c18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e23" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c18" target="c19">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e24" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c19" target="c20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c25" value="DRAFT editable → PUBLISHED inmutable · revisión obsoleta → 409 STALE_REVISION" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D5DDE6;fontColor=#4C596C;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="125" y="1144" width="3160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c26" value="&lt;b&gt;3 · Configurar servicio M1&lt;/b&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#F5F8FC;strokeColor=#CBD5E1;strokeWidth=2;fontSize=20;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="70" y="1370" width="3330" height="490" as="geometry" />
+        </mxCell>
+        <mxCell id="c27" value="&lt;b&gt;Flutter&lt;/b&gt;&lt;hr&gt;Elige servicio, tipo, carpeta Drive&lt;br&gt;y proyecto Redmine" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#DCE8FA;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="125" y="1470" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c28" value="&lt;b&gt;service.api&lt;/b&gt;&lt;hr&gt;ServiceController.create/update" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#EBE3F6;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="775" y="1470" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c29" value="&lt;b&gt;service.application&lt;/b&gt;&lt;hr&gt;ServiceConfigurationService&lt;br&gt;valida versiones" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#E6F3ED;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="1425" y="1470" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c30" value="&lt;b&gt;process.application&lt;/b&gt;&lt;hr&gt;PublishedProcessReader&lt;br&gt;confirma publicación" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#FFF0DB;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="2075" y="1470" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c31" value="&lt;b&gt;service.infrastructure&lt;/b&gt;&lt;hr&gt;JdbcServiceRepository&lt;br&gt;guarda IDs y asociaciones" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#E7EBFB;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="2725" y="1470" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="e32" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c27" target="c28">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e33" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c28" target="c29">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e34" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c29" target="c30">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e35" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c30" target="c31">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c36" value="Una versión por proceso; se guardan IDs externos, no archivos ni tickets completos" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D5DDE6;fontColor=#4C596C;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="125" y="1744" width="3160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c37" value="&lt;b&gt;4 · Preview, selección y ejecución M2&lt;/b&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#F5F8FC;strokeColor=#CBD5E1;strokeWidth=2;fontSize=20;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="70" y="1970" width="3330" height="490" as="geometry" />
+        </mxCell>
+        <mxCell id="c38" value="&lt;b&gt;Flutter&lt;/b&gt;&lt;hr&gt;Preview → selecciona tickets&lt;br&gt;POST /verifications" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#DCE8FA;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="125" y="2070" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c39" value="&lt;b&gt;verification.application&lt;/b&gt;&lt;hr&gt;PreviewService + StartService&lt;br&gt;valida alcance y cardinalidad" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#EBE3F6;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="775" y="2070" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c40" value="&lt;b&gt;verification.infrastructure&lt;/b&gt;&lt;hr&gt;Run QUEUED → Poller&lt;br&gt;claimNextQueued → RUNNING" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#E6F3ED;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="1425" y="2070" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c41" value="&lt;b&gt;integration&lt;/b&gt;&lt;hr&gt;Drive / Redmine / fixtures&lt;br&gt;GPT solo CASE_DEPENDENT" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#FFF0DB;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="2075" y="2070" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c42" value="&lt;b&gt;verification.application&lt;/b&gt;&lt;hr&gt;ExpectationEvaluator&lt;br&gt;resultado por ticket; COMPLETED" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#E7EBFB;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="2725" y="2070" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="e43" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c38" target="c39">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e44" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c39" target="c40">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e45" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c40" target="c41">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e46" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c41" target="c42">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c47" value="GET /verifications/{id} + /results para polling · sin transacción SQL durante HTTP externo" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D5DDE6;fontColor=#4C596C;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="125" y="2344" width="3160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c48" value="&lt;b&gt;5 · Revisión humana M2&lt;/b&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#F5F8FC;strokeColor=#CBD5E1;strokeWidth=2;fontSize=20;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="70" y="2570" width="3330" height="490" as="geometry" />
+        </mxCell>
+        <mxCell id="c49" value="&lt;b&gt;Flutter&lt;/b&gt;&lt;hr&gt;Abre resultado&lt;br&gt;indica aplicabilidad o estado" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#DCE8FA;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="125" y="2670" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c50" value="&lt;b&gt;verification.api&lt;/b&gt;&lt;hr&gt;HumanDecisionController&lt;br&gt;request con revisión + motivo" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#EBE3F6;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="775" y="2670" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c51" value="&lt;b&gt;verification.application&lt;/b&gt;&lt;hr&gt;HumanDecisionService&lt;br&gt;valida transición" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#E6F3ED;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="1425" y="2670" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c52" value="&lt;b&gt;verification.infrastructure&lt;/b&gt;&lt;hr&gt;ResultRepository&lt;br&gt;HumanDecisionRepository.append" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#FFF0DB;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="2075" y="2670" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c53" value="&lt;b&gt;Flutter&lt;/b&gt;&lt;hr&gt;Muestra estado efectivo&lt;br&gt;y evento auditado" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#E7EBFB;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="2725" y="2670" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="e54" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c49" target="c50">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e55" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c50" target="c51">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e56" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c51" target="c52">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e57" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c52" target="c53">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c58" value="La decisión automática se conserva; cada decisión humana genera un evento" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D5DDE6;fontColor=#4C596C;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="125" y="2944" width="3160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="c59" value="&lt;b&gt;6 · Respuesta de error consistente&lt;/b&gt;" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#F5F8FC;strokeColor=#CBD5E1;strokeWidth=2;fontSize=20;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="70" y="3170" width="3330" height="490" as="geometry" />
+        </mxCell>
+        <mxCell id="c60" value="&lt;b&gt;Flutter&lt;/b&gt;&lt;hr&gt;Petición inválida / sin token&lt;br&gt;o sin permiso" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#DCE8FA;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="125" y="3270" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c61" value="&lt;b&gt;identity.infrastructure&lt;/b&gt;&lt;hr&gt;SecurityFilterChain&lt;br&gt;401 o 403 antes de MVC" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#EBE3F6;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="775" y="3270" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c62" value="&lt;b&gt;shared.api&lt;/b&gt;&lt;hr&gt;Spring MVC built-in errors&lt;br&gt;ApiExceptionHandler for business/500" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#E6F3ED;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="1425" y="3270" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c63" value="&lt;b&gt;Spring ProblemDetail&lt;/b&gt;&lt;hr&gt;type, title, status, detail&lt;br&gt;optional code, traceId, details" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#FFF0DB;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="2075" y="3270" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="c64" value="&lt;b&gt;Flutter&lt;/b&gt;&lt;hr&gt;Usa status y detail/title&lt;br&gt;y code si está presente" style="rounded=1;arcSize=9;whiteSpace=wrap;html=1;fillColor=#E7EBFB;strokeColor=#657B93;strokeWidth=2;fontSize=17;fontColor=#203044;align=left;verticalAlign=top;spacing=16;" vertex="1" parent="1">
+          <mxGeometry x="2725" y="3270" width="550" height="230" as="geometry" />
+        </mxCell>
+        <mxCell id="e65" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c60" target="c61">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e66" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c61" target="c62">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e67" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c62" target="c63">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e68" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#72849A;strokeWidth=2;endArrow=block;endFill=1;fontSize=12;fontColor=#72849A;" edge="1" parent="1" source="c63" target="c64">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="c69" value="Ramas alternativas: seguridad usa sus handlers JSON; MVC usa Boot + ApiExceptionHandler. Flutter muestra detail o title; code es opcional." style="rounded=0;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#D5DDE6;fontColor=#4C596C;fontSize=15;fontStyle=0;align=left;verticalAlign=middle;spacing=7;" vertex="1" parent="1">
+          <mxGeometry x="125" y="3544" width="3160" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
