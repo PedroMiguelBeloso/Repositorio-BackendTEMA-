@@ -1,4 +1,4 @@
-package com.temaconsulting.agente_iso.shared.applicacion;
+package com.temaconsulting.agente_iso.shared.application;
 
 import org.springframework.http.HttpStatus;
 
