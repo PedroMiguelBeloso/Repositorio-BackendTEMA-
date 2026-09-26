@@ -16,8 +16,8 @@ public record ProcessVersionResponse(
         int revision,
         String objective,
         String owner,
-        List<Object> policies,
-        List<Object> macroActivities,
+        List<ProcessPolicyResponse> policies,
+        List<MacroActivityResponse> macroActivities,
         Instant publishedAt,
         Instant createdAt
 ) {
