@@ -14,4 +14,6 @@ public interface ProcessVersionRepository {
     Page<ProcessVersion> listByProcess(UUID processId, int page, int size);
 
     ProcessVersion insertDraft(ProcessVersion version);
+
+    ProcessVersion replaceDraft(ProcessVersion version, int expectedRevision);
 }

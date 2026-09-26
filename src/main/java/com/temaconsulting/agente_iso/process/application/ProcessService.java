@@ -1,5 +1,6 @@
 package com.temaconsulting.agente_iso.process.application;
 
+import com.temaconsulting.agente_iso.process.domain.DomainValidationException;
 import com.temaconsulting.agente_iso.process.domain.ProcessCode;
 import com.temaconsulting.agente_iso.process.domain.ProcessDefinition;
 import com.temaconsulting.agente_iso.shared.application.ApiException;
@@ -30,28 +31,26 @@ public class ProcessService {
     }
 
     public ProcessDefinition create(ProcessCode code, String name) {
-        if (code == null) {
-            throw validationError("code", "Process code is required");
+        final ProcessDefinition process;
+        try {
+            process = ProcessDefinition.create(
+                    UUID.randomUUID(),
+                    code,
+                    name,
+                    clock.instant()
+            );
+        } catch (DomainValidationException ex) {
+            throw validationError(ex.field(), ex.getMessage());
         }
 
-        String normalizedName = requireText(name, "name", "Process name is required");
-
-        if (processes.findByCode(code).isPresent()) {
-            throw conflict("A process with code " + code.name() + " already exists");
+        if (processes.findByCode(process.code()).isPresent()) {
+            throw conflict("A process with code " + process.code().name() + " already exists");
         }
-
-        ProcessDefinition process = new ProcessDefinition(
-                UUID.randomUUID(),
-                code,
-                normalizedName,
-                code.isM2Enabled(),
-                clock.instant()
-        );
 
         try {
             return processes.insert(process);
         } catch (DuplicateProcessCodeException ex) {
-            throw conflict("A process with code " + code.name() + " already exists");
+            throw conflict("A process with code " + process.code().name() + " already exists");
         }
     }
 
@@ -69,13 +68,6 @@ public class ProcessService {
         }
     }
 
-    private static String requireText(String value, String field, String message) {
-        if (value == null || value.isBlank()) {
-            throw validationError(field, message);
-        }
-        return value.trim();
-    }
-
     static ApiException notFound(String message) {
         return new ApiException(
                 ProblemCode.NOT_FOUND,
@@ -88,6 +80,15 @@ public class ProcessService {
     static ApiException conflict(String message) {
         return new ApiException(
                 ProblemCode.CONFLICT,
+                HttpStatus.CONFLICT,
+                message,
+                List.of()
+        );
+    }
+
+    static ApiException staleRevision(String message) {
+        return new ApiException(
+                ProblemCode.STALE_REVISION,
                 HttpStatus.CONFLICT,
                 message,
                 List.of()
