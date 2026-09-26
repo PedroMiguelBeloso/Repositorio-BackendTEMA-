@@ -2,10 +2,10 @@ package com.temaconsulting.agente_iso.process.application;
 
 import com.temaconsulting.agente_iso.process.domain.ProcessCode;
 import com.temaconsulting.agente_iso.process.domain.ProcessDefinition;
-import com.temaconsulting.agente_iso.shared.applicacion.ApiException;
-import com.temaconsulting.agente_iso.shared.applicacion.FieldProblem;
-import com.temaconsulting.agente_iso.shared.applicacion.Page;
-import com.temaconsulting.agente_iso.shared.applicacion.ProblemCode;
+import com.temaconsulting.agente_iso.shared.application.ApiException;
+import com.temaconsulting.agente_iso.shared.application.FieldProblem;
+import com.temaconsulting.agente_iso.shared.application.Page;
+import com.temaconsulting.agente_iso.shared.application.ProblemCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 

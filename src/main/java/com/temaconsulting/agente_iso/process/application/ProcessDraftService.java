@@ -3,7 +3,7 @@ package com.temaconsulting.agente_iso.process.application;
 import com.temaconsulting.agente_iso.process.api.dto.CreateVersionRequest;
 import com.temaconsulting.agente_iso.process.domain.ProcessStatus;
 import com.temaconsulting.agente_iso.process.domain.ProcessVersion;
-import com.temaconsulting.agente_iso.shared.applicacion.Page;
+import com.temaconsulting.agente_iso.shared.application.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

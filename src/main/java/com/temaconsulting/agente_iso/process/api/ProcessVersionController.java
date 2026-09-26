@@ -6,7 +6,7 @@ import com.temaconsulting.agente_iso.process.api.mapper.ProcessApiMapper;
 import com.temaconsulting.agente_iso.process.application.ProcessDraftService;
 import com.temaconsulting.agente_iso.process.domain.ProcessVersion;
 import com.temaconsulting.agente_iso.shared.api.PageMapper;
-import com.temaconsulting.agente_iso.shared.applicacion.Page;
+import com.temaconsulting.agente_iso.shared.application.Page;
 import com.temaconsulting.agente_iso.shared.dto.PageResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;

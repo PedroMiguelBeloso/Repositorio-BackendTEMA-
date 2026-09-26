@@ -4,7 +4,7 @@ import com.temaconsulting.agente_iso.process.application.DuplicateProcessCodeExc
 import com.temaconsulting.agente_iso.process.application.ProcessRepository;
 import com.temaconsulting.agente_iso.process.domain.ProcessCode;
 import com.temaconsulting.agente_iso.process.domain.ProcessDefinition;
-import com.temaconsulting.agente_iso.shared.applicacion.Page;
+import com.temaconsulting.agente_iso.shared.application.Page;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;

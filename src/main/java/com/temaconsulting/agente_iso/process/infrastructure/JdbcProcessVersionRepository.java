@@ -3,7 +3,7 @@ package com.temaconsulting.agente_iso.process.infrastructure;
 import com.temaconsulting.agente_iso.process.application.ProcessVersionRepository;
 import com.temaconsulting.agente_iso.process.domain.ProcessStatus;
 import com.temaconsulting.agente_iso.process.domain.ProcessVersion;
-import com.temaconsulting.agente_iso.shared.applicacion.Page;
+import com.temaconsulting.agente_iso.shared.application.Page;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
