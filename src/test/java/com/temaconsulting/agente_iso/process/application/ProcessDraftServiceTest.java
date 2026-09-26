@@ -33,6 +33,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -221,7 +222,7 @@ class ProcessDraftServiceTest {
 
         when(processes.findById(processId)).thenReturn(Optional.of(process(processId)));
         when(versions.findWithTree(versionId)).thenReturn(Optional.of(current));
-        when(versions.findByOfficialVersion(processId, "1.0")).thenReturn(Optional.of(current));
+        lenient().when(versions.findByOfficialVersion(processId, "1.0")).thenReturn(Optional.of(current));
 
         SaveDraftRequest request = new SaveDraftRequest(
                 2,
