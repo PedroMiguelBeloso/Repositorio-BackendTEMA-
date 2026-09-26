@@ -1,6 +1,6 @@
 package com.temaconsulting.agente_iso.shared.api;
 
-import com.temaconsulting.agente_iso.shared.applicacion.ApiException;
+import com.temaconsulting.agente_iso.shared.application.ApiException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
@@ -16,6 +16,7 @@ public class GlobalExceptionHandler {
         this.problemDetailsFactory = problemDetailsFactory;
     }
 
+    @ExceptionHandler(ApiException.class)
     public ResponseEntity<ProblemDetail> handleApiException(ApiException ex) {
         return ResponseEntity
                 .status(ex.httpStatus())
