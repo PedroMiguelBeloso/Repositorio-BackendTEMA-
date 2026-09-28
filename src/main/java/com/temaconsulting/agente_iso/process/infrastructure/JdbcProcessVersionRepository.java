@@ -1,35 +1,218 @@
 package com.temaconsulting.agente_iso.process.infrastructure;
 
-import com.temaconsulting.agente_iso.process.application.DuplicateOfficialVersionException;
 import com.temaconsulting.agente_iso.process.application.ProcessVersionRepository;
-import com.temaconsulting.agente_iso.process.application.StaleProcessVersionException;
-import com.temaconsulting.agente_iso.process.domain.Activity;
-import com.temaconsulting.agente_iso.process.domain.MacroActivity;
-import com.temaconsulting.agente_iso.process.domain.ProcessPolicy;
-import com.temaconsulting.agente_iso.process.domain.ProcessStatus;
-import com.temaconsulting.agente_iso.process.domain.ProcessVersion;
+import com.temaconsulting.agente_iso.process.domain.*;
+import com.temaconsulting.agente_iso.shared.application.ApiException;
 import com.temaconsulting.agente_iso.shared.application.Page;
-import org.springframework.dao.DuplicateKeyException;
+import com.temaconsulting.agente_iso.shared.application.ProblemCode;
+import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Repository
 public class JdbcProcessVersionRepository implements ProcessVersionRepository {
 
-    private static final RowMapper<ProcessVersion> BASE_ROW_MAPPER = (rs, rowNum) -> {
-        Timestamp publishedAt = rs.getTimestamp("published_at");
+    private final JdbcTemplate jdbc;
 
-        return new ProcessVersion(
+    public JdbcProcessVersionRepository(JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
+    }
+
+    public ProcessVersion replaceDraft(ProcessVersion version, int expectedRevision) {
+        // Bloqueo optimista raíz
+        int updatedRows = jdbc.update(
+                "UPDATE process_versions SET objective = ?, owner = ?, version_date = ?, official_version = ?, revision = revision + 1 "
+                        +
+                        "WHERE id = ? AND revision = ? AND status = 'DRAFT'::process_status",
+                version.objective(), version.owner(), version.versionDate(), version.officialVersion(), version.id(),
+                expectedRevision);
+        if (updatedRows == 0) {
+            throw new ApiException(ProblemCode.STALE_REVISION, HttpStatus.CONFLICT,
+                    "La versión fue modificada por alguien más.", List.of());
+        }
+
+        syncPolicies(version);
+        syncMacroActivities(version);
+        syncActivities(version);
+        syncExpectations(version);
+
+        return findWithTree(version.id()).orElseThrow();
+    }
+
+    private void syncPolicies(ProcessVersion version) {
+        // 1. Eliminar las políticas que ya no vienen en el request para esta versión
+        List<UUID> incoming = version.policies().stream().map(ProcessPolicy::id).toList();
+        deleteOmitted("process_policies", "process_version_id", version.id(), incoming);
+
+        List<Object[]> inserts = new ArrayList<>();
+        List<Object[]> updates = new ArrayList<>();
+
+        for (ProcessPolicy p : version.policies()) {
+            // Verificamos si la política ya existe específicamente para esta versión
+            Integer count = jdbc.queryForObject(
+                "SELECT count(*) FROM process_policies WHERE id = ? AND process_version_id = ?",
+                Integer.class,
+                p.id(), version.id()
+            );
+
+            if (count != null && count > 0) {
+                updates.add(new Object[] { p.order(), p.text(), p.id() });
+            } else {
+                inserts.add(new Object[] { p.id(), version.id(), p.order(), p.text() });
+            }
+        }
+
+        if (!inserts.isEmpty()) {
+            jdbc.batchUpdate(
+                "INSERT INTO process_policies (id, process_version_id, \"order\", text) VALUES (?, ?, ?, ?)",
+                inserts
+            );
+        }
+        if (!updates.isEmpty()) {
+            jdbc.batchUpdate(
+                "UPDATE process_policies SET \"order\" = ?, text = ? WHERE id = ?",
+                updates
+            );
+        }
+    }
+
+    private void syncMacroActivities(ProcessVersion version) {
+        List<UUID> incoming = version.macroActivities().stream().map(MacroActivity::id).toList();
+        deleteOmitted("macro_activities", "process_version_id", version.id(), incoming);
+
+        List<Object[]> inserts = new ArrayList<>();
+        List<Object[]> updates = new ArrayList<>();
+        for (MacroActivity m : version.macroActivities()) {
+            if (exists("macro_activities", m.id())) {
+                updates.add(new Object[] { m.name(), m.description(), m.order(), m.id() });
+            } else {
+                inserts.add(new Object[] { m.id(), version.id(), m.name(), m.description(), m.order() });
+            }
+        }
+        if (!inserts.isEmpty())
+            jdbc.batchUpdate(
+                    "INSERT INTO macro_activities (id, process_version_id, name, description, \"order\") VALUES (?, ?, ?, ?, ?)",
+                    inserts);
+        if (!updates.isEmpty())
+            jdbc.batchUpdate("UPDATE macro_activities SET name = ?, description = ?, \"order\" = ? WHERE id = ?",
+                    updates);
+    }
+
+    private void syncActivities(ProcessVersion version) {
+        List<UUID> incoming = version.macroActivities().stream().flatMap(m -> m.activities().stream()).map(Activity::id)
+                .toList();
+
+        if (incoming.isEmpty()) {
+            jdbc.update(
+                    "DELETE FROM activities WHERE macro_activity_id IN (SELECT id FROM macro_activities WHERE process_version_id = ?)",
+                    version.id());
+        } else {
+            jdbc.update(
+                    "DELETE FROM activities WHERE macro_activity_id IN (SELECT id FROM macro_activities WHERE process_version_id = ?) AND id != ALL(?)",
+                    version.id(), incoming.toArray(new UUID[0]));
+        }
+
+        List<Object[]> inserts = new ArrayList<>();
+        List<Object[]> updates = new ArrayList<>();
+        for (MacroActivity m : version.macroActivities()) {
+            for (Activity a : m.activities()) {
+                if (exists("activities", a.id())) {
+                    updates.add(new Object[] { a.name(), a.responsible(), a.instructions(), a.etaText(), a.order(),
+                            a.id() });
+                } else {
+                    inserts.add(new Object[] { a.id(), m.id(), a.name(), a.responsible(), a.instructions(), a.etaText(),
+                            a.order() });
+                }
+            }
+        }
+        if (!inserts.isEmpty())
+            jdbc.batchUpdate(
+                    "INSERT INTO activities (id, macro_activity_id, name, responsible, instructions, eta_text, \"order\") VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    inserts);
+        if (!updates.isEmpty())
+            jdbc.batchUpdate(
+                    "UPDATE activities SET name = ?, responsible = ?, instructions = ?, eta_text = ?, \"order\" = ? WHERE id = ?",
+                    updates);
+    }
+
+    private void syncExpectations(ProcessVersion version) {
+        List<UUID> incoming = version.macroActivities().stream()
+                .flatMap(m -> Stream.concat(m.inputs().stream(),
+                        Stream.concat(m.outputs().stream(),
+                                m.activities().stream().flatMap(a -> a.records().stream()))))
+                .map(e -> e.id()).toList();
+
+        if (incoming.isEmpty()) {
+            jdbc.update(
+                    "DELETE FROM evidence_expectations WHERE macro_activity_id IN (SELECT id FROM macro_activities WHERE process_version_id = ?)",
+                    version.id());
+        } else {
+            jdbc.update(
+                    "DELETE FROM evidence_expectations WHERE macro_activity_id IN (SELECT id FROM macro_activities WHERE process_version_id = ?) AND id != ALL(?)",
+                    version.id(), incoming.toArray(new UUID[0]));
+        }
+
+        List<Object[]> inserts = new ArrayList<>();
+        List<Object[]> updates = new ArrayList<>();
+        for (MacroActivity m : version.macroActivities()) {
+            List<EvidenceExpectation> allExp = Stream.concat(m.inputs().stream(),
+                    Stream.concat(m.outputs().stream(), m.activities().stream().flatMap(a -> a.records().stream())))
+                    .toList();
+            for (EvidenceExpectation e : allExp) {
+                if (exists("evidence_expectations", e.id())) {
+                    updates.add(new Object[] { e.displayName(), e.applicability().name(), e.cardinality().name(),
+                            e.order(), e.id() });
+                } else {
+                    inserts.add(
+                            new Object[] { e.id(), m.id(), e.activityId(), e.registryDefinitionId(), e.displayName(),
+                                    e.applicability().name(), e.cardinality().name(), e.location().name(), e.order() });
+                }
+            }
+        }
+        if (!inserts.isEmpty())
+            jdbc.batchUpdate(
+                    "INSERT INTO evidence_expectations (id, macro_activity_id, activity_id, registry_definition_id, display_name, applicability, cardinality, location, \"order\") VALUES (?, ?, ?, ?, ?, ?::applicability_mode, ?::cardinality_enum, ?::evidence_location, ?)",
+                    inserts);
+        if (!updates.isEmpty())
+            jdbc.batchUpdate(
+                    "UPDATE evidence_expectations SET display_name = ?, applicability = ?::applicability_mode, cardinality = ?::cardinality_enum, \"order\" = ? WHERE id = ?",
+                    updates);
+    }
+
+    private void deleteOmitted(String table, String parentColumn, UUID parentId, List<UUID> incomingIds) {
+        if (incomingIds.isEmpty()) {
+            jdbc.update("DELETE FROM " + table + " WHERE " + parentColumn + " = ?", parentId);
+        } else {
+            jdbc.update("DELETE FROM " + table + " WHERE " + parentColumn + " = ? AND id != ALL(?)",
+                    parentId, incomingIds.toArray(new UUID[0]));
+        }
+    }
+
+    private boolean exists(String table, UUID id) {
+        Integer count = jdbc.queryForObject("SELECT count(*) FROM " + table + " WHERE id = ?", Integer.class, id);
+        return count != null && count > 0;
+    }
+
+    public boolean allRegistriesExist(List<UUID> ids) {
+        if (ids.isEmpty())
+            return true;
+        Integer count = jdbc.queryForObject(
+                "SELECT count(*) FROM registry_definitions WHERE id = ALL(?)",
+                Integer.class,
+                new Object[] { ids.toArray(new UUID[0]) });
+        return count != null && count == ids.size();
+    }
+
+    public Optional<ProcessVersion> findById(UUID id) {
+        RowMapper<ProcessVersion> mapper = (rs, rowNum) -> new ProcessVersion(
                 rs.getObject("id", UUID.class),
                 rs.getObject("process_id", UUID.class),
                 rs.getString("official_version"),
@@ -40,375 +223,163 @@ public class JdbcProcessVersionRepository implements ProcessVersionRepository {
                 rs.getString("owner"),
                 List.of(),
                 List.of(),
-                publishedAt == null ? null : publishedAt.toInstant(),
-                rs.getTimestamp("created_at").toInstant()
-        );
-    };
-
-    private final JdbcTemplate jdbc;
-
-    public JdbcProcessVersionRepository(JdbcTemplate jdbc) {
-        this.jdbc = jdbc;
-    }
-
-    @Override
-    public Optional<ProcessVersion> findWithTree(UUID id) {
-        List<ProcessVersion> base = jdbc.query(
-                """
-                SELECT id, process_id, official_version, objective, owner, version_date,
-                       status, revision, published_at, created_at
-                FROM process_versions
-                WHERE id = ?
-                """,
-                BASE_ROW_MAPPER,
-                id
-        );
-
-        if (base.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(loadTrees(base).getFirst());
-    }
-
-    @Override
-    public Optional<ProcessVersion> findByOfficialVersion(UUID processId, String officialVersion) {
-        return jdbc.query(
-                        """
-                        SELECT id, process_id, official_version, objective, owner, version_date,
-                               status, revision, published_at, created_at
-                        FROM process_versions
-                        WHERE process_id = ? AND official_version = ?
-                        """,
-                        BASE_ROW_MAPPER,
-                        processId,
-                        officialVersion
-                )
-                .stream()
-                .findFirst();
-    }
-
-    @Override
-    public Page<ProcessVersion> listByProcess(UUID processId, int page, int size) {
-        int offset = Math.multiplyExact(page, size);
-
-        List<ProcessVersion> baseItems = jdbc.query(
-                """
-                SELECT id, process_id, official_version, objective, owner, version_date,
-                       status, revision, published_at, created_at
-                FROM process_versions
-                WHERE process_id = ?
-                ORDER BY created_at DESC, id DESC
-                LIMIT ? OFFSET ?
-                """,
-                BASE_ROW_MAPPER,
-                processId,
-                size,
-                offset
-        );
-
-        Long total = jdbc.queryForObject(
-                "SELECT COUNT(*) FROM process_versions WHERE process_id = ?",
-                Long.class,
-                processId
-        );
-
-        return new Page<>(
-                loadTrees(baseItems),
-                page,
-                size,
-                total == null ? 0 : total
-        );
+                rs.getTimestamp("published_at") != null ? rs.getTimestamp("published_at").toInstant() : null,
+                rs.getTimestamp("created_at") != null ? rs.getTimestamp("created_at").toInstant() : null);
+        List<ProcessVersion> list = jdbc.query("SELECT * FROM process_versions WHERE id = ?", mapper, id);
+        return list.stream().findFirst();
     }
 
     @Override
     public ProcessVersion insertDraft(ProcessVersion version) {
-        try {
-            jdbc.update(
-                    """
-                    INSERT INTO process_versions (
-                        id,
-                        process_id,
-                        official_version,
-                        objective,
-                        owner,
-                        version_date,
-                        status,
-                        revision,
-                        published_at,
-                        created_at
-                    )
-                    VALUES (?, ?, ?, ?, ?, ?, ?::process_status, ?, ?, ?)
-                    """,
-                    version.id(),
-                    version.processId(),
-                    version.officialVersion(),
-                    version.objective(),
-                    version.owner(),
-                    java.sql.Date.valueOf(version.versionDate()),
-                    version.status().name(),
-                    version.revision(),
-                    version.publishedAt() == null ? null : Timestamp.from(version.publishedAt()),
-                    Timestamp.from(version.createdAt())
-            );
-            return version;
-        } catch (DuplicateKeyException ex) {
-            throw new DuplicateOfficialVersionException(version.officialVersion());
-        }
+        jdbc.update(
+                "INSERT INTO process_versions (id, process_id, official_version, version_date, status, revision, objective, owner, created_at) " +
+                        "VALUES (?, ?, ?, ?, ?::process_status, ?, ?, ?, ?)",
+                version.id(),
+                version.processId(),
+                version.officialVersion(),
+                version.versionDate(),
+                version.status().name(),
+                version.revision(),
+                version.objective(),
+                version.owner(),
+                java.sql.Timestamp.from(version.createdAt())
+        );
+        return version;
     }
 
     @Override
-    public ProcessVersion replaceDraft(ProcessVersion version, int expectedRevision) {
-        try {
-            int updated = jdbc.update(
-                    """
-                    UPDATE process_versions
-                    SET official_version = ?,
-                        version_date = ?,
-                        objective = ?,
-                        owner = ?,
-                        revision = ?
-                    WHERE id = ?
-                      AND process_id = ?
-                      AND status = 'DRAFT'::process_status
-                      AND revision = ?
-                    """,
-                    version.officialVersion(),
-                    java.sql.Date.valueOf(version.versionDate()),
-                    version.objective(),
-                    version.owner(),
-                    version.revision(),
-                    version.id(),
-                    version.processId(),
-                    expectedRevision
-            );
-
-            if (updated == 0) {
-                throw new StaleProcessVersionException(version.id(), expectedRevision);
-            }
-
-            jdbc.update(
-                    "DELETE FROM process_policies WHERE process_version_id = ?",
-                    version.id()
-            );
-            jdbc.update(
-                    "DELETE FROM macro_activities WHERE process_version_id = ?",
-                    version.id()
-            );
-
-            insertPolicies(version);
-            insertMacroActivities(version);
-
-            return findWithTree(version.id())
-                    .orElseThrow(() -> new IllegalStateException(
-                            "Process version disappeared after replacement: " + version.id()
-                    ));
-        } catch (DuplicateKeyException ex) {
-            throw new DuplicateOfficialVersionException(version.officialVersion());
+    public Optional<ProcessVersion> findWithTree(UUID id) {
+        Optional<ProcessVersion> versionOpt = findById(id);
+        if (versionOpt.isEmpty()) {
+            return Optional.empty();
         }
-    }
+        ProcessVersion v = versionOpt.get();
 
-    private void insertPolicies(ProcessVersion version) {
-        if (version.policies().isEmpty()) {
-            return;
-        }
-
-        jdbc.batchUpdate(
-                """
-                INSERT INTO process_policies (id, process_version_id, "order", text)
-                VALUES (?, ?, ?, ?)
-                """,
-                version.policies(),
-                version.policies().size(),
-                (ps, policy) -> {
-                    ps.setObject(1, policy.id());
-                    ps.setObject(2, version.id());
-                    ps.setInt(3, policy.order());
-                    ps.setString(4, policy.text());
-                }
-        );
-    }
-
-    private void insertMacroActivities(ProcessVersion version) {
-        if (version.macroActivities().isEmpty()) {
-            return;
-        }
-
-        jdbc.batchUpdate(
-                """
-                INSERT INTO macro_activities (id, process_version_id, name, description, "order")
-                VALUES (?, ?, ?, ?, ?)
-                """,
-                version.macroActivities(),
-                version.macroActivities().size(),
-                (ps, macro) -> {
-                    ps.setObject(1, macro.id());
-                    ps.setObject(2, version.id());
-                    ps.setString(3, macro.name());
-                    ps.setString(4, macro.description());
-                    ps.setInt(5, macro.order());
-                }
+        // 1. Cargar políticas asociadas a la versión del proceso
+        List<ProcessPolicy> policies = jdbc.query(
+            "SELECT id, \"order\", text FROM process_policies WHERE process_version_id = ? ORDER BY \"order\", id",
+            (rs, rowNum) -> new ProcessPolicy(
+                rs.getObject("id", UUID.class),
+                rs.getInt("order"),
+                rs.getString("text")
+            ),
+            id
         );
 
-        List<Activity> activities = version.macroActivities().stream()
-                .flatMap(macro -> macro.activities().stream())
-                .toList();
-        if (activities.isEmpty()) {
-            return;
-        }
+        // 2. Cargar macroactividades
+        List<MacroActivity> macroActivities = jdbc.query(
+            "SELECT id, process_version_id, name, description, \"order\" FROM macro_activities WHERE process_version_id = ? ORDER BY \"order\", id",
+            (rs, rowNum) -> {
+                UUID macroId = rs.getObject("id", UUID.class);
+                
+                // Expectativas de tipo INPUT para la macroactividad
+                List<EvidenceExpectation> inputs = loadExpectations(macroId, null, EvidenceLocation.INPUT);
+                // Expectativas de tipo OUTPUT para la macroactividad
+                List<EvidenceExpectation> outputs = loadExpectations(macroId, null, EvidenceLocation.OUTPUT);
+                
+                // Actividades hijas de esta macroactividad
+                List<Activity> activities = jdbc.query(
+                    "SELECT id, macro_activity_id, name, responsible, instructions, eta_text, \"order\" FROM activities WHERE macro_activity_id = ? ORDER BY \"order\", id",
+                    (actRs, actRowNum) -> {
+                        UUID actId = actRs.getObject("id", UUID.class);
+                        List<EvidenceExpectation> records = loadExpectations(macroId, actId, EvidenceLocation.ACTIVITY_RECORD);
+                        return new Activity(
+                            actId,
+                            macroId,
+                            actRs.getString("name"),
+                            actRs.getString("responsible"),
+                            actRs.getString("instructions"),
+                            actRs.getString("eta_text"),
+                            actRs.getInt("order"),
+                            records
+                        );
+                    },
+                    macroId
+                );
 
-        jdbc.batchUpdate(
-                """
-                INSERT INTO activities (
-                    id,
-                    macro_activity_id,
-                    name,
-                    responsible,
-                    instructions,
-                    eta_text,
-                    "order"
-                )
-                VALUES (?, ?, ?, ?, ?, ?, ?)
-                """,
-                activities,
-                activities.size(),
-                (ps, activity) -> {
-                    ps.setObject(1, activity.id());
-                    ps.setObject(2, activity.macroActivityId());
-                    ps.setString(3, activity.name());
-                    ps.setString(4, activity.responsible());
-                    ps.setString(5, activity.instructions());
-                    ps.setString(6, activity.etaText());
-                    ps.setInt(7, activity.order());
-                }
-        );
-    }
-
-    private List<ProcessVersion> loadTrees(List<ProcessVersion> baseVersions) {
-        if (baseVersions.isEmpty()) {
-            return List.of();
-        }
-
-        List<UUID> versionIds = baseVersions.stream()
-                .map(ProcessVersion::id)
-                .toList();
-        String versionPlaceholders = placeholders(versionIds.size());
-
-        Map<UUID, List<ProcessPolicy>> policiesByVersion = new LinkedHashMap<>();
-        jdbc.query(
-                """
-                SELECT process_version_id, id, "order", text
-                FROM process_policies
-                WHERE process_version_id IN (%s)
-                ORDER BY process_version_id, "order", id
-                """.formatted(versionPlaceholders),
-                rs -> {
-                    UUID versionId = rs.getObject("process_version_id", UUID.class);
-                    policiesByVersion.computeIfAbsent(versionId, ignored -> new ArrayList<>())
-                            .add(new ProcessPolicy(
-                                    rs.getObject("id", UUID.class),
-                                    rs.getInt("order"),
-                                    rs.getString("text")
-                            ));
-                },
-                versionIds.toArray()
+                return new MacroActivity(
+                    macroId,
+                    rs.getObject("process_version_id", UUID.class),
+                    rs.getString("name"),
+                    rs.getString("description"),
+                    rs.getInt("order"),
+                    activities,
+                    inputs,
+                    outputs
+                );
+            },
+            id
         );
 
-        List<MacroRow> macroRows = jdbc.query(
-                """
-                SELECT process_version_id, id, name, description, "order"
-                FROM macro_activities
-                WHERE process_version_id IN (%s)
-                ORDER BY process_version_id, "order", id
-                """.formatted(versionPlaceholders),
-                (rs, rowNum) -> new MacroRow(
-                        rs.getObject("process_version_id", UUID.class),
-                        rs.getObject("id", UUID.class),
-                        rs.getString("name"),
-                        rs.getString("description"),
-                        rs.getInt("order")
-                ),
-                versionIds.toArray()
+        // Reconstruir la versión con el árbol completo hidratado
+        ProcessVersion fullVersion = new ProcessVersion(
+            v.id(),
+            v.processId(),
+            v.officialVersion(),
+            v.versionDate(),
+            v.status(),
+            v.revision(),
+            v.objective(),
+            v.owner(),
+            policies,
+            macroActivities,
+            v.publishedAt(),
+            v.createdAt()
         );
 
-        Map<UUID, List<Activity>> activitiesByMacro = loadActivities(macroRows);
-        Map<UUID, List<MacroActivity>> macrosByVersion = new LinkedHashMap<>();
-        for (MacroRow row : macroRows) {
-            MacroActivity macro = new MacroActivity(
-                    row.id(),
-                    row.processVersionId(),
-                    row.name(),
-                    row.description(),
-                    row.order(),
-                    activitiesByMacro.getOrDefault(row.id(), List.of())
-            );
-            macrosByVersion.computeIfAbsent(row.processVersionId(), ignored -> new ArrayList<>())
-                    .add(macro);
-        }
-
-        return baseVersions.stream()
-                .map(base -> new ProcessVersion(
-                        base.id(),
-                        base.processId(),
-                        base.officialVersion(),
-                        base.versionDate(),
-                        base.status(),
-                        base.revision(),
-                        base.objective(),
-                        base.owner(),
-                        policiesByVersion.getOrDefault(base.id(), List.of()),
-                        macrosByVersion.getOrDefault(base.id(), List.of()),
-                        base.publishedAt(),
-                        base.createdAt()
-                ))
-                .toList();
+        return Optional.of(fullVersion);
     }
 
-    private Map<UUID, List<Activity>> loadActivities(List<MacroRow> macroRows) {
-        if (macroRows.isEmpty()) {
-            return Map.of();
+    private List<EvidenceExpectation> loadExpectations(UUID macroId, UUID activityId, EvidenceLocation location) {
+        String sql;
+        Object[] params;
+        if (activityId == null) {
+            sql = "SELECT id, macro_activity_id, activity_id, registry_definition_id, display_name, applicability, cardinality, location, \"order\" FROM evidence_expectations WHERE macro_activity_id = ? AND activity_id IS NULL AND location = ?::evidence_location ORDER BY \"order\", id";
+            params = new Object[]{macroId, location.name()};
+        } else {
+            sql = "SELECT id, macro_activity_id, activity_id, registry_definition_id, display_name, applicability, cardinality, location, \"order\" FROM evidence_expectations WHERE activity_id = ? AND location = ?::evidence_location ORDER BY \"order\", id";
+            params = new Object[]{activityId, location.name()};
         }
 
-        List<UUID> macroIds = macroRows.stream()
-                .map(MacroRow::id)
-                .toList();
-        String macroPlaceholders = placeholders(macroIds.size());
+        return jdbc.query(sql, (rs, rowNum) -> new EvidenceExpectation(
+            rs.getObject("id", UUID.class),
+            rs.getObject("macro_activity_id", UUID.class),
+            rs.getObject("activity_id", UUID.class),
+            rs.getObject("registry_definition_id", UUID.class),
+            rs.getString("display_name"),
+            ApplicabilityMode.valueOf(rs.getString("applicability")),
+            Cardinality.valueOf(rs.getString("cardinality")),
+            EvidenceLocation.valueOf(rs.getString("location")),
+            rs.getInt("order")
+        ), params);
+    }
 
-        Map<UUID, List<Activity>> activitiesByMacro = new LinkedHashMap<>();
-        jdbc.query(
-                """
-                SELECT id, macro_activity_id, name, responsible, instructions, eta_text, "order"
-                FROM activities
-                WHERE macro_activity_id IN (%s)
-                ORDER BY macro_activity_id, "order", id
-                """.formatted(macroPlaceholders),
-                rs -> {
-                    UUID macroId = rs.getObject("macro_activity_id", UUID.class);
-                    activitiesByMacro.computeIfAbsent(macroId, ignored -> new ArrayList<>())
-                            .add(new Activity(
-                                    rs.getObject("id", UUID.class),
-                                    macroId,
-                                    rs.getString("name"),
-                                    rs.getString("responsible"),
-                                    rs.getString("instructions"),
-                                    rs.getString("eta_text"),
-                                    rs.getInt("order")
-                            ));
-                },
-                macroIds.toArray()
+    @Override
+    public Optional<ProcessVersion> findByOfficialVersion(UUID processId, String officialVersion) {
+        List<ProcessVersion> list = jdbc.query(
+            "SELECT * FROM process_versions WHERE process_id = ? AND official_version = ?",
+            (rs, rowNum) -> findById(rs.getObject("id", UUID.class)).orElse(null),
+            processId, officialVersion
         );
-        return activitiesByMacro;
+        return list.stream().filter(Objects::nonNull).findFirst();
     }
 
-    private static String placeholders(int count) {
-        return String.join(", ", Collections.nCopies(count, "?"));
-    }
+    @Override
+    public Page<ProcessVersion> listByProcess(UUID processId, int page, int size) {
+        int offset = page * size;
+        List<ProcessVersion> content = jdbc.query(
+            "SELECT id FROM process_versions WHERE process_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
+            (rs, rowNum) -> findById(rs.getObject("id", UUID.class)).orElse(null),
+            processId, size, offset
+        ).stream().filter(Objects::nonNull).toList();
 
-    private record MacroRow(
-            UUID processVersionId,
-            UUID id,
-            String name,
-            String description,
-            int order
-    ) {
+        Integer total = jdbc.queryForObject(
+            "SELECT count(*) FROM process_versions WHERE process_id = ?",
+            Integer.class,
+            processId
+        );
+        int totalElements = total != null ? total : 0;
+
+        return new Page<>(content, page, size, totalElements);
     }
 }

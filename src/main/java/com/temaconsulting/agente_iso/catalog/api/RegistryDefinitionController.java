@@ -1,0 +1,44 @@
+package com.temaconsulting.agente_iso.catalog.api;
+
+import com.temaconsulting.agente_iso.catalog.api.dto.CatalogDtos.*;
+import com.temaconsulting.agente_iso.catalog.application.RegistryCatalogService;
+import com.temaconsulting.agente_iso.catalog.domain.EvidenceType;
+import com.temaconsulting.agente_iso.catalog.domain.RegistryDefinition;
+import com.temaconsulting.agente_iso.shared.dto.PageResponse;
+import com.temaconsulting.agente_iso.shared.dto.PageInfo;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/v1/registry-definitions")
+public class RegistryDefinitionController {
+
+    private final RegistryCatalogService catalogService;
+
+    public RegistryDefinitionController(RegistryCatalogService catalogService) {
+        this.catalogService = catalogService;
+    }
+
+    @GetMapping
+    public PageResponse<RegistryDefinitionResponse> list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) EvidenceType type) {
+        
+        List<RegistryDefinition> results = catalogService.list(page, size, query, type);
+        List<RegistryDefinitionResponse> items = results.stream().map(this::toResponse).toList();
+        return new PageResponse<>(items, new PageInfo(page, size, 100, 5));
+    }
+
+    @PostMapping
+    public RegistryDefinitionResponse create(@Valid @RequestBody CreateRegistryRequest request) {
+        RegistryDefinition created = catalogService.create(request);
+        return toResponse(created);
+    }
+
+    private RegistryDefinitionResponse toResponse(RegistryDefinition d) {
+        return new RegistryDefinitionResponse(d.id(), d.key(), d.canonicalName(), d.evidenceType(), d.officialNomenclature(), d.preloaded());
+    }
+}

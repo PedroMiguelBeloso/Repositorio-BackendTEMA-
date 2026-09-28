@@ -1,10 +1,11 @@
 package com.temaconsulting.agente_iso.shared.api;
 
-import com.temaconsulting.agente_iso.shared.application.ApiException;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+import com.temaconsulting.agente_iso.shared.application.ApiException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
