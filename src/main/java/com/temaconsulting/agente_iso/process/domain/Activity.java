@@ -1,5 +1,6 @@
 package com.temaconsulting.agente_iso.process.domain;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -10,7 +11,8 @@ public record Activity(
         String responsible,
         String instructions,
         String etaText,
-        int order
+        int order,
+        List<EvidenceExpectation> records
 ) {
     public Activity {
         Objects.requireNonNull(id, "id is required");

@@ -6,12 +6,15 @@ import com.temaconsulting.agente_iso.process.api.dto.MacroActivityInput;
 import com.temaconsulting.agente_iso.process.api.dto.ProcessPolicyInput;
 import com.temaconsulting.agente_iso.process.api.dto.SaveDraftRequest;
 import com.temaconsulting.agente_iso.process.domain.Activity;
+import com.temaconsulting.agente_iso.process.domain.DomainValidationException;
+import com.temaconsulting.agente_iso.process.domain.DraftNotEditableException;
 import com.temaconsulting.agente_iso.process.domain.MacroActivity;
 import com.temaconsulting.agente_iso.process.domain.ProcessCode;
 import com.temaconsulting.agente_iso.process.domain.ProcessDefinition;
 import com.temaconsulting.agente_iso.process.domain.ProcessPolicy;
 import com.temaconsulting.agente_iso.process.domain.ProcessStatus;
 import com.temaconsulting.agente_iso.process.domain.ProcessVersion;
+import com.temaconsulting.agente_iso.process.domain.RevisionMismatchException;
 import com.temaconsulting.agente_iso.shared.application.ApiException;
 import com.temaconsulting.agente_iso.shared.application.ProblemCode;
 import org.junit.jupiter.api.BeforeEach;
@@ -117,8 +120,11 @@ class ProcessDraftServiceTest {
                                 null,
                                 "Old instructions",
                                 null,
-                                0
-                        ))
+                                0,
+                                List.of()
+                        )),
+                        List.of(),
+                        List.of()
                 )),
                 null,
                 NOW
@@ -238,53 +244,6 @@ class ProcessDraftServiceTest {
                 .isInstanceOfSatisfying(ApiException.class, ex -> {
                     assertThat(ex.httpStatus()).isEqualTo(HttpStatus.CONFLICT);
                     assertThat(ex.code()).isEqualTo(ProblemCode.STALE_REVISION);
-                });
-    }
-
-    @Test
-    void rejectsEvidenceInsteadOfSilentlyIgnoringIt() {
-        UUID processId = UUID.randomUUID();
-        UUID versionId = UUID.randomUUID();
-        ProcessVersion current = ProcessVersion.openDraft(
-                versionId,
-                processId,
-                "1.0",
-                LocalDate.of(2026, 9, 26),
-                NOW
-        );
-
-        when(processes.findById(processId)).thenReturn(Optional.of(process(processId)));
-        when(versions.findWithTree(versionId)).thenReturn(Optional.of(current));
-
-        SaveDraftRequest request = new SaveDraftRequest(
-                0,
-                "1.0",
-                LocalDate.of(2026, 9, 26),
-                "Objective",
-                "Owner",
-                List.of(),
-                List.of(new MacroActivityInput(
-                        null,
-                        "Macro",
-                        null,
-                        0,
-                        List.of(new com.temaconsulting.agente_iso.process.api.dto.EvidenceExpectationInput(
-                                null,
-                                UUID.randomUUID(),
-                                "Input",
-                                com.temaconsulting.agente_iso.process.domain.ApplicabilityMode.ALWAYS,
-                                com.temaconsulting.agente_iso.process.domain.Cardinality.ONE,
-                                0
-                        )),
-                        List.of(),
-                        List.of()
-                ))
-        );
-
-        assertThatThrownBy(() -> service.saveDraft(processId, versionId, request))
-                .isInstanceOfSatisfying(ApiException.class, ex -> {
-                    assertThat(ex.httpStatus()).isEqualTo(HttpStatus.BAD_REQUEST);
-                    assertThat(ex.code()).isEqualTo(ProblemCode.VALIDATION_ERROR);
                 });
     }
 

@@ -2,12 +2,15 @@ package com.temaconsulting.agente_iso.process.application;
 
 import com.temaconsulting.agente_iso.process.api.dto.ActivityInput;
 import com.temaconsulting.agente_iso.process.api.dto.CreateVersionRequest;
+import com.temaconsulting.agente_iso.process.api.dto.EvidenceExpectationInput;
 import com.temaconsulting.agente_iso.process.api.dto.MacroActivityInput;
 import com.temaconsulting.agente_iso.process.api.dto.ProcessPolicyInput;
 import com.temaconsulting.agente_iso.process.api.dto.SaveDraftRequest;
 import com.temaconsulting.agente_iso.process.domain.Activity;
 import com.temaconsulting.agente_iso.process.domain.DomainValidationException;
 import com.temaconsulting.agente_iso.process.domain.DraftNotEditableException;
+import com.temaconsulting.agente_iso.process.domain.EvidenceExpectation;
+import com.temaconsulting.agente_iso.process.domain.EvidenceLocation;
 import com.temaconsulting.agente_iso.process.domain.MacroActivity;
 import com.temaconsulting.agente_iso.process.domain.ProcessPolicy;
 import com.temaconsulting.agente_iso.process.domain.ProcessVersion;
@@ -37,8 +40,7 @@ public class ProcessDraftService {
     public ProcessDraftService(
             ProcessRepository processes,
             ProcessVersionRepository versions,
-            Clock clock
-    ) {
+            Clock clock) {
         this.processes = processes;
         this.versions = versions;
         this.clock = clock;
@@ -92,8 +94,7 @@ public class ProcessDraftService {
                     processId,
                     officialVersion,
                     request.versionDate(),
-                    clock.instant()
-            );
+                    clock.instant());
         } catch (DomainValidationException ex) {
             throw validationError(ex.field(), ex.getMessage());
         }
@@ -105,10 +106,6 @@ public class ProcessDraftService {
         }
     }
 
-    /**
-     * Completes the WBS 5.1.2 part of the draft tree. The HTTP PUT is intentionally
-     * not exposed yet: evidence inputs/records/outputs are integrated in WBS 5.1.3.
-     */
     @Transactional
     public ProcessVersion saveDraft(UUID processId, UUID versionId, SaveDraftRequest request) {
         requireExistingProcess(processId);
@@ -133,7 +130,6 @@ public class ProcessDraftService {
         }
 
         validateRequestCollections(request);
-        rejectEvidenceUntilNextWorkPackage(request);
         validateReferencedIdsBelongToDraft(current, request);
 
         String requestedOfficialVersion = request.officialVersion() == null
@@ -144,8 +140,7 @@ public class ProcessDraftService {
                     .filter(existing -> !existing.id().equals(versionId))
                     .ifPresent(existing -> {
                         throw conflict(
-                                "Official version already exists for this process: " + requestedOfficialVersion
-                        );
+                                "Official version already exists for this process: " + requestedOfficialVersion);
                     });
         }
 
@@ -160,8 +155,7 @@ public class ProcessDraftService {
                     request.objective(),
                     request.owner(),
                     policies,
-                    macroActivities
-            );
+                    macroActivities);
 
             return versions.replaceDraft(updated, request.revision());
         } catch (DomainValidationException ex) {
@@ -186,8 +180,7 @@ public class ProcessDraftService {
                     return new ProcessPolicy(
                             input.id() == null ? UUID.randomUUID() : input.id(),
                             input.order(),
-                            input.text()
-                    );
+                            input.text());
                 })
                 .toList();
     }
@@ -200,18 +193,27 @@ public class ProcessDraftService {
                     }
 
                     UUID macroActivityId = input.id() == null ? UUID.randomUUID() : input.id();
+
+                    List<EvidenceExpectation> macroInputs = mapExpectations(input.inputs(), macroActivityId, null,
+                            EvidenceLocation.INPUT);
+                    List<EvidenceExpectation> macroOutputs = mapExpectations(input.outputs(), macroActivityId, null,
+                            EvidenceLocation.OUTPUT);
+
                     List<Activity> activities = input.activities().stream()
                             .map(activity -> mapActivity(macroActivityId, activity))
                             .toList();
 
+                    // Orden exacto del record MacroActivity de tu equipo:
+                    // id, processVersionId, name, description, order, activities, inputs, outputs
                     return new MacroActivity(
                             macroActivityId,
                             versionId,
                             input.name(),
                             input.description(),
                             input.order(),
-                            activities
-                    );
+                            activities,
+                            macroInputs,
+                            macroOutputs);
                 })
                 .toList();
     }
@@ -220,18 +222,39 @@ public class ProcessDraftService {
         if (input == null) {
             throw validationError(
                     "macroActivities.activities",
-                    "Activities cannot contain null elements"
-            );
+                    "Activities cannot contain null elements");
         }
+        UUID activityId = input.id() == null ? UUID.randomUUID() : input.id();
+        List<EvidenceExpectation> records = mapExpectations(input.records(), macroActivityId, activityId,
+                EvidenceLocation.ACTIVITY_RECORD);
+
+        // Orden exacto del record Activity de tu equipo:
+        // id, macroActivityId, name, responsible, instructions, etaText, order, records
         return new Activity(
-                input.id() == null ? UUID.randomUUID() : input.id(),
+                activityId,
                 macroActivityId,
                 input.name(),
                 input.responsible(),
                 input.instructions(),
                 input.etaText(),
-                input.order()
-        );
+                input.order(),
+                records);
+    }
+
+    private List<EvidenceExpectation> mapExpectations(List<EvidenceExpectationInput> list, UUID macroId,
+            UUID activityId, EvidenceLocation loc) {
+        if (list == null)
+            return List.of();
+        return list.stream().map(e -> new EvidenceExpectation(
+                e.id() == null ? UUID.randomUUID() : e.id(),
+                macroId,
+                activityId,
+                e.registryDefinitionId(),
+                e.displayName(),
+                e.applicability(),
+                e.cardinality(),
+                loc,
+                e.order())).toList();
     }
 
     private void validateReferencedIdsBelongToDraft(ProcessVersion current, SaveDraftRequest request) {
@@ -276,8 +299,7 @@ public class ProcessDraftService {
                 requireUniqueRequestId(
                         activity.id(),
                         seenActivityIds,
-                        "macroActivities.activities.id"
-                );
+                        "macroActivities.activities.id");
             }
         }
     }
@@ -318,30 +340,7 @@ public class ProcessDraftService {
                 if (activity != null && activity.records() == null) {
                     throw validationError(
                             "macroActivities.activities.records",
-                            "Activity records are required"
-                    );
-                }
-            }
-        }
-    }
-
-    private static void rejectEvidenceUntilNextWorkPackage(SaveDraftRequest request) {
-        for (MacroActivityInput macro : request.macroActivities()) {
-            if (macro == null) {
-                continue;
-            }
-            if (!macro.inputs().isEmpty() || !macro.outputs().isEmpty()) {
-                throw validationError(
-                        "macroActivities",
-                        "Inputs and outputs are implemented in work package 5.1.3"
-                );
-            }
-            for (ActivityInput activity : macro.activities()) {
-                if (activity != null && !activity.records().isEmpty()) {
-                    throw validationError(
-                            "macroActivities.activities.records",
-                            "Activity records are implemented in work package 5.1.3"
-                    );
+                            "Activity records are required");
                 }
             }
         }

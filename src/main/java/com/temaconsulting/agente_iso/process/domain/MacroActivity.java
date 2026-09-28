@@ -12,7 +12,9 @@ public record MacroActivity(
         String name,
         String description,
         int order,
-        List<Activity> activities
+        List<Activity> activities,
+        List<EvidenceExpectation> inputs,
+        List<EvidenceExpectation> outputs
 ) {
     public MacroActivity {
         Objects.requireNonNull(id, "id is required");
