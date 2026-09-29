@@ -7,12 +7,13 @@ import org.springframework.stereotype.Component;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+
 @Component
 public class UserRowMapper implements RowMapper<User> {
 
     @Override
     public User mapRow(ResultSet rs, int rowNum) throws SQLException {
-        return new User(
+        return User.reconstitute(
                 rs.getObject("id", java.util.UUID.class),
                 rs.getString("email"),
                 rs.getString("display_name"),

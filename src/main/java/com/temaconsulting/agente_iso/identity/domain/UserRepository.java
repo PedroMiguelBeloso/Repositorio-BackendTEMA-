@@ -17,5 +17,5 @@ public interface UserRepository {
 
     User insert(User user);
 
-    void updatePassword(UUID id, String hash);
+    void updatePassword(User user);
 }

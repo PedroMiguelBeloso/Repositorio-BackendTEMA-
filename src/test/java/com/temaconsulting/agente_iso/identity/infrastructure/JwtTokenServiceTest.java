@@ -1,7 +1,6 @@
 package com.temaconsulting.agente_iso.identity.infrastructure;
 
 import com.temaconsulting.agente_iso.identity.api.dto.TokenResponse;
-import com.temaconsulting.agente_iso.identity.domain.Role;
 import com.temaconsulting.agente_iso.identity.domain.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
@@ -43,13 +42,11 @@ class JwtTokenServiceTest {
                 .algorithm(MacAlgorithm.HS256)
                 .build();
 
-        User user = new User(
+        User user = User.createAdmin(
                 UUID.randomUUID(),
                 "admin@tema.test",
                 "Admin",
                 "hash",
-                Role.ADMIN,
-                true,
                 CLOCK.instant()
         );
 

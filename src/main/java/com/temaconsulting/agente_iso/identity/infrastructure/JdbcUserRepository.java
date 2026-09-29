@@ -1,9 +1,11 @@
 package com.temaconsulting.agente_iso.identity.infrastructure;
 
+import com.temaconsulting.agente_iso.identity.application.DuplicateUserEmailException;
 import com.temaconsulting.agente_iso.identity.domain.User;
 import com.temaconsulting.agente_iso.identity.domain.UserRepository;
 import com.temaconsulting.agente_iso.shared.dto.PageInfo;
 import com.temaconsulting.agente_iso.shared.dto.Page;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -48,10 +50,10 @@ public class JdbcUserRepository implements UserRepository {
 
     @Override
     public Page<User> list(int page, int size) {
-        int offset = page * size;
+        long offset = (long) page * size;
 
         var items = jdbcTemplate.query(
-                BASE_SELECT + "ORDER BY email LIMIT ? OFFSET ?",
+                BASE_SELECT + "ORDER BY email, id LIMIT ? OFFSET ?",
                 mapper,
                 size,
                 offset
@@ -85,30 +87,34 @@ public class JdbcUserRepository implements UserRepository {
 
     @Override
     public User insert(User user) {
-        jdbcTemplate.update(
-                """
-                INSERT INTO users (
-                    id, email, display_name, password_hash, role, active, created_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
-                """,
-                user.id(),
-                user.email(),
-                user.displayName(),
-                user.passwordHash(),
-                user.role().name(),
-                user.active(),
-                Timestamp.from(user.createdAt())
-        );
+        try {
+            jdbcTemplate.update(
+                    """
+                    INSERT INTO users (
+                        id, email, display_name, password_hash, role, active, created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    user.id(),
+                    user.email(),
+                    user.displayName(),
+                    user.passwordHash(),
+                    user.role().name(),
+                    user.active(),
+                    Timestamp.from(user.createdAt())
+            );
+        } catch (DuplicateKeyException ex) {
+            throw new DuplicateUserEmailException();
+        }
 
         return user;
     }
 
     @Override
-    public void updatePassword(UUID id, String hash) {
+    public void updatePassword(User user) {
         int updated = jdbcTemplate.update(
                 "UPDATE users SET password_hash = ? WHERE id = ?",
-                hash,
-                id
+                user.passwordHash(),
+                user.id()
         );
 
         if (updated != 1) {

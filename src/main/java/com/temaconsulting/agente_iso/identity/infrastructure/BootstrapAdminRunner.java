@@ -1,6 +1,5 @@
 package com.temaconsulting.agente_iso.identity.infrastructure;
 
-import com.temaconsulting.agente_iso.identity.domain.Role;
 import com.temaconsulting.agente_iso.identity.domain.User;
 import com.temaconsulting.agente_iso.identity.domain.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,7 +11,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.time.Clock;
-import java.util.Locale;
 import java.util.UUID;
 
 @Component
@@ -53,17 +51,15 @@ public class BootstrapAdminRunner implements ApplicationRunner {
 
         validateInput();
 
-        if (userRepository.findByEmail(email.trim().toLowerCase(Locale.ROOT)).isPresent()) {
+        if (userRepository.findByEmail(email).isPresent()) {
             return;
         }
 
-        User admin = new User(
+        User admin = User.createAdmin(
                 UUID.randomUUID(),
-                email.trim().toLowerCase(Locale.ROOT),
-                displayName.trim(),
+                email,
+                displayName,
                 passwordEncoder.encode(password),
-                Role.ADMIN,
-                true,
                 clock.instant()
         );
 

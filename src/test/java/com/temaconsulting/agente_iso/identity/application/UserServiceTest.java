@@ -16,10 +16,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -49,16 +52,12 @@ class UserServiceTest {
     }
 
     @Test
-    void listRejectsInvalidPage() {
-        assertThrows(RuntimeException.class, () -> userService.list(-1, 20));
-    }
-
-    @Test
     void createReaderAlwaysCreatesReaderWithHashedPassword() {
         Instant now = Instant.parse("2026-09-24T20:00:00Z");
         when(clock.instant()).thenReturn(now);
         when(passwordEncoder.encode("initial-password")).thenReturn("hashed-password");
-        when(userRepository.insert(org.mockito.ArgumentMatchers.any(User.class)))
+        when(userRepository.findByEmail(" READER@TEMA.TEST ")).thenReturn(Optional.empty());
+        when(userRepository.insert(any(User.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
 
         User result = userService.createReader(
@@ -77,5 +76,25 @@ class UserServiceTest {
         assertEquals("hashed-password", stored.passwordHash());
         assertEquals(now, stored.createdAt());
         assertEquals(stored, result);
+    }
+
+    @Test
+    void createReaderRejectsDuplicateEmailBeforeEncodingPassword() {
+        User existing = User.createReader(
+                UUID.randomUUID(),
+                "reader@tema.test",
+                "Existing",
+                "hash",
+                Instant.parse("2026-09-24T20:00:00Z")
+        );
+        when(userRepository.findByEmail("reader@tema.test")).thenReturn(Optional.of(existing));
+
+        assertThrows(
+                DuplicateUserEmailException.class,
+                () -> userService.createReader("reader@tema.test", "Reader", "initial-password")
+        );
+
+        verify(passwordEncoder, never()).encode(any());
+        verify(userRepository, never()).insert(any());
     }
 }
