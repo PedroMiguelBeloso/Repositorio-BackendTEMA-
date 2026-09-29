@@ -1,20 +1,18 @@
 package com.temaconsulting.agente_iso.identity.application;
 
-import com.temaconsulting.agente_iso.shared.application.ApiException;
-import com.temaconsulting.agente_iso.shared.application.ProblemCode;
-import org.springframework.http.HttpStatus;
-
-import java.util.List;
 import java.util.UUID;
 
-public class CurrentUserNotFoundException extends ApiException {
+/** Raised when the authenticated subject no longer maps to a usable user. */
+public class CurrentUserNotFoundException extends RuntimeException {
 
-    public CurrentUserNotFoundException(UUID id) {
-        super(
-                ProblemCode.UNAUTHORIZED,
-                HttpStatus.UNAUTHORIZED,
-                "La sesión ya no corresponde a un usuario válido.",
-                List.of()
-        );
+    private final UUID userId;
+
+    public CurrentUserNotFoundException(UUID userId) {
+        super("La sesión ya no corresponde a un usuario válido.");
+        this.userId = userId;
+    }
+
+    public UUID userId() {
+        return userId;
     }
 }

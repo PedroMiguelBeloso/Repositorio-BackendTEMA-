@@ -4,6 +4,8 @@ import com.temaconsulting.agente_iso.identity.api.dto.TokenResponse;
 import com.temaconsulting.agente_iso.identity.api.dto.UserResponse;
 import com.temaconsulting.agente_iso.identity.api.mapper.UserApiMapper;
 import com.temaconsulting.agente_iso.identity.application.AuthService;
+import com.temaconsulting.agente_iso.identity.application.DuplicateUserEmailException;
+import com.temaconsulting.agente_iso.identity.application.InvalidCredentialsException;
 import com.temaconsulting.agente_iso.identity.application.UserService;
 import com.temaconsulting.agente_iso.identity.domain.Role;
 import com.temaconsulting.agente_iso.identity.domain.User;
@@ -19,7 +21,8 @@ import com.temaconsulting.agente_iso.shared.dto.PageInfo;
 import com.temaconsulting.agente_iso.shared.dto.PageResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;import org.springframework.context.annotation.Import;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -30,12 +33,14 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(controllers = {AuthController.class, UserController.class})
@@ -46,6 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         JsonAccessDeniedHandler.class,
         UserApiMapper.class,
         ApiExceptionHandler.class,
+        IdentityApiExceptionHandler.class,
         ProblemDetailsFactory.class,
         Configuration.class
 })
@@ -108,13 +114,11 @@ class AuthControllerSecurityTest {
 
     @Test
     void adminCanAccessUsersEndpoint() throws Exception {
-        User user = new User(
+        User user = User.createAdmin(
                 USER_ID,
                 "admin@tema.test",
                 "Admin",
                 "hash",
-                Role.ADMIN,
-                true,
                 Instant.parse("2026-09-24T20:00:00Z")
         );
 
@@ -132,18 +136,18 @@ class AuthControllerSecurityTest {
                                 ))
                 )
                 .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.items[0].password_hash").doesNotExist())
+                .andExpect(jsonPath("$.items[0].passwordHash").doesNotExist());
     }
 
     @Test
     void meUsesAuthenticatedSubject() throws Exception {
-        User expected = new User(
+        User expected = User.createReader(
                 USER_ID,
                 "reader@tema.test",
                 "Reader",
                 "hash",
-                Role.READER,
-                true,
                 Instant.parse("2026-09-24T20:00:00Z")
         );
         when(authService.currentUser(USER_ID)).thenReturn(expected);
@@ -168,17 +172,106 @@ class AuthControllerSecurityTest {
                                 .content("{\"currentPassword\":\"old-password\",\"newPassword\":\"new-password\"}")
                 )
                 .andExpect(status().isNoContent());
+
+        org.mockito.Mockito.verify(authService).changePassword(
+                USER_ID,
+                "old-password",
+                "new-password"
+        );
+    }
+
+    @Test
+    void readerCanChangeOwnPassword() throws Exception {
+        mockMvc.perform(
+                        put("/auth/password")
+                                .with(jwt().jwt(jwt -> jwt.subject(USER_ID.toString()))
+                                        .authorities(new SimpleGrantedAuthority("ROLE_READER")))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"currentPassword\":\"old-password\",\"newPassword\":\"new-password\"}")
+                )
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void readerCannotCreateReader() throws Exception {
+        mockMvc.perform(
+                        post("/users")
+                                .with(jwt().authorities(
+                                        new SimpleGrantedAuthority("ROLE_READER")
+                                ))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"email\":\"reader2@tema.test\",\"displayName\":\"Reader 2\",\"initialPassword\":\"initial-password\"}")
+                )
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void invalidReaderCreationReturnsBadRequest() throws Exception {
+        mockMvc.perform(
+                        post("/users")
+                                .with(jwt().authorities(
+                                        new SimpleGrantedAuthority("ROLE_ADMIN")
+                                ))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"email\":\"not-an-email\",\"displayName\":\"\",\"initialPassword\":\"short\"}")
+                )
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void invalidPaginationReturnsBadRequest() throws Exception {
+        mockMvc.perform(
+                        get("/users?page=-1&size=101")
+                                .with(jwt().authorities(
+                                        new SimpleGrantedAuthority("ROLE_ADMIN")
+                                ))
+                )
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void duplicateReaderEmailReturnsConflict() throws Exception {
+        when(userService.createReader(
+                "reader@tema.test",
+                "Reader",
+                "initial-password"
+        )).thenThrow(new DuplicateUserEmailException());
+
+        mockMvc.perform(
+                        post("/users")
+                                .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"email\":\"reader@tema.test\",\"displayName\":\"Reader\",\"initialPassword\":\"initial-password\"}")
+                )
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("CONFLICT"));
+    }
+
+    @Test
+    void wrongCurrentPasswordReturnsUnauthorized() throws Exception {
+        doThrow(new InvalidCredentialsException()).when(authService).changePassword(
+                USER_ID,
+                "wrong-password",
+                "new-password"
+        );
+
+        mockMvc.perform(
+                        put("/auth/password")
+                                .with(jwt().jwt(jwt -> jwt.subject(USER_ID.toString())))
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content("{\"currentPassword\":\"wrong-password\",\"newPassword\":\"new-password\"}")
+                )
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
     }
 
     @Test
     void adminCanCreateReader() throws Exception {
-        User reader = new User(
+        User reader = User.createReader(
                 USER_ID,
                 "reader@tema.test",
                 "Reader",
                 "hash",
-                Role.READER,
-                true,
                 Instant.parse("2026-09-24T20:00:00Z")
         );
         when(userService.createReader(
@@ -196,7 +289,9 @@ class AuthControllerSecurityTest {
                                 .content("{\"email\":\"reader@tema.test\",\"displayName\":\"Reader\",\"initialPassword\":\"initial-password\"}")
                 )
                 .andExpect(status().isCreated())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON));
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.password_hash").doesNotExist())
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
     }
 
 }

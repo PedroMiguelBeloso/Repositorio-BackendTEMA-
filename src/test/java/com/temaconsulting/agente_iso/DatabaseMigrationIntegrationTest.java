@@ -38,7 +38,7 @@ class DatabaseMigrationIntegrationTest {
         Integer migrationsCount = jdbcTemplate.queryForObject(
                 "SELECT count(*) FROM flyway_schema_history WHERE success = true", Integer.class);
         
-        assertThat(migrationsCount).isGreaterThanOrEqualTo(2); // V1 y V2 completadas
+        assertThat(migrationsCount).isGreaterThanOrEqualTo(4); // V1, V2, V3 y V4 completadas
     }
 
     @Test
@@ -93,4 +93,19 @@ class DatabaseMigrationIntegrationTest {
                 resultId2, runId, expectationId, macroId, "Display 2", "COMPLIES", "COMPLIES", "APPLIES", "DETERMINISTIC", "rationale 2", 1);
         });
     }
+    @Test
+    void testUsersEmailUniquenessIsCaseInsensitiveAtDatabaseLevel() {
+        UUID firstId = UUID.randomUUID();
+        jdbcTemplate.update(
+                "INSERT INTO users (id, email, display_name, password_hash, role, active) VALUES (?, ?, ?, ?, ?::role_enum, ?)",
+                firstId, "Case@Test.com", "First", "hash", "READER", true
+        );
+
+        UUID secondId = UUID.randomUUID();
+        assertThrows(DataIntegrityViolationException.class, () -> jdbcTemplate.update(
+                "INSERT INTO users (id, email, display_name, password_hash, role, active) VALUES (?, ?, ?, ?, ?::role_enum, ?)",
+                secondId, "case@test.com", "Second", "hash", "READER", true
+        ));
+    }
+
 }

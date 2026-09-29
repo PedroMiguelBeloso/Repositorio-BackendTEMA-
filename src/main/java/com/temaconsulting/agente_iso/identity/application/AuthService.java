@@ -6,8 +6,8 @@ import com.temaconsulting.agente_iso.identity.domain.User;
 import com.temaconsulting.agente_iso.identity.domain.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Clock;
 import java.util.Locale;
 import java.util.UUID;
 
@@ -17,18 +17,15 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenIssuer jwtTokenIssuer;
-    private final Clock clock;
 
     public AuthService(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
-            JwtTokenIssuer jwtTokenIssuer,
-            Clock clock
+            JwtTokenIssuer jwtTokenIssuer
     ) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtTokenIssuer = jwtTokenIssuer;
-        this.clock = clock;
     }
 
     public TokenResponse login(LoginRequest request) {
@@ -51,6 +48,7 @@ public class AuthService {
                 .orElseThrow(() -> new CurrentUserNotFoundException(userId));
     }
 
+    @Transactional
     public void changePassword(UUID userId, String currentPassword, String newPassword) {
         User user = userRepository.findById(userId)
                 .filter(User::canLogin)
@@ -61,8 +59,8 @@ public class AuthService {
         }
 
         String newHash = passwordEncoder.encode(newPassword);
-        userRepository.updatePassword(userId, newHash);
-        clock.instant();
+        user.changePasswordHash(newHash);
+        userRepository.updatePassword(user);
     }
 
     private String normalizeEmail(String email) {

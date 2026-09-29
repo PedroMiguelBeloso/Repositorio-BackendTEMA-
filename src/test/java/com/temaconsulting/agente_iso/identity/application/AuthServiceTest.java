@@ -1,6 +1,5 @@
 package com.temaconsulting.agente_iso.identity.application;
 
-import com.temaconsulting.agente_iso.identity.api.dto.ChangePasswordRequest;
 import com.temaconsulting.agente_iso.identity.api.dto.LoginRequest;
 import com.temaconsulting.agente_iso.identity.api.dto.TokenResponse;
 import com.temaconsulting.agente_iso.identity.domain.Role;
@@ -13,7 +12,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.time.Clock;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,8 +29,6 @@ class AuthServiceTest {
     @Mock UserRepository userRepository;
     @Mock PasswordEncoder passwordEncoder;
     @Mock JwtTokenIssuer jwtTokenIssuer;
-    @Mock Clock clock;
-
     private AuthService authService;
     private User activeAdmin;
 
@@ -41,16 +37,13 @@ class AuthServiceTest {
         authService = new AuthService(
                 userRepository,
                 passwordEncoder,
-                jwtTokenIssuer,
-                clock
+                jwtTokenIssuer
         );
-        activeAdmin = new User(
+        activeAdmin = User.createAdmin(
                 UUID.randomUUID(),
                 "admin@tema.test",
                 "Admin",
                 "$2a$10$hash",
-                Role.ADMIN,
-                true,
                 Instant.parse("2026-09-24T20:00:00Z")
         );
     }
@@ -97,7 +90,7 @@ class AuthServiceTest {
 
     @Test
     void inactiveUserReturnsInvalidCredentials() {
-        User inactive = new User(
+        User inactive = User.reconstitute(
                 activeAdmin.id(),
                 activeAdmin.email(),
                 activeAdmin.displayName(),
@@ -140,7 +133,10 @@ class AuthServiceTest {
     @Test
     void changePasswordVerifiesCurrentPasswordAndStoresNewHash() {
         when(userRepository.findById(activeAdmin.id())).thenReturn(Optional.of(activeAdmin));
-        when(passwordEncoder.matches("old-password", activeAdmin.passwordHash())).thenReturn(true);
+
+        String currentHash = activeAdmin.passwordHash();
+
+        when(passwordEncoder.matches("old-password", currentHash)).thenReturn(true);
         when(passwordEncoder.encode("new-password")).thenReturn("new-hash");
 
         authService.changePassword(
@@ -149,8 +145,28 @@ class AuthServiceTest {
                 "new-password"
         );
 
-        verify(passwordEncoder).matches("old-password", activeAdmin.passwordHash());
+        verify(passwordEncoder).matches("old-password", currentHash);
         verify(passwordEncoder).encode("new-password");
-        verify(userRepository).updatePassword(activeAdmin.id(), "new-hash");
+        verify(userRepository).updatePassword(activeAdmin);
+        assertEquals("new-hash", activeAdmin.passwordHash());
     }
+    @Test
+    void changedPasswordBecomesTheOnlyPasswordAccepted() {
+        when(userRepository.findById(activeAdmin.id())).thenReturn(Optional.of(activeAdmin));
+        when(passwordEncoder.matches("old-password", activeAdmin.passwordHash())).thenReturn(true);
+        when(passwordEncoder.encode("new-password")).thenReturn("new-hash");
+        when(passwordEncoder.matches("new-password", "new-hash")).thenReturn(true);
+        when(passwordEncoder.matches("old-password", "new-hash")).thenReturn(false);
+        when(userRepository.findByEmail("admin@tema.test")).thenReturn(Optional.of(activeAdmin));
+
+        authService.changePassword(activeAdmin.id(), "old-password", "new-password");
+        authService.login(new LoginRequest("admin@tema.test", "new-password"));
+
+        verify(jwtTokenIssuer).issue(activeAdmin);
+        assertThrows(
+                InvalidCredentialsException.class,
+                () -> authService.login(new LoginRequest("admin@tema.test", "old-password"))
+        );
+    }
+
 }
