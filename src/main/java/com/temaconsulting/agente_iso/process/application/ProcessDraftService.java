@@ -72,9 +72,6 @@ public class ProcessDraftService {
         if (request == null) {
             throw validationError("request", "Request body is required");
         }
-        if (request.copyFromVersionId() != null) {
-            throw conflict("copyFromVersionId is not supported before work package 5.1.4");
-        }
         if (request.officialVersion() == null || request.officialVersion().isBlank()) {
             throw validationError("officialVersion", "Official version is required");
         }
@@ -89,12 +86,29 @@ public class ProcessDraftService {
 
         final ProcessVersion draft;
         try {
-            draft = ProcessVersion.openDraft(
-                    UUID.randomUUID(),
-                    processId,
-                    officialVersion,
-                    request.versionDate(),
-                    clock.instant());
+            if (request.copyFromVersionId() == null) {
+                draft = ProcessVersion.openDraft(
+                        UUID.randomUUID(),
+                        processId,
+                        officialVersion,
+                        request.versionDate(),
+                        clock.instant());
+            } else {
+                ProcessVersion source = versions.findWithTree(request.copyFromVersionId())
+                        .orElseThrow(() -> notFound("Source process version not found: " + request.copyFromVersionId()));
+
+                if (!source.processId().equals(processId)) {
+                    throw notFound("Source process version not found: " + request.copyFromVersionId());
+                }
+
+                draft = copyAsDraft(
+                        source,
+                        processId,
+                        officialVersion,
+                        request.versionDate(),
+                        clock.instant()
+                );
+            }
         } catch (DomainValidationException ex) {
             throw validationError(ex.field(), ex.getMessage());
         }
@@ -169,6 +183,106 @@ public class ProcessDraftService {
         } catch (DuplicateOfficialVersionException ex) {
             throw conflict("Official version already exists for this process: " + request.officialVersion());
         }
+    }
+
+    private static ProcessVersion copyAsDraft(
+            ProcessVersion source,
+            UUID processId,
+            String officialVersion,
+            java.time.LocalDate versionDate,
+            java.time.Instant createdAt
+    ) {
+        UUID newVersionId = UUID.randomUUID();
+
+        List<ProcessPolicy> policies = source.policies().stream()
+                .map(policy -> new ProcessPolicy(
+                        UUID.randomUUID(),
+                        policy.order(),
+                        policy.text()
+                ))
+                .toList();
+
+        List<MacroActivity> macros = source.macroActivities().stream()
+                .map(sourceMacro -> {
+                    UUID newMacroId = UUID.randomUUID();
+
+                    List<EvidenceExpectation> inputs = sourceMacro.inputs().stream()
+                            .map(e -> copyExpectation(e, newMacroId, null, EvidenceLocation.INPUT))
+                            .toList();
+                    List<EvidenceExpectation> outputs = sourceMacro.outputs().stream()
+                            .map(e -> copyExpectation(e, newMacroId, null, EvidenceLocation.OUTPUT))
+                            .toList();
+
+                    List<Activity> activities = sourceMacro.activities().stream()
+                            .map(sourceActivity -> {
+                                UUID newActivityId = UUID.randomUUID();
+                                List<EvidenceExpectation> records = sourceActivity.records().stream()
+                                        .map(e -> copyExpectation(
+                                                e,
+                                                newMacroId,
+                                                newActivityId,
+                                                EvidenceLocation.ACTIVITY_RECORD
+                                        ))
+                                        .toList();
+                                return new Activity(
+                                        newActivityId,
+                                        newMacroId,
+                                        sourceActivity.name(),
+                                        sourceActivity.responsible(),
+                                        sourceActivity.instructions(),
+                                        sourceActivity.etaText(),
+                                        sourceActivity.order(),
+                                        records
+                                );
+                            })
+                            .toList();
+
+                    return new MacroActivity(
+                            newMacroId,
+                            newVersionId,
+                            sourceMacro.name(),
+                            sourceMacro.description(),
+                            sourceMacro.order(),
+                            activities,
+                            inputs,
+                            outputs
+                    );
+                })
+                .toList();
+
+        return new ProcessVersion(
+                newVersionId,
+                processId,
+                officialVersion,
+                versionDate,
+                com.temaconsulting.agente_iso.process.domain.ProcessStatus.DRAFT,
+                0,
+                source.objective(),
+                source.owner(),
+                policies,
+                macros,
+                null,
+                createdAt
+        );
+    }
+
+    private static EvidenceExpectation copyExpectation(
+            EvidenceExpectation source,
+            UUID macroActivityId,
+            UUID activityId,
+            EvidenceLocation location
+    ) {
+        return new EvidenceExpectation(
+                UUID.randomUUID(),
+                macroActivityId,
+                activityId,
+                source.registryDefinitionId(),
+                source.displayName(),
+                source.applicability(),
+                source.cardinality(),
+                location,
+                source.order()
+        );
     }
 
     private List<ProcessPolicy> mapPolicies(List<ProcessPolicyInput> inputs) {
@@ -268,6 +382,16 @@ public class ProcessDraftService {
                 .flatMap(macro -> macro.activities().stream())
                 .map(Activity::id)
                 .collect(java.util.stream.Collectors.toSet());
+        Set<UUID> currentExpectationIds = current.macroActivities().stream()
+                .flatMap(macro -> java.util.stream.Stream.concat(
+                        macro.inputs().stream(),
+                        java.util.stream.Stream.concat(
+                                macro.outputs().stream(),
+                                macro.activities().stream().flatMap(activity -> activity.records().stream())
+                        )
+                ))
+                .map(EvidenceExpectation::id)
+                .collect(java.util.stream.Collectors.toSet());
 
         Set<UUID> seenPolicyIds = new HashSet<>();
         for (ProcessPolicyInput policy : request.policies()) {
@@ -280,6 +404,7 @@ public class ProcessDraftService {
 
         Set<UUID> seenMacroIds = new HashSet<>();
         Set<UUID> seenActivityIds = new HashSet<>();
+        Set<UUID> seenExpectationIds = new HashSet<>();
         for (MacroActivityInput macro : request.macroActivities()) {
             if (macro == null) {
                 continue;
@@ -288,19 +413,59 @@ public class ProcessDraftService {
                 requireOwnedId(macro.id(), currentMacroActivityIds, "macroActivities.id");
                 requireUniqueRequestId(macro.id(), seenMacroIds, "macroActivities.id");
             }
+
+            validateExpectationIds(
+                    macro.inputs(),
+                    currentExpectationIds,
+                    seenExpectationIds,
+                    "macroActivities.inputs.id"
+            );
+            validateExpectationIds(
+                    macro.outputs(),
+                    currentExpectationIds,
+                    seenExpectationIds,
+                    "macroActivities.outputs.id"
+            );
+
             if (macro.activities() == null) {
                 continue;
             }
             for (ActivityInput activity : macro.activities()) {
-                if (activity == null || activity.id() == null) {
+                if (activity == null) {
                     continue;
                 }
-                requireOwnedId(activity.id(), currentActivityIds, "macroActivities.activities.id");
-                requireUniqueRequestId(
-                        activity.id(),
-                        seenActivityIds,
-                        "macroActivities.activities.id");
+                if (activity.id() != null) {
+                    requireOwnedId(activity.id(), currentActivityIds, "macroActivities.activities.id");
+                    requireUniqueRequestId(
+                            activity.id(),
+                            seenActivityIds,
+                            "macroActivities.activities.id");
+                }
+                validateExpectationIds(
+                        activity.records(),
+                        currentExpectationIds,
+                        seenExpectationIds,
+                        "macroActivities.activities.records.id"
+                );
             }
+        }
+    }
+
+    private static void validateExpectationIds(
+            List<EvidenceExpectationInput> expectations,
+            Set<UUID> currentIds,
+            Set<UUID> seenIds,
+            String field
+    ) {
+        if (expectations == null) {
+            return;
+        }
+        for (EvidenceExpectationInput expectation : expectations) {
+            if (expectation == null || expectation.id() == null) {
+                continue;
+            }
+            requireOwnedId(expectation.id(), currentIds, field);
+            requireUniqueRequestId(expectation.id(), seenIds, field);
         }
     }
 

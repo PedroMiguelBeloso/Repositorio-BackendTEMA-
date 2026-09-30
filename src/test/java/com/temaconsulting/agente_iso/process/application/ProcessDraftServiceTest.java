@@ -6,15 +6,16 @@ import com.temaconsulting.agente_iso.process.api.dto.MacroActivityInput;
 import com.temaconsulting.agente_iso.process.api.dto.ProcessPolicyInput;
 import com.temaconsulting.agente_iso.process.api.dto.SaveDraftRequest;
 import com.temaconsulting.agente_iso.process.domain.Activity;
-import com.temaconsulting.agente_iso.process.domain.DomainValidationException;
-import com.temaconsulting.agente_iso.process.domain.DraftNotEditableException;
+import com.temaconsulting.agente_iso.process.domain.EvidenceLocation;
+import com.temaconsulting.agente_iso.process.domain.EvidenceExpectation;
+import com.temaconsulting.agente_iso.process.domain.Cardinality;
+import com.temaconsulting.agente_iso.process.domain.ApplicabilityMode;
 import com.temaconsulting.agente_iso.process.domain.MacroActivity;
 import com.temaconsulting.agente_iso.process.domain.ProcessCode;
 import com.temaconsulting.agente_iso.process.domain.ProcessDefinition;
 import com.temaconsulting.agente_iso.process.domain.ProcessPolicy;
 import com.temaconsulting.agente_iso.process.domain.ProcessStatus;
 import com.temaconsulting.agente_iso.process.domain.ProcessVersion;
-import com.temaconsulting.agente_iso.process.domain.RevisionMismatchException;
 import com.temaconsulting.agente_iso.shared.application.ApiException;
 import com.temaconsulting.agente_iso.shared.application.ProblemCode;
 import org.junit.jupiter.api.BeforeEach;
@@ -260,6 +261,93 @@ class ProcessDraftServiceTest {
                     assertThat(ex.httpStatus()).isEqualTo(HttpStatus.NOT_FOUND);
                     assertThat(ex.code()).isEqualTo(ProblemCode.NOT_FOUND);
                 });
+    }
+
+    @Test
+    void copiesVersionWithFreshNodeIdsAndPreservedRegistryReferences() {
+        UUID processId = UUID.randomUUID();
+        UUID sourceVersionId = UUID.randomUUID();
+        UUID sourcePolicyId = UUID.randomUUID();
+        UUID sourceMacroId = UUID.randomUUID();
+        UUID sourceActivityId = UUID.randomUUID();
+        UUID sourceExpectationId = UUID.randomUUID();
+        UUID registryId = UUID.randomUUID();
+
+        EvidenceExpectation sourceExpectation = new EvidenceExpectation(
+                sourceExpectationId,
+                sourceMacroId,
+                null,
+                registryId,
+                "Ticket input",
+                ApplicabilityMode.ALWAYS,
+                Cardinality.ONE,
+                EvidenceLocation.INPUT,
+                0
+        );
+        ProcessVersion source = new ProcessVersion(
+                sourceVersionId,
+                processId,
+                "1.0",
+                LocalDate.of(2026, 9, 1),
+                ProcessStatus.PUBLISHED,
+                3,
+                "Source objective",
+                "Source owner",
+                List.of(new ProcessPolicy(sourcePolicyId, 0, "Policy")),
+                List.of(new MacroActivity(
+                        sourceMacroId,
+                        sourceVersionId,
+                        "Macro",
+                        "Description",
+                        0,
+                        List.of(new Activity(
+                                sourceActivityId,
+                                sourceMacroId,
+                                "Activity",
+                                "Owner",
+                                "Instructions",
+                                "1 day",
+                                0,
+                                List.of()
+                        )),
+                        List.of(sourceExpectation),
+                        List.of()
+                )),
+                NOW.minusSeconds(60),
+                NOW.minusSeconds(120)
+        );
+
+        when(processes.findById(processId)).thenReturn(Optional.of(process(processId)));
+        when(versions.findByOfficialVersion(processId, "2.0")).thenReturn(Optional.empty());
+        when(versions.findWithTree(sourceVersionId)).thenReturn(Optional.of(source));
+        when(versions.insertDraft(any(ProcessVersion.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        ProcessVersion copied = service.createDraft(
+                processId,
+                new CreateVersionRequest("2.0", LocalDate.of(2026, 9, 26), sourceVersionId)
+        );
+
+        assertThat(copied.id()).isNotEqualTo(source.id());
+        assertThat(copied.status()).isEqualTo(ProcessStatus.DRAFT);
+        assertThat(copied.revision()).isZero();
+        assertThat(copied.publishedAt()).isNull();
+        assertThat(copied.officialVersion()).isEqualTo("2.0");
+        assertThat(copied.versionDate()).isEqualTo(LocalDate.of(2026, 9, 26));
+        assertThat(copied.objective()).isEqualTo(source.objective());
+        assertThat(copied.owner()).isEqualTo(source.owner());
+
+        assertThat(copied.policies().get(0).id()).isNotEqualTo(sourcePolicyId);
+        assertThat(copied.macroActivities().get(0).id()).isNotEqualTo(sourceMacroId);
+        assertThat(copied.macroActivities().get(0).activities().get(0).id())
+                .isNotEqualTo(sourceActivityId);
+        assertThat(copied.macroActivities().get(0).inputs().get(0).id())
+                .isNotEqualTo(sourceExpectationId);
+        assertThat(copied.macroActivities().get(0).inputs().get(0).registryDefinitionId())
+                .isEqualTo(registryId);
+
+        assertThat(source.id()).isEqualTo(sourceVersionId);
+        assertThat(source.macroActivities().get(0).id()).isEqualTo(sourceMacroId);
     }
 
     @Test
