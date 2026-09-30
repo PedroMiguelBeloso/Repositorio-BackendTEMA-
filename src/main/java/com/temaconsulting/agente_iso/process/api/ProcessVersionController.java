@@ -2,8 +2,11 @@ package com.temaconsulting.agente_iso.process.api;
 
 import com.temaconsulting.agente_iso.process.api.dto.CreateVersionRequest;
 import com.temaconsulting.agente_iso.process.api.dto.ProcessVersionResponse;
+import com.temaconsulting.agente_iso.process.api.dto.PublishVersionRequest;
+import com.temaconsulting.agente_iso.process.api.dto.SaveDraftRequest;
 import com.temaconsulting.agente_iso.process.api.mapper.ProcessApiMapper;
 import com.temaconsulting.agente_iso.process.application.ProcessDraftService;
+import com.temaconsulting.agente_iso.process.application.ProcessPublicationService;
 import com.temaconsulting.agente_iso.process.domain.ProcessVersion;
 import com.temaconsulting.agente_iso.shared.api.PageMapper;
 import com.temaconsulting.agente_iso.shared.application.Page;
@@ -15,9 +18,12 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.validation.Valid;
 
 import java.util.UUID;
 
@@ -26,9 +32,14 @@ import java.util.UUID;
 public class ProcessVersionController {
 
     private final ProcessDraftService drafts;
+    private final ProcessPublicationService publications;
 
-    public ProcessVersionController(ProcessDraftService drafts) {
+    public ProcessVersionController(
+            ProcessDraftService drafts,
+            ProcessPublicationService publications
+    ) {
         this.drafts = drafts;
+        this.publications = publications;
     }
 
     @GetMapping
@@ -53,7 +64,7 @@ public class ProcessVersionController {
     @PreAuthorize("hasRole('ADMIN')")
     public ProcessVersionResponse createVersion(
             @PathVariable UUID processId,
-            @RequestBody CreateVersionRequest request
+            @Valid @RequestBody CreateVersionRequest request
     ) {
         return ProcessApiMapper.toResponse(drafts.createDraft(processId, request));
     }
@@ -66,4 +77,26 @@ public class ProcessVersionController {
     ) {
         return ProcessApiMapper.toResponse(drafts.getVersion(processId, versionId));
     }
+
+
+    @PutMapping("/{versionId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ProcessVersionResponse saveDraft(
+            @PathVariable UUID processId,
+            @PathVariable UUID versionId,
+            @Valid @RequestBody SaveDraftRequest request
+    ) {
+        return ProcessApiMapper.toResponse(drafts.saveDraft(processId, versionId, request));
+    }
+
+    @PostMapping("/{versionId}/publish")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ProcessVersionResponse publish(
+            @PathVariable UUID processId,
+            @PathVariable UUID versionId,
+            @Valid @RequestBody PublishVersionRequest request
+    ) {
+        return ProcessApiMapper.toResponse(publications.publish(processId, versionId, request.revision()));
+    }
+
 }
