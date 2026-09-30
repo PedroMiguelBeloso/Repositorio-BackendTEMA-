@@ -2,7 +2,9 @@ package com.temaconsulting.agente_iso.process.api;
 
 import com.temaconsulting.agente_iso.process.api.dto.CreateProcessRequest;
 import com.temaconsulting.agente_iso.process.api.dto.CreateVersionRequest;
+import com.temaconsulting.agente_iso.process.api.dto.PublishVersionRequest;
 import com.temaconsulting.agente_iso.process.application.ProcessDraftService;
+import com.temaconsulting.agente_iso.process.application.ProcessPublicationService;
 import com.temaconsulting.agente_iso.process.application.ProcessService;
 import com.temaconsulting.agente_iso.process.domain.ProcessCode;
 import com.temaconsulting.agente_iso.process.domain.ProcessDefinition;
@@ -40,6 +42,9 @@ class ProcessAuthorizationTest {
 
     @Autowired
     private ProcessDraftService draftService;
+
+    @Autowired
+    private ProcessPublicationService publicationService;
 
     @Test
     @WithMockUser(roles = "READER")
@@ -145,6 +150,19 @@ class ProcessAuthorizationTest {
                 .isEqualTo(versionId);
     }
 
+
+
+    @Test
+    @WithMockUser(roles = "READER")
+    void readerCannotPublishVersion() {
+        assertThatThrownBy(() -> versionController.publish(
+                UUID.randomUUID(),
+                UUID.randomUUID(),
+                new PublishVersionRequest(0)
+        )).isInstanceOf(AccessDeniedException.class);
+    }
+
+
     @Configuration
     @EnableMethodSecurity
     static class TestConfiguration {
@@ -160,13 +178,21 @@ class ProcessAuthorizationTest {
         }
 
         @Bean
+        ProcessPublicationService processPublicationService() {
+            return mock(ProcessPublicationService.class);
+        }
+
+        @Bean
         ProcessController processController(ProcessService processService) {
             return new ProcessController(processService);
         }
 
         @Bean
-        ProcessVersionController processVersionController(ProcessDraftService drafts) {
-            return new ProcessVersionController(drafts);
+        ProcessVersionController processVersionController(
+                ProcessDraftService drafts,
+                ProcessPublicationService publications
+        ) {
+            return new ProcessVersionController(drafts, publications);
         }
     }
 }
