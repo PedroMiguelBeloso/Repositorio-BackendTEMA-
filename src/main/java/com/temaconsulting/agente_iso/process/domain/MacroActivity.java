@@ -36,6 +36,32 @@ public record MacroActivity(
         }
         normalizedActivities.sort(Comparator.comparingInt(Activity::order).thenComparing(Activity::id));
         activities = List.copyOf(normalizedActivities);
+
+        inputs = normalizeExpectations(inputs, id, EvidenceLocation.INPUT, "macroActivities.inputs");
+        outputs = normalizeExpectations(outputs, id, EvidenceLocation.OUTPUT, "macroActivities.outputs");
+    }
+
+    private static List<EvidenceExpectation> normalizeExpectations(
+            List<EvidenceExpectation> values,
+            UUID macroActivityId,
+            EvidenceLocation expectedLocation,
+            String field
+    ) {
+        List<EvidenceExpectation> normalized = values == null ? new ArrayList<>() : new ArrayList<>(values);
+        for (EvidenceExpectation expectation : normalized) {
+            if (!expectation.macroActivityId().equals(macroActivityId)
+                    || expectation.activityId() != null
+                    || expectation.location() != expectedLocation) {
+                throw new DomainValidationException(
+                        field,
+                        "Evidence expectation does not belong to the macroactivity or has an invalid location"
+                );
+            }
+        }
+        normalized.sort(
+                Comparator.comparingInt(EvidenceExpectation::order).thenComparing(EvidenceExpectation::id)
+        );
+        return List.copyOf(normalized);
     }
 
     private static String requireText(String value, String field, String message) {

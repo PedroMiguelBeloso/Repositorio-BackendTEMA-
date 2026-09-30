@@ -124,6 +124,27 @@ public record ProcessVersion(
         return status == ProcessStatus.DRAFT;
     }
 
+    public ProcessVersion publish(Instant at) {
+        Objects.requireNonNull(at, "publishedAt is required");
+        if (!isEditable()) {
+            throw new DraftNotEditableException(id);
+        }
+        return new ProcessVersion(
+                id,
+                processId,
+                officialVersion,
+                versionDate,
+                ProcessStatus.PUBLISHED,
+                revision + 1,
+                objective,
+                owner,
+                policies,
+                macroActivities,
+                at,
+                createdAt
+        );
+    }
+
     public void ensureEditableAt(int expectedRevision) {
         if (!isEditable()) {
             throw new DraftNotEditableException(id);

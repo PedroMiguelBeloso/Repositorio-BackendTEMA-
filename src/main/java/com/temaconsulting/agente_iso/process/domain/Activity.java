@@ -1,5 +1,7 @@
 package com.temaconsulting.agente_iso.process.domain;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -24,6 +26,22 @@ public record Activity(
         if (order < 0) {
             throw new DomainValidationException("activities.order", "Activity order must be greater than or equal to 0");
         }
+
+        List<EvidenceExpectation> normalizedRecords = records == null ? List.of() : new ArrayList<>(records);
+        for (EvidenceExpectation record : normalizedRecords) {
+            if (!record.macroActivityId().equals(macroActivityId)
+                    || !id.equals(record.activityId())
+                    || record.location() != EvidenceLocation.ACTIVITY_RECORD) {
+                throw new DomainValidationException(
+                        "activities.records",
+                        "Every activity record must belong to the activity and use ACTIVITY_RECORD location"
+                );
+            }
+        }
+        normalizedRecords.sort(
+                Comparator.comparingInt(EvidenceExpectation::order).thenComparing(EvidenceExpectation::id)
+        );
+        records = List.copyOf(normalizedRecords);
     }
 
     private static String requireText(String value, String field, String message) {
