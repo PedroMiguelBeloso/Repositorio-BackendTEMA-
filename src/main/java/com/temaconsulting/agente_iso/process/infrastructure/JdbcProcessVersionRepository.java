@@ -1,11 +1,11 @@
 package com.temaconsulting.agente_iso.process.infrastructure;
 
+import com.temaconsulting.agente_iso.process.application.DuplicateOfficialVersionException;
 import com.temaconsulting.agente_iso.process.application.ProcessVersionRepository;
+import com.temaconsulting.agente_iso.process.application.StaleProcessVersionException;
 import com.temaconsulting.agente_iso.process.domain.*;
-import com.temaconsulting.agente_iso.shared.application.ApiException;
 import com.temaconsulting.agente_iso.shared.application.Page;
-import com.temaconsulting.agente_iso.shared.application.ProblemCode;
-import org.springframework.http.HttpStatus;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -35,8 +35,7 @@ public class JdbcProcessVersionRepository implements ProcessVersionRepository {
                 version.objective(), version.owner(), version.versionDate(), version.officialVersion(), version.id(),
                 expectedRevision);
         if (updatedRows == 0) {
-            throw new ApiException(ProblemCode.STALE_REVISION, HttpStatus.CONFLICT,
-                    "La versión fue modificada por alguien más.", List.of());
+            throw new StaleProcessVersionException(version.id(), expectedRevision);
         }
 
         syncPolicies(version);
@@ -231,20 +230,62 @@ public class JdbcProcessVersionRepository implements ProcessVersionRepository {
 
     @Override
     public ProcessVersion insertDraft(ProcessVersion version) {
-        jdbc.update(
-                "INSERT INTO process_versions (id, process_id, official_version, version_date, status, revision, objective, owner, created_at) " +
-                        "VALUES (?, ?, ?, ?, ?::process_status, ?, ?, ?, ?)",
-                version.id(),
-                version.processId(),
-                version.officialVersion(),
-                version.versionDate(),
-                version.status().name(),
-                version.revision(),
-                version.objective(),
-                version.owner(),
-                java.sql.Timestamp.from(version.createdAt())
+        try {
+            jdbc.update(
+                    "INSERT INTO process_versions (id, process_id, official_version, version_date, status, revision, objective, owner, created_at) " +
+                            "VALUES (?, ?, ?, ?, ?::process_status, ?, ?, ?, ?)",
+                    version.id(),
+                    version.processId(),
+                    version.officialVersion(),
+                    version.versionDate(),
+                    version.status().name(),
+                    version.revision(),
+                    version.objective(),
+                    version.owner(),
+                    java.sql.Timestamp.from(version.createdAt())
+            );
+
+            if (!version.policies().isEmpty() || !version.macroActivities().isEmpty()) {
+                syncPolicies(version);
+                syncMacroActivities(version);
+                syncActivities(version);
+                syncExpectations(version);
+            }
+            return findWithTree(version.id()).orElseThrow();
+        } catch (DataIntegrityViolationException ex) {
+            if (isOfficialVersionUniqueViolation(ex)) {
+                throw new DuplicateOfficialVersionException(version.officialVersion());
+            }
+            throw ex;
+        }
+    }
+
+    @Override
+    public ProcessVersion publish(UUID id, int expectedRevision, java.time.Instant at) {
+        int updated = jdbc.update(
+                "UPDATE process_versions " +
+                        "SET status = 'PUBLISHED'::process_status, published_at = ?, revision = revision + 1 " +
+                        "WHERE id = ? AND revision = ? AND status = 'DRAFT'::process_status",
+                java.sql.Timestamp.from(at),
+                id,
+                expectedRevision
         );
-        return version;
+        if (updated == 0) {
+            throw new StaleProcessVersionException(id, expectedRevision);
+        }
+        return findWithTree(id).orElseThrow();
+    }
+
+    private static boolean isOfficialVersionUniqueViolation(DataIntegrityViolationException ex) {
+        Throwable current = ex;
+        while (current != null) {
+            String message = current.getMessage();
+            if (message != null && message.contains("uq_process_versions_process_official_version")) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     @Override
@@ -341,7 +382,19 @@ public class JdbcProcessVersionRepository implements ProcessVersionRepository {
             params = new Object[]{activityId, location.name()};
         }
 
-        return jdbc.query(sql, (rs, rowNum) -> new EvidenceExpectation(
+        String enrichedSql = sql.replace(
+                "SELECT id, macro_activity_id, activity_id, registry_definition_id, display_name, applicability, cardinality, location, \"order\" FROM evidence_expectations",
+                "SELECT ee.id, ee.macro_activity_id, ee.activity_id, ee.registry_definition_id, ee.display_name, " +
+                        "ee.applicability, ee.cardinality, ee.location, ee.\"order\", " +
+                        "rd.evidence_type, rd.official_nomenclature FROM evidence_expectations ee " +
+                        "JOIN registry_definitions rd ON rd.id = ee.registry_definition_id"
+        ).replace("WHERE macro_activity_id", "WHERE ee.macro_activity_id")
+         .replace("WHERE activity_id", "WHERE ee.activity_id")
+         .replace("AND activity_id IS NULL", "AND ee.activity_id IS NULL")
+         .replace("AND location", "AND ee.location")
+         .replace("ORDER BY \"order\", id", "ORDER BY ee.\"order\", ee.id");
+
+        return jdbc.query(enrichedSql, (rs, rowNum) -> new EvidenceExpectation(
             rs.getObject("id", UUID.class),
             rs.getObject("macro_activity_id", UUID.class),
             rs.getObject("activity_id", UUID.class),
@@ -350,7 +403,9 @@ public class JdbcProcessVersionRepository implements ProcessVersionRepository {
             ApplicabilityMode.valueOf(rs.getString("applicability")),
             Cardinality.valueOf(rs.getString("cardinality")),
             EvidenceLocation.valueOf(rs.getString("location")),
-            rs.getInt("order")
+            rs.getInt("order"),
+            EvidenceType.valueOf(rs.getString("evidence_type")),
+            rs.getString("official_nomenclature")
         ), params);
     }
 
@@ -368,8 +423,8 @@ public class JdbcProcessVersionRepository implements ProcessVersionRepository {
     public Page<ProcessVersion> listByProcess(UUID processId, int page, int size) {
         int offset = page * size;
         List<ProcessVersion> content = jdbc.query(
-            "SELECT id FROM process_versions WHERE process_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
-            (rs, rowNum) -> findById(rs.getObject("id", UUID.class)).orElse(null),
+            "SELECT id FROM process_versions WHERE process_id = ? ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?",
+            (rs, rowNum) -> findWithTree(rs.getObject("id", UUID.class)).orElse(null),
             processId, size, offset
         ).stream().filter(Objects::nonNull).toList();
 
