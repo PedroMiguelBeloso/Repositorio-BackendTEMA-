@@ -57,16 +57,54 @@ class DatabaseMigrationIntegrationTest {
                 processId, "START_UP", "Start Up");
 
         UUID processVersionId = UUID.randomUUID();
-        jdbcTemplate.update("INSERT INTO process_versions (id, process_id, official_version, objective, owner, version_date, status) VALUES (?, ?, ?, ?, ?, NOW(), ?::process_status)",
-                processVersionId, processId, "v1", "Obj", "Owner", "PUBLISHED");
+
+        jdbcTemplate.update(
+                "INSERT INTO process_versions " +
+                        "(id, process_id, official_version, objective, owner, version_date, status, revision) " +
+                        "VALUES (?, ?, ?, ?, ?, NOW(), ?::process_status, ?)",
+                processVersionId,
+                processId,
+                "v1",
+                "Obj",
+                "Owner",
+                "DRAFT",
+                0
+        );
 
         UUID macroId = UUID.randomUUID();
-        jdbcTemplate.update("INSERT INTO macro_activities (id, process_version_id, name, \"order\") VALUES (?, ?, ?, ?)",
-                macroId, processVersionId, "Macro 1", 1);
-        
+
+        jdbcTemplate.update(
+                "INSERT INTO macro_activities " +
+                        "(id, process_version_id, name, \"order\") VALUES (?, ?, ?, ?)",
+                macroId,
+                processVersionId,
+                "Macro 1",
+                1
+        );
+
         UUID expectationId = UUID.randomUUID();
-        jdbcTemplate.update("INSERT INTO evidence_expectations (id, macro_activity_id, registry_definition_id, display_name, applicability, cardinality, location, \"order\") VALUES (?, ?, ?, ?, ?::applicability_mode, ?::cardinality_enum, ?::evidence_location, ?)",
-                expectationId, macroId, registryId, "Exp 1", "ALWAYS", "ONE", "INPUT", 1);
+
+        jdbcTemplate.update(
+                "INSERT INTO evidence_expectations " +
+                        "(id, macro_activity_id, registry_definition_id, display_name, applicability, cardinality, location, \"order\") " +
+                        "VALUES (?, ?, ?, ?, ?::applicability_mode, ?::cardinality_enum, ?::evidence_location, ?)",
+                expectationId,
+                macroId,
+                registryId,
+                "Exp 1",
+                "ALWAYS",
+                "ONE",
+                "INPUT",
+                1
+        );
+
+// Una vez armado el árbol, la versión se publica.
+        jdbcTemplate.update(
+                "UPDATE process_versions " +
+                        "SET status = 'PUBLISHED'::process_status, published_at = NOW(), revision = revision + 1 " +
+                        "WHERE id = ? AND status = 'DRAFT'::process_status",
+                processVersionId
+        );
 
         UUID serviceId = UUID.randomUUID();
         jdbcTemplate.update("INSERT INTO services (id, name, client, service_type, status, revision) VALUES (?, ?, ?, ?::service_type, ?::service_status, ?)",
