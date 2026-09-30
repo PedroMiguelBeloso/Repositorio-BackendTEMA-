@@ -78,7 +78,7 @@ public class JdbcUserRepository implements UserRepository {
     @Override
     public boolean existsAdmin() {
         Boolean exists = jdbcTemplate.queryForObject(
-                "SELECT EXISTS (SELECT 1 FROM users WHERE role = ?)",
+                "SELECT EXISTS (SELECT 1 FROM users WHERE role = CAST(? AS role_enum))",
                 Boolean.class,
                 "ADMIN"
         );
@@ -92,7 +92,7 @@ public class JdbcUserRepository implements UserRepository {
                     """
                     INSERT INTO users (
                         id, email, display_name, password_hash, role, active, created_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, CAST(? AS role_enum), ?, ?)
                     """,
                     user.id(),
                     user.email(),
