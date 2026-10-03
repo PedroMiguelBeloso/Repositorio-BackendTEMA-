@@ -87,7 +87,7 @@ class AuthControllerSecurityTest {
         when(authService.login(any())).thenReturn(tokenResponse);
 
         mockMvc.perform(
-                        post("/auth/login")
+                        post("/api/v1/auth/login")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"email\":\"admin@tema.test\",\"password\":\"secret\"}")
                 )
@@ -97,14 +97,14 @@ class AuthControllerSecurityTest {
 
     @Test
     void meWithoutTokenReturns401() throws Exception {
-        mockMvc.perform(get("/auth/me"))
+        mockMvc.perform(get("/api/v1/auth/me"))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void readerCannotAccessAdminEndpoint() throws Exception {
         mockMvc.perform(
-                        get("/users")
+                        get("/api/v1/users")
                                 .with(jwt().authorities(
                                         new SimpleGrantedAuthority("ROLE_READER")
                                 ))
@@ -130,7 +130,7 @@ class AuthControllerSecurityTest {
         );
 
         mockMvc.perform(
-                        get("/users")
+                        get("/api/v1/users")
                                 .with(jwt().authorities(
                                         new SimpleGrantedAuthority("ROLE_ADMIN")
                                 ))
@@ -153,7 +153,7 @@ class AuthControllerSecurityTest {
         when(authService.currentUser(USER_ID)).thenReturn(expected);
 
         mockMvc.perform(
-                        get("/auth/me")
+                        get("/api/v1/auth/me")
                                 .with(jwt().jwt(jwt -> jwt.subject(USER_ID.toString())))
                 )
                 .andExpect(status().isOk())
@@ -166,7 +166,7 @@ class AuthControllerSecurityTest {
     @Test
     void passwordChangeUsesAuthenticatedSubject() throws Exception {
         mockMvc.perform(
-                        put("/auth/password")
+                        put("/api/v1/auth/password")
                                 .with(jwt().jwt(jwt -> jwt.subject(USER_ID.toString())))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"currentPassword\":\"old-password\",\"newPassword\":\"new-password\"}")
@@ -183,7 +183,7 @@ class AuthControllerSecurityTest {
     @Test
     void readerCanChangeOwnPassword() throws Exception {
         mockMvc.perform(
-                        put("/auth/password")
+                        put("/api/v1/auth/password")
                                 .with(jwt().jwt(jwt -> jwt.subject(USER_ID.toString()))
                                         .authorities(new SimpleGrantedAuthority("ROLE_READER")))
                                 .contentType(MediaType.APPLICATION_JSON)
@@ -195,7 +195,7 @@ class AuthControllerSecurityTest {
     @Test
     void readerCannotCreateReader() throws Exception {
         mockMvc.perform(
-                        post("/users")
+                        post("/api/v1/users")
                                 .with(jwt().authorities(
                                         new SimpleGrantedAuthority("ROLE_READER")
                                 ))
@@ -208,7 +208,7 @@ class AuthControllerSecurityTest {
     @Test
     void invalidReaderCreationReturnsBadRequest() throws Exception {
         mockMvc.perform(
-                        post("/users")
+                        post("/api/v1/users")
                                 .with(jwt().authorities(
                                         new SimpleGrantedAuthority("ROLE_ADMIN")
                                 ))
@@ -221,7 +221,7 @@ class AuthControllerSecurityTest {
     @Test
     void invalidPaginationReturnsBadRequest() throws Exception {
         mockMvc.perform(
-                        get("/users?page=-1&size=101")
+                        get("/api/v1/users?page=-1&size=101")
                                 .with(jwt().authorities(
                                         new SimpleGrantedAuthority("ROLE_ADMIN")
                                 ))
@@ -238,7 +238,7 @@ class AuthControllerSecurityTest {
         )).thenThrow(new DuplicateUserEmailException());
 
         mockMvc.perform(
-                        post("/users")
+                        post("/api/v1/users")
                                 .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"email\":\"reader@tema.test\",\"displayName\":\"Reader\",\"initialPassword\":\"initial-password\"}")
@@ -256,7 +256,7 @@ class AuthControllerSecurityTest {
         );
 
         mockMvc.perform(
-                        put("/auth/password")
+                        put("/api/v1/auth/password")
                                 .with(jwt().jwt(jwt -> jwt.subject(USER_ID.toString())))
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content("{\"currentPassword\":\"wrong-password\",\"newPassword\":\"new-password\"}")
@@ -281,7 +281,7 @@ class AuthControllerSecurityTest {
         )).thenReturn(reader);
 
         mockMvc.perform(
-                        post("/users")
+                        post("/api/v1/users")
                                 .with(jwt().authorities(
                                         new SimpleGrantedAuthority("ROLE_ADMIN")
                                 ))
@@ -294,4 +294,30 @@ class AuthControllerSecurityTest {
                 .andExpect(jsonPath("$.passwordHash").doesNotExist());
     }
 
+    @Test
+    void readerCannotCreateProcessAtVersionedRoute() throws Exception {
+        mockMvc.perform(post("/api/v1/processes")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_READER"))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void readerCannotCreateRegistryDefinitionAtVersionedRoute() throws Exception {
+        mockMvc.perform(post("/api/v1/registry-definitions")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_READER"))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void readerCannotPublishProcessVersionAtVersionedRoute() throws Exception {
+        mockMvc.perform(post("/api/v1/processes/process-id/versions/version-id/publish")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_READER"))))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void anonymousCannotReadVersionedProcessRoute() throws Exception {
+        mockMvc.perform(get("/api/v1/processes"))
+                .andExpect(status().isUnauthorized());
+    }
 }
