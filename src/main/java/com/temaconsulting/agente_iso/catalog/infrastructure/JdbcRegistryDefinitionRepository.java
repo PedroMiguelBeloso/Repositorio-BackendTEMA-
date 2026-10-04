@@ -7,6 +7,7 @@ import com.temaconsulting.agente_iso.shared.application.Page;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -60,45 +61,36 @@ public class JdbcRegistryDefinitionRepository implements RegistryDefinitionRepos
 
     @Override
     public Page<RegistryDefinition> list(int page, int size, String query) {
-        String filter = query == null || query.isBlank() ? null : "%" + query.trim() + "%";
-        List<RegistryDefinition> items;
-        Integer total;
-
-        if (filter == null) {
-            items = jdbc.query(
-                    "SELECT * FROM registry_definitions ORDER BY canonical_name LIMIT ? OFFSET ?",
-                    mapper,
-                    size,
-                    page * size
-            );
-            total = jdbc.queryForObject(
-                    "SELECT count(*) FROM registry_definitions",
-                    Integer.class
-            );
-        } else {
-            items = jdbc.query(
-                    "SELECT * FROM registry_definitions WHERE canonical_name ILIKE ? ORDER BY canonical_name LIMIT ? OFFSET ?",
-                    mapper,
-                    filter,
-                    size,
-                    page * size
-            );
-            total = jdbc.queryForObject(
-                    "SELECT count(*) FROM registry_definitions WHERE canonical_name ILIKE ?",
-                    Integer.class,
-                    filter
-            );
-        }
-
-        return new Page<>(items, page, size, total == null ? 0 : total);
+        return list(page, size, query, null);
     }
 
-    public List<RegistryDefinition> list(int page, int size, String query, EvidenceType type) {
-        String sql = "SELECT * FROM registry_definitions WHERE 1=1 ";
-        if (type != null) sql += " AND evidence_type = '" + type.name() + "'::evidence_type";
-        if (query != null && !query.isBlank()) sql += " AND canonical_name ILIKE '%" + query + "%'";
-        sql += " ORDER BY canonical_name LIMIT ? OFFSET ?";
-        
-        return jdbc.query(sql, mapper, size, page * size);
+    @Override
+    public Page<RegistryDefinition> list(int page, int size, String query, EvidenceType evidenceType) {
+        StringBuilder filter = new StringBuilder(" WHERE 1=1");
+        List<Object> parameters = new ArrayList<>();
+        if (evidenceType != null) {
+            filter.append(" AND evidence_type = ?::evidence_type");
+            parameters.add(evidenceType.name());
+        }
+        if (query != null && !query.isBlank()) {
+            filter.append(" AND canonical_name ILIKE ?");
+            parameters.add("%" + query.trim() + "%");
+        }
+
+        Long total = jdbc.queryForObject(
+                "SELECT count(*) FROM registry_definitions" + filter,
+                Long.class,
+                parameters.toArray()
+        );
+        List<Object> pageParameters = new ArrayList<>(parameters);
+        pageParameters.add(size);
+        pageParameters.add(page * size);
+        List<RegistryDefinition> items = jdbc.query(
+                "SELECT * FROM registry_definitions" + filter
+                        + " ORDER BY canonical_name, id LIMIT ? OFFSET ?",
+                mapper,
+                pageParameters.toArray()
+        );
+        return new Page<>(items, page, size, total == null ? 0 : total);
     }
 }

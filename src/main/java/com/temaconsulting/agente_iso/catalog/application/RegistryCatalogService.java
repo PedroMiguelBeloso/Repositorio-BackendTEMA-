@@ -3,23 +3,22 @@ package com.temaconsulting.agente_iso.catalog.application;
 import com.temaconsulting.agente_iso.catalog.api.dto.CatalogDtos.CreateRegistryRequest;
 import com.temaconsulting.agente_iso.catalog.domain.EvidenceType;
 import com.temaconsulting.agente_iso.catalog.domain.RegistryDefinition;
-import com.temaconsulting.agente_iso.catalog.infrastructure.JdbcRegistryDefinitionRepository;
+import com.temaconsulting.agente_iso.shared.application.Page;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
 public class RegistryCatalogService {
 
-    private final JdbcRegistryDefinitionRepository repository;
+    private final RegistryDefinitionRepository repository;
 
-    public RegistryCatalogService(JdbcRegistryDefinitionRepository repository) {
+    public RegistryCatalogService(RegistryDefinitionRepository repository) {
         this.repository = repository;
     }
 
-    public List<RegistryDefinition> list(int page, int size, String query, EvidenceType type) {
-        return repository.list(page, size, query, type);
+    public Page<RegistryDefinition> list(int page, int size, String query, EvidenceType evidenceType) {
+        return repository.list(page, size, query, evidenceType);
     }
 
     public RegistryDefinition create(CreateRegistryRequest request) {
