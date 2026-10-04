@@ -4,11 +4,11 @@ import com.temaconsulting.agente_iso.catalog.api.dto.CatalogDtos.*;
 import com.temaconsulting.agente_iso.catalog.application.RegistryCatalogService;
 import com.temaconsulting.agente_iso.catalog.domain.EvidenceType;
 import com.temaconsulting.agente_iso.catalog.domain.RegistryDefinition;
+import com.temaconsulting.agente_iso.shared.api.PageMapper;
+import com.temaconsulting.agente_iso.shared.application.Page;
 import com.temaconsulting.agente_iso.shared.dto.PageResponse;
-import com.temaconsulting.agente_iso.shared.dto.PageInfo;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/registry-definitions")
@@ -25,11 +25,11 @@ public class RegistryDefinitionController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String query,
-            @RequestParam(required = false) EvidenceType type) {
-        
-        List<RegistryDefinition> results = catalogService.list(page, size, query, type);
-        List<RegistryDefinitionResponse> items = results.stream().map(this::toResponse).toList();
-        return new PageResponse<>(items, new PageInfo(page, size, 100, 5));
+            @RequestParam(required = false) EvidenceType evidenceType) {
+        Page<RegistryDefinition> results = catalogService.list(page, size, query, evidenceType);
+        var items = results.items().stream().map(this::toResponse).toList();
+        return new PageResponse<>(items,
+                PageMapper.toPageInfo(results.page(), results.size(), results.totalElements()));
     }
 
     @PostMapping
