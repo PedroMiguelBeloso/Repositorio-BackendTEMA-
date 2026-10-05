@@ -23,7 +23,11 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
+// Two JDBC connections allow Flyway startup but expose deeply nested RowMapper queries.
+@SpringBootTest(properties = {
+        "spring.datasource.hikari.maximum-pool-size=2",
+        "spring.datasource.hikari.connection-timeout=1000"
+})
 @Testcontainers
 class JdbcProcessPersistenceIntegrationTest {
 
@@ -96,9 +100,15 @@ class JdbcProcessPersistenceIntegrationTest {
         assertThat(loadedDraft.officialVersion()).isEqualTo("2.0");
         assertThat(loadedDraft.status()).isEqualTo(ProcessStatus.DRAFT);
         assertThat(loadedDraft.revision()).isZero();
+        jdbc.update(
+                "INSERT INTO macro_activities (id, process_version_id, name, description, \"order\") VALUES (?, ?, ?, ?, ?)",
+                UUID.randomUUID(), versionId, "Organización interna", null, 1
+        );
         assertThat(versions.listByProcess(processId, 0, 20).items())
                 .extracting(ProcessVersion::id)
                 .contains(versionId);
+        assertThat(versions.listByProcess(processId, 0, 20).items().getFirst().macroActivities())
+                .hasSize(1);
 
         Integer databaseRevision = jdbc.queryForObject(
                 "SELECT revision FROM process_versions WHERE id = ?",
