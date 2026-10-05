@@ -12,8 +12,8 @@ y `GET /api/v1/services/{serviceId}/verifiable-processes`. Usa las tablas existe
 Un servicio puede crearse sin fuentes mientras se configuran las integraciones.
 Cuando el request incluye `driveFolderId` o `redmineProjectId`, el backend exige
 un `ServiceSourceResolver` que lea la fuente con la identidad técnica y devuelva
-su nombre; sin ese adaptador responde `503` y no persiste el servicio. El módulo
-de integraciones implementará ese puerto. El endpoint
+su nombre; sin acceso responde `503` y no persiste el servicio. El adaptador de
+Drive implementa esta lectura; la de Redmine queda para 6.2.1. El endpoint
 `GET /api/v1/services/{serviceId}/tickets` ya está preparado para consumir
 `ServiceTicketSearch`; sin proyecto Redmine o sin adaptador responde `503`.
 No se generan nombres ni tickets ficticios en el perfil de ejecución normal.
@@ -29,10 +29,33 @@ un servicio particular.
 
 La variable opcional `TEMA_INTEGRATION_PROBE_TIMEOUT` controla el tiempo máximo
 por fuente en formato ISO-8601 (`PT3S` por defecto; máximo `PT30S`). No se
-necesitan variables de Drive ni Redmine para arrancar el backend en esta etapa.
-Los adaptadores de lectura reales corresponden a 6.1.1 y 6.2.1. Esas tareas
-reemplazarán `UnconfiguredDriveProbe` y `UnconfiguredRedmineProbe` por
-implementaciones de `IntegrationProbe` que realicen una lectura efectiva; hasta
-entonces, ambos endpoints informan `NOT_CONFIGURED`. Configurar una URL o
-credenciales por sí solo nunca produce `AVAILABLE`; ese estado exige una lectura
-exitosa. Las futuras credenciales deben mantenerse fuera del repositorio.
+necesitan variables de Drive ni Redmine para arrancar el backend. El adaptador
+de Drive se habilita por separado; Redmine seguirá en `NOT_CONFIGURED` hasta
+6.2.1. Configurar credenciales por sí solo nunca produce `AVAILABLE`: ese
+estado exige una lectura exitosa.
+
+## Conector Google Drive de solo lectura (TC-163)
+
+El backend arranca con `TEMA_DRIVE_ENABLED=false` por defecto. Para probar Drive,
+habilitar la API de Google Drive en el proyecto de prueba, dar acceso de lectura
+a una carpeta de prueba a la identidad técnica y configurar las credenciales
+mediante Application Default Credentials. En desarrollo local se puede indicar
+la ruta de un archivo de credenciales **fuera del repositorio** con
+`GOOGLE_APPLICATION_CREDENTIALS`; no copiar el JSON a `src/main/resources` ni
+registrarlo en Git. La identidad necesita el alcance `drive.metadata.readonly`.
+
+Con `TEMA_DRIVE_ENABLED=true`, `POST /api/v1/integrations/test` ejecuta una
+lectura real; `GET /api/v1/integrations/drive/folders?query=&page=0&size=20`
+lista carpetas para el Administrador. Al guardar `driveFolderId` en un servicio,
+el backend comprueba el ID y toma el nombre desde Drive. Sin credenciales o
+sin acceso, el selector y el guardado informan un error seguro y no simulan
+disponibilidad. `TEMA_DRIVE_TIMEOUT` usa una duración ISO-8601 (`PT5S` por
+defecto). `TEMA_DRIVE_API_BASE_URL` solo se cambia en pruebas con un servidor
+HTTP simulado. Las credenciales no se muestran en respuestas ni en logs.
+
+El contrato actual exige totales de paginación. Drive solo entrega
+`nextPageToken`, así que el selector recorre las páginas accesibles y calcula
+los totales antes de paginar. Está pensado para un Drive de prueba acotado;
+si se supera el límite de 100 páginas, la consulta falla sin entregar una
+lista parcial como si fuese completa. La búsqueda documental por nomenclatura
+se implementa aparte en 6.1.2.
