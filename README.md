@@ -57,5 +57,49 @@ El contrato actual exige totales de paginación. Drive solo entrega
 `nextPageToken`, así que el selector recorre las páginas accesibles y calcula
 los totales antes de paginar. Está pensado para un Drive de prueba acotado;
 si se supera el límite de 100 páginas, la consulta falla sin entregar una
-lista parcial como si fuese completa. La búsqueda documental por nomenclatura
-se implementa aparte en 6.1.2.
+lista parcial como si fuese completa.
+
+## Búsqueda de evidencias de Drive (TC-164)
+
+`DriveEvidenceSearch` es una operación interna para M2; no agrega un endpoint
+público. Recibe el ID de la carpeta configurada para el servicio, el tipo
+`DOCUMENT` o `FOLDER`, la nomenclatura oficial y la cardinalidad `ONE` o
+`MULTIPLE`. Solo lee metadatos dentro de esa carpeta y sus subcarpetas. Un
+nombre se compara exactamente; una ruta se compara desde la carpeta del
+servicio. No abre archivos ni sigue accesos directos.
+
+El resultado distingue `FOUND`, `ABSENT`, `AMBIGUOUS` y `NOT_CHECKABLE`.
+`ABSENT` se devuelve solo tras completar todas las páginas y subcarpetas.
+Errores de autenticación, permisos, timeout, respuestas incompletas y límites
+de recorrido producen `NOT_CHECKABLE`; no equivalen a incumplimiento. La
+operación limita el recorrido a 100 páginas, 1000 carpetas, 100000 elementos
+y 30 segundos. M2 decidirá después la aplicabilidad y traducirá el resultado
+a un estado de verificación. No se requiere migración ni credenciales nuevas:
+se reutiliza la configuración de Drive descrita arriba.
+
+```mermaid
+classDiagram
+    class DriveEvidenceSearch {
+      <<interface>>
+      +search(SearchRequest) SearchResult
+    }
+    class GoogleDriveAdapter
+    class SearchRequest {
+      +rootFolderId
+      +kind
+      +officialNomenclature
+      +cardinality
+    }
+    class SearchResult {
+      +outcome
+      +problem
+      +matches
+    }
+    DriveEvidenceSearch <|.. GoogleDriveAdapter
+    DriveEvidenceSearch --> SearchRequest
+    DriveEvidenceSearch --> SearchResult
+```
+
+El futuro verificador convierte los tipos y cardinalidad de la expectativa
+publicada de M1 al `SearchRequest`, y traduce el `SearchResult` a su propio
+resultado. `integration` no depende del módulo `verification`.
