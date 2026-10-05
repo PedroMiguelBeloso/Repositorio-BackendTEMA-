@@ -308,49 +308,23 @@ public class JdbcProcessVersionRepository implements ProcessVersionRepository {
         );
 
         // 2. Cargar macroactividades
-        List<MacroActivity> macroActivities = jdbc.query(
+        List<MacroActivityRow> macroRows = jdbc.query(
             "SELECT id, process_version_id, name, description, \"order\" FROM macro_activities WHERE process_version_id = ? ORDER BY \"order\", id",
-            (rs, rowNum) -> {
-                UUID macroId = rs.getObject("id", UUID.class);
-                
-                // Expectativas de tipo INPUT para la macroactividad
-                List<EvidenceExpectation> inputs = loadExpectations(macroId, null, EvidenceLocation.INPUT);
-                // Expectativas de tipo OUTPUT para la macroactividad
-                List<EvidenceExpectation> outputs = loadExpectations(macroId, null, EvidenceLocation.OUTPUT);
-                
-                // Actividades hijas de esta macroactividad
-                List<Activity> activities = jdbc.query(
-                    "SELECT id, macro_activity_id, name, responsible, instructions, eta_text, \"order\" FROM activities WHERE macro_activity_id = ? ORDER BY \"order\", id",
-                    (actRs, actRowNum) -> {
-                        UUID actId = actRs.getObject("id", UUID.class);
-                        List<EvidenceExpectation> records = loadExpectations(macroId, actId, EvidenceLocation.ACTIVITY_RECORD);
-                        return new Activity(
-                            actId,
-                            macroId,
-                            actRs.getString("name"),
-                            actRs.getString("responsible"),
-                            actRs.getString("instructions"),
-                            actRs.getString("eta_text"),
-                            actRs.getInt("order"),
-                            records
-                        );
-                    },
-                    macroId
-                );
-
-                return new MacroActivity(
-                    macroId,
-                    rs.getObject("process_version_id", UUID.class),
-                    rs.getString("name"),
-                    rs.getString("description"),
-                    rs.getInt("order"),
-                    activities,
-                    inputs,
-                    outputs
-                );
-            },
+            (rs, rowNum) -> new MacroActivityRow(
+                rs.getObject("id", UUID.class),
+                rs.getObject("process_version_id", UUID.class),
+                rs.getString("name"),
+                rs.getString("description"),
+                rs.getInt("order")
+            ),
             id
         );
+        // JDBC ResultSets must be closed before another query is made. Running
+        // child queries inside a RowMapper held multiple pool connections per
+        // request and exhausted Hikari when the UI loaded versions in parallel.
+        List<MacroActivity> macroActivities = macroRows.stream()
+            .map(this::loadMacroActivity)
+            .toList();
 
         // Reconstruir la versión con el árbol completo hidratado
         ProcessVersion fullVersion = new ProcessVersion(
@@ -370,6 +344,40 @@ public class JdbcProcessVersionRepository implements ProcessVersionRepository {
 
         return Optional.of(fullVersion);
     }
+
+    private MacroActivity loadMacroActivity(MacroActivityRow macro) {
+        List<ActivityRow> activityRows = jdbc.query(
+            "SELECT id, macro_activity_id, name, responsible, instructions, eta_text, \"order\" FROM activities WHERE macro_activity_id = ? ORDER BY \"order\", id",
+            (rs, rowNum) -> new ActivityRow(
+                rs.getObject("id", UUID.class),
+                rs.getObject("macro_activity_id", UUID.class),
+                rs.getString("name"),
+                rs.getString("responsible"),
+                rs.getString("instructions"),
+                rs.getString("eta_text"),
+                rs.getInt("order")
+            ),
+            macro.id()
+        );
+        List<Activity> activities = activityRows.stream()
+            .map(row -> new Activity(
+                row.id(), row.macroId(), row.name(), row.responsible(), row.instructions(),
+                row.etaText(), row.order(),
+                loadExpectations(macro.id(), row.id(), EvidenceLocation.ACTIVITY_RECORD)
+            ))
+            .toList();
+        return new MacroActivity(
+            macro.id(), macro.processVersionId(), macro.name(), macro.description(), macro.order(),
+            activities,
+            loadExpectations(macro.id(), null, EvidenceLocation.INPUT),
+            loadExpectations(macro.id(), null, EvidenceLocation.OUTPUT)
+        );
+    }
+
+    private record MacroActivityRow(UUID id, UUID processVersionId, String name, String description, int order) {}
+
+    private record ActivityRow(UUID id, UUID macroId, String name, String responsible, String instructions,
+                               String etaText, int order) {}
 
     private List<EvidenceExpectation> loadExpectations(UUID macroId, UUID activityId, EvidenceLocation location) {
         String sql;
@@ -411,22 +419,26 @@ public class JdbcProcessVersionRepository implements ProcessVersionRepository {
 
     @Override
     public Optional<ProcessVersion> findByOfficialVersion(UUID processId, String officialVersion) {
-        List<ProcessVersion> list = jdbc.query(
+        List<UUID> ids = jdbc.query(
             "SELECT * FROM process_versions WHERE process_id = ? AND official_version = ?",
-            (rs, rowNum) -> findById(rs.getObject("id", UUID.class)).orElse(null),
+            (rs, rowNum) -> rs.getObject("id", UUID.class),
             processId, officialVersion
         );
-        return list.stream().filter(Objects::nonNull).findFirst();
+        return ids.stream().findFirst().flatMap(this::findById);
     }
 
     @Override
     public Page<ProcessVersion> listByProcess(UUID processId, int page, int size) {
         int offset = page * size;
-        List<ProcessVersion> content = jdbc.query(
+        List<UUID> versionIds = jdbc.query(
             "SELECT id FROM process_versions WHERE process_id = ? ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?",
-            (rs, rowNum) -> findWithTree(rs.getObject("id", UUID.class)).orElse(null),
+            (rs, rowNum) -> rs.getObject("id", UUID.class),
             processId, size, offset
-        ).stream().filter(Objects::nonNull).toList();
+        );
+        List<ProcessVersion> content = versionIds.stream()
+            .map(id -> findWithTree(id).orElse(null))
+            .filter(Objects::nonNull)
+            .toList();
 
         Integer total = jdbc.queryForObject(
             "SELECT count(*) FROM process_versions WHERE process_id = ?",
