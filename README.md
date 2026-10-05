@@ -12,10 +12,11 @@ y `GET /api/v1/services/{serviceId}/verifiable-processes`. Usa las tablas existe
 Un servicio puede crearse sin fuentes mientras se configuran las integraciones.
 Cuando el request incluye `driveFolderId` o `redmineProjectId`, el backend exige
 un `ServiceSourceResolver` que lea la fuente con la identidad técnica y devuelva
-su nombre; sin acceso responde `503` y no persiste el servicio. El adaptador de
-Drive implementa esta lectura; la de Redmine queda para 6.2.1. El endpoint
-`GET /api/v1/services/{serviceId}/tickets` ya está preparado para consumir
-`ServiceTicketSearch`; sin proyecto Redmine o sin adaptador responde `503`.
+su nombre; sin acceso responde `503` y no persiste el servicio. Los adaptadores
+de Drive y Redmine implementan esta lectura y validan el proyecto o carpeta real
+antes de guardar el servicio. El endpoint `GET /api/v1/services/{serviceId}/tickets`
+usa `ServiceTicketSearch` con el proyecto asociado al servicio y responde `503`
+si no existe un proyecto Redmine validado o si el conector no está disponible.
 No se generan nombres ni tickets ficticios en el perfil de ejecución normal.
 
 ## Disponibilidad general de fuentes M1
@@ -29,10 +30,47 @@ un servicio particular.
 
 La variable opcional `TEMA_INTEGRATION_PROBE_TIMEOUT` controla el tiempo máximo
 por fuente en formato ISO-8601 (`PT3S` por defecto; máximo `PT30S`). No se
-necesitan variables de Drive ni Redmine para arrancar el backend. El adaptador
-de Drive se habilita por separado; Redmine seguirá en `NOT_CONFIGURED` hasta
-6.2.1. Configurar credenciales por sí solo nunca produce `AVAILABLE`: ese
-estado exige una lectura exitosa.
+necesitan variables de Drive ni Redmine para arrancar el backend. Configurar
+credenciales por sí solo nunca produce `AVAILABLE`: ese estado exige una lectura
+exitosa. `NOT_CONFIGURED` sigue siendo el estado inicial para una fuente sin
+configuración.
+
+## Conector Redmine de solo lectura (TC-6.2.1)
+
+El backend incluye un adaptador de lectura de Redmine para proyectos y tickets
+que usa `GET` sobre la API REST JSON de Redmine, envía la clave en la cabecera
+`X-Redmine-API-Key` y nunca la incluye en la URL, respuestas ni logs. El acceso
+es solo de lectura: no crea proyectos ni tickets ni descarga adjuntos.
+
+Para habilitarlo, configurar:
+
+- `TEMA_REDMINE_ENABLED=true`
+- `TEMA_REDMINE_API_BASE_URL=http://<host>:<port>/redmine`
+- `TEMA_REDMINE_API_KEY=<clave del usuario del servicio>
+- `TEMA_REDMINE_TIMEOUT=PT5S` (o un valor ISO-8601 válido entre 1 ms y 30 s)
+
+`POST /api/v1/integrations/test` ejecuta una prueba real de lectura; un
+resultado `AVAILABLE` exige que Redmine responda correctamente. Si la clave falla,
+Redmine responde `401`; si se carece de permisos, `403`; si no es alcanzable o
+falla la lectura, el estado queda en `UNAVAILABLE`.
+
+El selector de proyectos expone `GET /api/v1/integrations/redmine/projects` para
+Administradores, con paginación y la posibilidad de filtrar por nombre o
+identifier. Al guardar o editar un servicio, se valida que el proyecto exista,
+sea accesible y que el backend pueda devolver su nombre para persistir el `id`
+real de Redmine junto con el nombre visible.
+
+Antes de ejecutar una verificación de M2, `GET /api/v1/services/{serviceId}/tickets`
+usa exclusivamente el proyecto Redmine guardado en el servicio, solicita
+`status_id=*` para incluir tickets abiertos y cerrados y restringe los
+resultados al proyecto asociado. La búsqueda por ID o asunto se hace dentro del
+proyecto del servicio y la paginación se conserva con `totalElements`, `page` y
+`size`.
+
+La lectura individual de un ticket comprueba que `project.id` coincide con el
+proyecto del servicio antes de devolver los metadatos, historial y campos
+personalizados de Redmine. Eso permite a M2 analizar la evolución del ticket sin
+mezclar tickets de otros proyectos.
 
 ## Conector Google Drive de solo lectura (TC-163)
 
