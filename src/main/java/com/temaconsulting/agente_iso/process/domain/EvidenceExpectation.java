@@ -46,6 +46,26 @@ public record EvidenceExpectation(
         }
     }
 
+    /** Returns whether this expectation is backed by a Redmine ticket selection. */
+    public boolean isTicket() {
+        return evidenceType == EvidenceType.TICKET;
+    }
+
+    /**
+     * Returns whether this expectation may consume the ticket context of its
+     * macroactivity during the later verification execution.
+     *
+     * This is based only on typed published configuration, never on display
+     * names. The published MVP has no separate ticket-context relationship in
+     * the persistence model, so documentary CASE_DEPENDENT evidence is the
+     * supported contextual case.
+     */
+    public boolean usesTicketSelectionContext() {
+        return isTicket()
+                || (evidenceType == EvidenceType.DOCUMENT
+                && applicability == ApplicabilityMode.CASE_DEPENDENT);
+    }
+
     public EvidenceExpectation(
             UUID id,
             UUID macroActivityId,

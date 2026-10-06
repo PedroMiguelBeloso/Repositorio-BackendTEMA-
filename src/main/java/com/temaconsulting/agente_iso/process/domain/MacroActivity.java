@@ -37,8 +37,77 @@ public record MacroActivity(
         normalizedActivities.sort(Comparator.comparingInt(Activity::order).thenComparing(Activity::id));
         activities = List.copyOf(normalizedActivities);
 
-        inputs = normalizeExpectations(inputs, id, EvidenceLocation.INPUT, "macroActivities.inputs");
-        outputs = normalizeExpectations(outputs, id, EvidenceLocation.OUTPUT, "macroActivities.outputs");
+        List<EvidenceExpectation> normalizedInputs = normalizeExpectations(
+                inputs, id, EvidenceLocation.INPUT, "macroActivities.inputs");
+        List<EvidenceExpectation> normalizedOutputs = normalizeExpectations(
+                outputs, id, EvidenceLocation.OUTPUT, "macroActivities.outputs");
+        ensureUniqueExpectationIds(normalizedActivities, normalizedInputs, normalizedOutputs);
+        inputs = normalizedInputs;
+        outputs = normalizedOutputs;
+    }
+
+    /**
+     * Returns all evidence that belongs to this macroactivity in verification order:
+     * inputs, activity records ordered by activity, then outputs.
+     */
+    public List<EvidenceExpectation> expectationsInVerificationOrder() {
+        List<EvidenceExpectation> result = new ArrayList<>();
+        result.addAll(inputs);
+        activities.stream()
+                .sorted(Comparator.comparingInt(Activity::order).thenComparing(Activity::id))
+                .forEach(activity -> result.addAll(activity.records()));
+        result.addAll(outputs);
+        return List.copyOf(result);
+    }
+
+    /**
+     * Returns the TICKET inputs of this macroactivity.
+     * The published model allows at most one such input for the MVP.
+     */
+    public List<EvidenceExpectation> ticketInputs() {
+        return inputs.stream()
+                .filter(EvidenceExpectation::isTicket)
+                .toList();
+    }
+
+    /** Returns whether this macroactivity requires the ticket selector in M2. */
+    public boolean requiresTicketSelection() {
+        return expectationsInVerificationOrder().stream().anyMatch(EvidenceExpectation::isTicket);
+    }
+
+    /** Returns the expectations that will receive the selected ticket context. */
+    public List<EvidenceExpectation> ticketContextExpectations() {
+        return expectationsInVerificationOrder().stream()
+                .filter(EvidenceExpectation::usesTicketSelectionContext)
+                .toList();
+    }
+
+    private static void ensureUniqueExpectationIds(
+            List<Activity> activities,
+            List<EvidenceExpectation> inputs,
+            List<EvidenceExpectation> outputs
+    ) {
+        java.util.Set<UUID> ids = new java.util.HashSet<>();
+        for (EvidenceExpectation expectation : inputs) {
+            addExpectationId(ids, expectation);
+        }
+        for (Activity activity : activities) {
+            for (EvidenceExpectation expectation : activity.records()) {
+                addExpectationId(ids, expectation);
+            }
+        }
+        for (EvidenceExpectation expectation : outputs) {
+            addExpectationId(ids, expectation);
+        }
+    }
+
+    private static void addExpectationId(java.util.Set<UUID> ids, EvidenceExpectation expectation) {
+        if (!ids.add(expectation.id())) {
+            throw new DomainValidationException(
+                    "macroActivities.evidenceExpectations.id",
+                    "Repeated evidence expectation IDs are not allowed within a macroactivity"
+            );
+        }
     }
 
     private static List<EvidenceExpectation> normalizeExpectations(

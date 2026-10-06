@@ -124,6 +124,10 @@ public record ProcessVersion(
         return status == ProcessStatus.DRAFT;
     }
 
+    public boolean isPublished() {
+        return status == ProcessStatus.PUBLISHED;
+    }
+
     public ProcessVersion publish(Instant at) {
         Objects.requireNonNull(at, "publishedAt is required");
         if (!isEditable()) {

@@ -4,6 +4,7 @@ import com.temaconsulting.agente_iso.process.domain.ProcessDefinition;
 import com.temaconsulting.agente_iso.process.domain.ProcessVersion;
 import org.springframework.stereotype.Service;
 
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.temaconsulting.agente_iso.process.application.ProcessService.notFound;
@@ -19,11 +20,13 @@ public class ProcessAssignmentQuery implements ProcessAssignmentReader {
     }
 
     @Override
-    public ProcessAssignmentInfo get(UUID versionId) {
-        ProcessVersion version = versions.findWithTree(versionId)
-                .orElseThrow(() -> notFound("Process version not found: " + versionId));
-        ProcessDefinition process = processes.findById(version.processId())
-                .orElseThrow(() -> notFound("Process not found: " + version.processId()));
+    public Optional<ProcessAssignmentInfo> find(UUID versionId) {
+        return versions.findWithTree(versionId).flatMap(version ->
+                processes.findById(version.processId()).map(process -> toInfo(version, process))
+        );
+    }
+
+    private ProcessAssignmentInfo toInfo(ProcessVersion version, ProcessDefinition process) {
         return new ProcessAssignmentInfo(
                 version.id(), process.id(), process.code(), process.name(),
                 version.officialVersion(), version.status(), process.m2Enabled(),
@@ -31,5 +34,11 @@ public class ProcessAssignmentQuery implements ProcessAssignmentReader {
                         .map(macro -> new ProcessAssignmentInfo.MacroActivityInfo(macro.id(), macro.name()))
                         .toList()
         );
+    }
+
+    @Override
+    public ProcessAssignmentInfo get(UUID versionId) {
+        return find(versionId)
+                .orElseThrow(() -> notFound("Process version not found: " + versionId));
     }
 }
