@@ -141,3 +141,12 @@ classDiagram
 El futuro verificador convierte los tipos y cardinalidad de la expectativa
 publicada de M1 al `SearchRequest`, y traduce el `SearchResult` a su propio
 resultado. `integration` no depende del módulo `verification`.
+
+## Regla de diseño de dominio — M2 preview
+
+La implementación de `POST /api/v1/verifications/preview` protege las invariantes locales en `verification.domain`, mantiene las reglas que requieren múltiples objetos en servicios de dominio/aplicación y deja la traducción HTTP en `verification.api`. El detalle de ubicación y justificación está en `docs/7.1.1-domain-rule-placement.md`.
+
+
+## 7.1.1 — Verification preview
+
+Implemented `POST /api/v1/verifications/preview` as a read-only M2 use case. Domain invariants live in `verification.domain` and `process.domain`; cross-object validation is coordinated by `VerificationScopeResolver`; HTTP validation/error mapping stays in `verification.api`. The preview does not create runs or call external sources. See `docs/7.1.1-domain-rule-placement.md` and `docs/7.1.1-alignment-report.md`.

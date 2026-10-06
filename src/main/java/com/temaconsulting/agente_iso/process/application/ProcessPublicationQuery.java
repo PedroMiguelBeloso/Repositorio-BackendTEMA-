@@ -6,9 +6,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
-import static com.temaconsulting.agente_iso.process.application.ProcessService.conflict;
-import static com.temaconsulting.agente_iso.process.application.ProcessService.notFound;
-
 @Service
 public class ProcessPublicationQuery implements PublishedProcessReader {
 
@@ -21,10 +18,10 @@ public class ProcessPublicationQuery implements PublishedProcessReader {
     @Override
     public ProcessVersion getPublished(UUID versionId) {
         ProcessVersion version = versions.findWithTree(versionId)
-                .orElseThrow(() -> notFound("Process version not found: " + versionId));
+                .orElseThrow(() -> new ProcessVersionNotFoundException(versionId));
 
         if (version.status() != ProcessStatus.PUBLISHED) {
-            throw conflict("Process version is not published: " + versionId);
+            throw new ProcessVersionNotPublishedException(versionId);
         }
         return version;
     }
