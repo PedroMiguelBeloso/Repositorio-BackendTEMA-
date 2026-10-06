@@ -35,6 +35,18 @@ credenciales por sí solo nunca produce `AVAILABLE`: ese estado exige una lectur
 exitosa. `NOT_CONFIGURED` sigue siendo el estado inicial para una fuente sin
 configuración.
 
+## Resumen de corrección y validación
+
+Se corrigió la lectura individual de tickets de Redmine y la validación del historial para que el adaptador cumpla con el contrato de M2:
+
+- Se incluye explícitamente `include=journals` al consultar el ticket.
+- Si Redmine responde `404`, el backend lo transforma en `ApiException` de dominio y no en un error técnico escapado.
+- El snapshot del ticket ahora conserva correctamente `statusId`, `statusName`, `closed`, `customFields` y `journals`.
+- Los cambios del historial (`details`) se parsean y quedan accesibles como `JournalChange`.
+- El estado cerrado solo se marca cuando Redmine lo señala explícitamente; si no hay esa señal, se devuelve como no determinado en lugar de inferirse por el nombre.
+
+La validación quedó cubierta por tests de Redmine y la suite completa del backend ejecuta correctamente con `./mvnw test` sin fallos reportados en Surefire.
+
 ## Conector Redmine de solo lectura (TC-6.2.1)
 
 El backend incluye un adaptador de lectura de Redmine para proyectos y tickets
@@ -71,6 +83,20 @@ La lectura individual de un ticket comprueba que `project.id` coincide con el
 proyecto del servicio antes de devolver los metadatos, historial y campos
 personalizados de Redmine. Eso permite a M2 analizar la evolución del ticket sin
 mezclar tickets de otros proyectos.
+
+En la consulta de detalle se incluye explícitamente `include=journals`; si la
+respuesta de Redmine omite ese campo, la lectura del historial se considera
+incompleta y no se interpreta como un historial vacío. El estado cerrado se
+respetará solo cuando Redmine lo informe explícitamente; si no existe esa señal,
+se devolverá como `desconocido` y nunca se deducirá por el nombre del estado.
+
+Para M2, este snapshot debe usarse como evidencia de lectura, no como prueba de
+cumplimiento por sí mismo: el backend recupera y organiza la información del
+ticket y su historial, pero la decisión de si un cambio cumple una expectativa del
+proceso se realizará en la capa de verificación. Antes de devolver el snapshot,
+se valida que el ticket pertenezca al proyecto de Redmine asociado al servicio y
+que cada consulta de detalle se refiera a un ticket concreto, sin mezclar datos
+entre tickets o proyectos.
 
 ## Conector Google Drive de solo lectura (TC-163)
 
