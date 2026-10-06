@@ -206,7 +206,17 @@ public class RedmineAdapter implements IntegrationProbe, RedmineProjectCatalog, 
             throw invalid("ticketId", "Ticket ID is required");
         }
         requireConfigured();
-        JsonNode payload = getJson("/issues/{id}.json", "id", ticketId.trim());
+        JsonNode payload;
+        try {
+            payload = getJson("/issues/{id}.json", "id", ticketId.trim(), "include", "journals");
+        } catch (RedmineReadException ex) {
+            Throwable cause = ex.getCause();
+            if (cause instanceof RestClientResponseException responseException && responseException.getStatusCode().value() == 404) {
+                throw new ApiException(ProblemCode.NOT_FOUND, HttpStatus.NOT_FOUND,
+                        "No se encontró el ticket solicitado", List.of());
+            }
+            throw ex;
+        }
         JsonNode issue = payload.get("issue");
         if (issue == null || issue.isEmpty()) {
             throw new ApiException(ProblemCode.NOT_FOUND, HttpStatus.NOT_FOUND,
@@ -217,16 +227,22 @@ public class RedmineAdapter implements IntegrationProbe, RedmineProjectCatalog, 
             throw new ApiException(ProblemCode.TICKET_OUTSIDE_PROJECT, HttpStatus.FORBIDDEN,
                     "El ticket no pertenece al proyecto configurado del servicio", List.of());
         }
+        JsonNode journalsNode = issue.path("journals");
+        if (journalsNode == null || journalsNode.isNull() || !journalsNode.isArray()) {
+            throw new ApiException(ProblemCode.SOURCE_UNAVAILABLE, HttpStatus.SERVICE_UNAVAILABLE,
+                    "El ticket no incluye el historial requerido", List.of());
+        }
         TicketSnapshot.CustomField[] customFields = parseCustomFields(issue.path("custom_fields"));
-        TicketSnapshot.JournalEntry[] journals = parseJournals(issue.path("journals"));
+        TicketSnapshot.JournalEntry[] journals = parseJournals(journalsNode);
         return new TicketSnapshot(
                 text(issue.path("id")),
                 actualProjectId,
                 text(issue.path("project").path("name")),
                 text(issue.path("subject")),
                 text(issue.path("status").path("name")),
-                "closed".equalsIgnoreCase(text(issue.path("status").path("name")).toLowerCase(Locale.ROOT))
-                        || issue.path("status").path("is_closed").asBoolean(false),
+                text(issue.path("status").path("id")),
+                text(issue.path("status").path("name")),
+                parseClosedStatus(issue.path("status")),
                 text(issue.path("description")),
                 text(issue.path("assigned_to").path("name")),
                 parseInstant(issue.path("updated_on")),
@@ -372,9 +388,55 @@ public class RedmineAdapter implements IntegrationProbe, RedmineProjectCatalog, 
             String user = text(journal.path("user").path("name"));
             String notes = text(journal.path("notes"));
             Instant createdAt = parseInstant(journal.path("created_on"));
-            entries.add(new TicketSnapshot.JournalEntry(id, user, notes, createdAt));
+            List<TicketSnapshot.JournalChange> changes = parseJournalChanges(journal.path("details"));
+            entries.add(new TicketSnapshot.JournalEntry(id, user, notes, createdAt, changes));
         }
         return entries.toArray(TicketSnapshot.JournalEntry[]::new);
+    }
+
+    private static List<TicketSnapshot.JournalChange> parseJournalChanges(JsonNode details) {
+        if (details == null || !details.isArray()) {
+            return List.of();
+        }
+        List<TicketSnapshot.JournalChange> changes = new ArrayList<>();
+        for (JsonNode detail : details) {
+            String field = text(detail.path("property"));
+            Object oldValue = parseJsonValue(detail.path("old_value"));
+            Object newValue = parseJsonValue(detail.path("new_value"));
+            changes.add(new TicketSnapshot.JournalChange(field, oldValue, newValue));
+        }
+        return changes;
+    }
+
+    private static Object parseJsonValue(JsonNode node) {
+        if (node == null || node.isNull()) {
+            return null;
+        }
+        if (node.isTextual() || node.isNumber() || node.isBoolean()) {
+            return node.asText();
+        }
+        if (node.isArray() || node.isObject()) {
+            return node.toString();
+        }
+        return node.asText();
+    }
+
+    private static Boolean parseClosedStatus(JsonNode status) {
+        if (status == null || status.isNull()) {
+            return null;
+        }
+        if (status.hasNonNull("is_closed") && status.get("is_closed").isBoolean()) {
+            return status.get("is_closed").asBoolean();
+        }
+        String normalized = text(status.path("name"));
+        if (normalized == null) {
+            return null;
+        }
+        String name = normalized.trim().toLowerCase(Locale.ROOT);
+        return switch (name) {
+            case "cerrado", "closed", "resolved", "done", "terminado" -> true;
+            default -> null;
+        };
     }
 
     private RuntimeException translate(RestClientResponseException ex) {

@@ -28,9 +28,9 @@ class RedmineAdapterTest {
         server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
         server.createContext("/redmine/projects", this::respondProject);
         server.createContext("/redmine/issues", this::respondIssue);
+        server.createContext("/redmine/issues/", this::respondIssueDetail);
         server.createContext("/redmine/projects/12.json", this::respondProjectDetail);
         server.createContext("/redmine/projects/999.json", this::respondProjectDetail);
-        server.createContext("/redmine/issues/204.json", this::respondIssueDetail);
         server.start();
     }
 
@@ -78,6 +78,102 @@ class RedmineAdapterTest {
         assertThat(page.items()).allMatch(ticket -> ticket.projectId().equals("12"));
         assertThat(byId.items()).extracting(TicketSummary::id).containsExactly("204");
         assertThat(requests).allMatch(request -> !request.contains("X-Redmine-API-Key"));
+    }
+
+    @Test
+    void readsSelectedTicketWithHistoryAndRejectsOtherProject() {
+        RedmineAdapter redmine = adapter(true);
+
+        var ticket = redmine.getTicket("12", "204");
+
+        assertThat(ticket.projectId()).isEqualTo("12");
+        assertThat(ticket.subject()).isEqualTo("Fallo de integración");
+        assertThat(ticket.statusId()).isEqualTo("5");
+        assertThat(ticket.statusName()).isEqualTo("Cerrado");
+        assertThat(ticket.status()).isEqualTo("Cerrado");
+        assertThat(ticket.closed()).isTrue();
+        assertThat(ticket.customFields()).extracting(field -> field.name()).contains("Prioridad");
+        assertThat(ticket.journals()).hasSize(2);
+        assertThat(ticket.journals().getFirst().notes()).isEqualTo("Se cerró");
+        assertThat(ticket.journals().getFirst().changes()).extracting(change -> change.field())
+                .contains("status_id");
+        assertThat(ticket.journals().getFirst().changes()).extracting(change -> change.newValue())
+                .contains("5");
+        assertThatThrownBy(() -> redmine.getTicket("12", "999"))
+                .isInstanceOf(ApiException.class)
+                .hasMessageContaining("No se encontró");
+        assertThatThrownBy(() -> redmine.getTicket("22", "204"))
+                .isInstanceOf(ApiException.class)
+                .hasMessageContaining("no pertenece");
+        assertThat(requests).anyMatch(request -> request.contains("/redmine/issues/204.json?include=journals"));
+    }
+
+    @Test
+    void missingJournalsAreRejectedAsUnreadableHistory() throws IOException {
+        HttpServer issueOnlyServer = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        issueOnlyServer.createContext("/redmine/issues/", exchange -> {
+            requests.add(exchange.getRequestMethod() + " " + exchange.getRequestURI() + " " + exchange.getRequestHeaders().getFirst("X-Redmine-API-Key"));
+            write(exchange, 200, """
+                    {
+                      "issue": {
+                        "id": 204,
+                        "project": {"id": 12, "name": "Proyecto principal"},
+                        "subject": "Fallo de integración",
+                        "status": {"id": 5, "name": "Cerrado"},
+                        "assigned_to": {"name": "Ana"},
+                        "updated_on": "2026-10-02T11:00:00Z",
+                        "custom_fields": [{"id": 1, "name": "Prioridad", "value": "Alta"}]
+                      }
+                    }
+                    """);
+        });
+        issueOnlyServer.start();
+        try {
+            RedmineAdapter redmine = new RedmineAdapter(RestClient.builder(), true,
+                    "http://127.0.0.1:" + issueOnlyServer.getAddress().getPort() + "/redmine",
+                    "test-redmine-key", "PT1S");
+
+            assertThatThrownBy(() -> redmine.getTicket("12", "204"))
+                    .isInstanceOf(ApiException.class)
+                    .hasMessageContaining("historial");
+        } finally {
+            issueOnlyServer.stop(0);
+        }
+    }
+
+    @Test
+    void unknownStatusIsNotGuessedWhenRedmineDoesNotSignalClosed() throws IOException {
+        HttpServer unknownStatusServer = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        unknownStatusServer.createContext("/redmine/issues/", exchange -> {
+            requests.add(exchange.getRequestMethod() + " " + exchange.getRequestURI() + " " + exchange.getRequestHeaders().getFirst("X-Redmine-API-Key"));
+            write(exchange, 200, """
+                    {
+                      "issue": {
+                        "id": 204,
+                        "project": {"id": 12, "name": "Proyecto principal"},
+                        "subject": "Fallo de integración",
+                        "status": {"id": 7, "name": "En revisión"},
+                        "assigned_to": {"name": "Ana"},
+                        "updated_on": "2026-10-02T11:00:00Z",
+                        "journals": []
+                      }
+                    }
+                    """);
+        });
+        unknownStatusServer.start();
+        try {
+            RedmineAdapter redmine = new RedmineAdapter(RestClient.builder(), true,
+                    "http://127.0.0.1:" + unknownStatusServer.getAddress().getPort() + "/redmine",
+                    "test-redmine-key", "PT1S");
+
+            var ticket = redmine.getTicket("12", "204");
+            assertThat(ticket.statusId()).isEqualTo("7");
+            assertThat(ticket.statusName()).isEqualTo("En revisión");
+            assertThat(ticket.closed()).isNull();
+            assertThat(ticket.journals()).isEmpty();
+        } finally {
+            unknownStatusServer.stop(0);
+        }
     }
 
     private RedmineAdapter adapter(boolean enabled) {
@@ -170,11 +266,14 @@ class RedmineAdapterTest {
                         "project": {"id": 12, "name": "Proyecto principal"},
                         "subject": "Fallo de integración",
                         "description": "Detalle",
-                        "status": {"id": 5, "name": "Cerrado"},
+                        "status": {"id": 5, "name": "Cerrado", "is_closed": true},
                         "assigned_to": {"name": "Ana"},
                         "updated_on": "2026-10-02T11:00:00Z",
                         "custom_fields": [{"id": 1, "name": "Prioridad", "value": "Alta"}],
-                        "journals": [{"id": 1, "user": {"name": "Ana"}, "notes": "Se cerró"}]
+                        "journals": [
+                          {"id": 1, "user": {"name": "Ana"}, "notes": "Se cerró", "created_on": "2026-10-02T12:00:00Z", "details": [{"property": "status_id", "old_value": "1", "new_value": "5"}]},
+                          {"id": 2, "user": {"name": "Luis"}, "notes": "Investigación", "created_on": "2026-10-01T12:00:00Z", "details": [{"property": "assigned_to_id", "old_value": "7", "new_value": "9"}]}
+                        ]
                       }
                     }
                     """);
