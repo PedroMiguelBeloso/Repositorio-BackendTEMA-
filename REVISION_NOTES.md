@@ -1,6 +1,6 @@
 # Backend TEMA - Revision Notes
 
-This revision aligns the implemented Identity slice with the supplied OpenAPI contract, the DBML model, and the Identity UML tab.
+This revision contains the Identity, M1 process/service/catalog, and M2 verification-preview slices on the integration branch, along with the persistence foundation and corresponding tests.
 
 ## Identity changes
 
@@ -23,7 +23,7 @@ This revision aligns the implemented Identity slice with the supplied OpenAPI co
 
 ## Important scope note
 
-The uploaded repository still contains placeholder packages for `catalog`, `process`, `service`, `verification`, and `integration`. This revision does not claim that the complete M1/M2 application has been implemented; it brings the implemented Identity slice and the persistence foundation into alignment with the supplied specifications.
+M1 owns the published service/process/catalog configuration. M2 reads those public application boundaries to form an in-memory verification context; this task does not implement external evidence retrieval or verification-run persistence.
 
 ## Task 7.1.1 — Verification preview and domain-rule alignment
 
@@ -31,8 +31,15 @@ The uploaded repository still contains placeholder packages for `catalog`, `proc
 - Added `VerificationTarget`, `VerificationPreview`, `PreviewExpectation`, `TicketSelectionGroup`, and the `TicketSelectionPlanner` domain service.
 - Moved local invariants into domain objects: scope/macroActivity consistency, expectation location/activity consistency, stable ticket-group identity, ticket-input cardinality, related expectation membership, and preview group/expectation relationships.
 - `TicketSelectionPlanner` now receives only the `MacroActivity` aggregate and derives its expectation set from the aggregate, so grouping decisions are not made by the application service.
-- `VerificationScopeResolver` coordinates the public read boundaries of `service` and `process`, validates publication/assignment/M2 eligibility, resolves PROCESS vs MACRO_ACTIVITY, and revalidates the same relationships that a future start operation must use.
+- `VerificationContextLoader` coordinates public read boundaries for `service`, `process` and `catalog`, validates publication/assignment/M2 eligibility, and resolves PROCESS vs MACRO_ACTIVITY.
 - Application-layer preview failures no longer carry `HttpStatus`; `verification.api.VerificationApiExceptionHandler` translates semantic failures to RFC 9457 `ProblemDetail` responses.
 - No Drive, Redmine, GPT, verification-run persistence, ticket-selection persistence, or new database migration was added for this preview-only task.
-- Added domain, resolver, and controller security tests plus `docs/7.1.1-domain-rule-placement.md` and `docs/7.1.1-alignment-report.md`.
+- Added domain, context-loader, and controller security tests plus `docs/7.1.1-domain-rule-placement.md`.
 - The supplied DBML does not model an explicit ticket-context foreign key for documentary evidence. The implementation therefore uses only typed evidence data (`DOCUMENT` + `CASE_DEPENDENT`) for the permitted contextual association and never inspects visible names.
+
+## Task 7.1.2 — Verification context
+
+- Added immutable in-memory service, process, scope, macroactivity and expectation context for reuse by preview and future execution.
+- Resolved catalog definitions in one batch; retained each expectation independently and rejected missing definitions or published DOCUMENT/FOLDER definitions without official nomenclature.
+- Kept the 7.1.1 preview response shape unchanged because the referenced OpenAPI YAML is not present in this checkout.
+- Added fixture-based loader tests for source absence, exact assignments, scope/order, applicability/cardinality, catalog types and preview/context ID consistency.

@@ -31,6 +31,9 @@ public class ServiceSnapshotQuery implements ServiceSnapshotReader {
         return new ServiceSnapshot(
                 service.id(),
                 service.revision(),
+                service.serviceType(),
+                service.sources().driveFolder(),
+                service.sources().redmineProject(),
                 service.processes().stream()
                         .map(this::toAssignment)
                         .toList()

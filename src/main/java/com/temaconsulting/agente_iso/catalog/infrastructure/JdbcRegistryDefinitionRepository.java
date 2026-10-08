@@ -8,6 +8,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -38,6 +39,19 @@ public class JdbcRegistryDefinitionRepository implements RegistryDefinitionRepos
                 id
         );
         return rows.stream().findFirst();
+    }
+
+    @Override
+    public List<RegistryDefinition> findAllByIds(Collection<UUID> ids) {
+        if (ids.isEmpty()) {
+            return List.of();
+        }
+        String placeholders = String.join(",", java.util.Collections.nCopies(ids.size(), "?"));
+        return jdbc.query(
+                "SELECT * FROM registry_definitions WHERE id IN (" + placeholders + ")",
+                mapper,
+                ids.toArray()
+        );
     }
 
     @Override
