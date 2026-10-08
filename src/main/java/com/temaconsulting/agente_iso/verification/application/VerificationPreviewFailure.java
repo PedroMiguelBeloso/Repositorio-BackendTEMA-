@@ -28,6 +28,10 @@ public final class VerificationPreviewFailure extends RuntimeException {
         return new VerificationPreviewFailure(Kind.NOT_FOUND, ProblemCode.NOT_FOUND, null, message);
     }
 
+    public static VerificationPreviewFailure missing(ProblemCode code, String message) {
+        return new VerificationPreviewFailure(Kind.NOT_FOUND, code, null, message);
+    }
+
     public static VerificationPreviewFailure businessRule(ProblemCode code, String field, String message) {
         return new VerificationPreviewFailure(Kind.BUSINESS_RULE, code, field, message);
     }

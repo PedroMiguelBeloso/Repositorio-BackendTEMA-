@@ -1,5 +1,8 @@
 package com.temaconsulting.agente_iso.service.application;
 
+import com.temaconsulting.agente_iso.service.domain.ExternalSource;
+import com.temaconsulting.agente_iso.service.domain.ServiceType;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,10 +19,17 @@ public interface ServiceSnapshotReader {
     record ServiceSnapshot(
             UUID serviceId,
             int revision,
+            ServiceType serviceType,
+            ExternalSource driveFolder,
+            ExternalSource redmineProject,
             List<ProcessAssignment> processAssignments
     ) {
         public ServiceSnapshot {
             processAssignments = List.copyOf(processAssignments);
+        }
+
+        public ServiceSnapshot(UUID serviceId, int revision, List<ProcessAssignment> processAssignments) {
+            this(serviceId, revision, null, null, null, processAssignments);
         }
     }
 

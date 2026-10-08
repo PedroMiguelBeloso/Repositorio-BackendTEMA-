@@ -11,14 +11,14 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class VerificationPreviewService {
-    private final VerificationScopeResolver scopeResolver;
+    private final VerificationContextLoader contextLoader;
 
-    public VerificationPreviewService(VerificationScopeResolver scopeResolver) {
-        this.scopeResolver = scopeResolver;
+    public VerificationPreviewService(VerificationContextLoader contextLoader) {
+        this.contextLoader = contextLoader;
     }
 
     @Transactional(readOnly = true)
     public VerificationPreview preview(VerificationTarget target) {
-        return scopeResolver.resolve(target);
+        return VerificationContextPreviewMapper.toPreview(contextLoader.load(target));
     }
 }

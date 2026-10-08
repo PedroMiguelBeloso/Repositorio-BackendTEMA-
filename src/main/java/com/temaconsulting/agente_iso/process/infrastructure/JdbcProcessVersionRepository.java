@@ -395,7 +395,7 @@ public class JdbcProcessVersionRepository implements ProcessVersionRepository {
                 "SELECT ee.id, ee.macro_activity_id, ee.activity_id, ee.registry_definition_id, ee.display_name, " +
                         "ee.applicability, ee.cardinality, ee.location, ee.\"order\", " +
                         "rd.evidence_type, rd.official_nomenclature FROM evidence_expectations ee " +
-                        "JOIN registry_definitions rd ON rd.id = ee.registry_definition_id"
+                        "LEFT JOIN registry_definitions rd ON rd.id = ee.registry_definition_id"
         ).replace("WHERE macro_activity_id", "WHERE ee.macro_activity_id")
          .replace("WHERE activity_id", "WHERE ee.activity_id")
          .replace("AND activity_id IS NULL", "AND ee.activity_id IS NULL")
@@ -412,7 +412,9 @@ public class JdbcProcessVersionRepository implements ProcessVersionRepository {
             Cardinality.valueOf(rs.getString("cardinality")),
             EvidenceLocation.valueOf(rs.getString("location")),
             rs.getInt("order"),
-            EvidenceType.valueOf(rs.getString("evidence_type")),
+            rs.getString("evidence_type") == null
+                    ? null
+                    : EvidenceType.valueOf(rs.getString("evidence_type")),
             rs.getString("official_nomenclature")
         ), params);
     }
