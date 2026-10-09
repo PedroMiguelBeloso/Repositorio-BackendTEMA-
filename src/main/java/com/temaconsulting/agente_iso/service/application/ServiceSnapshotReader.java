@@ -16,8 +16,13 @@ public interface ServiceSnapshotReader {
     record ServiceSnapshot(
             UUID serviceId,
             int revision,
-            List<ProcessAssignment> processAssignments
+            List<ProcessAssignment> processAssignments,
+            String redmineProjectId
     ) {
+        public ServiceSnapshot(UUID serviceId, int revision, List<ProcessAssignment> processAssignments) {
+            this(serviceId, revision, processAssignments, null);
+        }
+
         public ServiceSnapshot {
             processAssignments = List.copyOf(processAssignments);
         }

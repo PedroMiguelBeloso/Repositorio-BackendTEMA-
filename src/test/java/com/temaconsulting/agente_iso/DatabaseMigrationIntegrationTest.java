@@ -1,4 +1,11 @@
 package com.temaconsulting.agente_iso;
+
+import com.temaconsulting.agente_iso.verification.application.VerificationRunDraft;
+import com.temaconsulting.agente_iso.verification.application.VerificationStartFailure;
+import com.temaconsulting.agente_iso.verification.domain.ValidatedTicketSelection;
+import com.temaconsulting.agente_iso.verification.domain.ValidatedTicketSelections;
+import com.temaconsulting.agente_iso.verification.domain.VerificationScope;
+import com.temaconsulting.agente_iso.verification.infrastructure.JdbcVerificationRunRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -8,9 +15,11 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import java.util.List;
 import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
@@ -31,6 +40,9 @@ class DatabaseMigrationIntegrationTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private JdbcVerificationRunRepository verificationRuns;
 
     @Test
     void testFlywayMigrationsExecuteSuccessfully() {
@@ -144,6 +156,104 @@ class DatabaseMigrationIntegrationTest {
                 "INSERT INTO users (id, email, display_name, password_hash, role, active) VALUES (?, ?, ?, ?, ?::role_enum, ?)",
                 secondId, "case@test.com", "Second", "hash", "READER", true
         ));
+    }
+
+    @Test
+    void persistsExactlyTheValidatedTicketIdsForTheCreatedRun() {
+        UUID userId = UUID.randomUUID();
+        jdbcTemplate.update(
+                "INSERT INTO users (id, email, display_name, password_hash, role, active) VALUES (?, ?, ?, ?, ?::role_enum, ?)",
+                userId, userId + "@test.com", "Admin", "hash", "ADMIN", true
+        );
+        UUID processId = UUID.randomUUID();
+        jdbcTemplate.update(
+                "INSERT INTO processes (id, code, name, m2_enabled) VALUES (?, ?::process_code, ?, ?)",
+                processId, "TAKE_OVER", "Take Over", true
+        );
+        UUID processVersionId = UUID.randomUUID();
+        jdbcTemplate.update(
+                """
+                INSERT INTO process_versions (
+                    id, process_id, official_version, objective, owner, version_date,
+                    status, revision, published_at
+                ) VALUES (?, ?, ?, ?, ?, CURRENT_DATE, ?::process_status, ?, NOW())
+                """,
+                processVersionId, processId, "v1", "Objective", "Owner", "PUBLISHED", 1
+        );
+        UUID serviceId = UUID.randomUUID();
+        jdbcTemplate.update(
+                """
+                INSERT INTO services (
+                    id, name, client, service_type, status, revision,
+                    redmine_project_id, redmine_project_name
+                ) VALUES (?, ?, ?, ?::service_type, ?::service_status, ?, ?, ?)
+                """,
+                serviceId, "Service", "Client", "SOFTWARE_FACTORY", "ACTIVE", 3,
+                "redmine-project-1", "Project"
+        );
+        jdbcTemplate.update(
+                "INSERT INTO service_process_versions (service_id, process_id, process_version_id) VALUES (?, ?, ?)",
+                serviceId, processId, processVersionId
+        );
+
+        UUID runId = UUID.randomUUID();
+        UUID macroActivityId = UUID.randomUUID();
+        var selected = new ValidatedTicketSelections(List.of(
+                new ValidatedTicketSelection(
+                        "ticket-group:" + macroActivityId,
+                        macroActivityId,
+                        List.of("204", "205")
+                )
+        ));
+        var created = verificationRuns.create(new VerificationRunDraft(
+                runId, serviceId, 3, processVersionId, userId,
+                VerificationScope.PROCESS, null, "Start note", selected
+        ));
+
+        assertThat(created.id()).isEqualTo(runId);
+        assertThat(created.serviceRevisionSnapshot()).isEqualTo(3);
+        assertThat(created.redmineProjectId()).isEqualTo("redmine-project-1");
+        assertThat(created.ticketSelections().groups().getFirst().ticketIds())
+                .containsExactly("204", "205");
+        List<String> savedTicketIds = jdbcTemplate.queryForList(
+                """
+                SELECT ticket_id FROM verification_ticket_selections
+                WHERE run_id = ? AND group_id = ? ORDER BY ticket_id
+                """,
+                String.class, runId, "ticket-group:" + macroActivityId
+        );
+        assertThat(savedTicketIds).containsExactly("204", "205");
+
+        UUID laterRunId = UUID.randomUUID();
+        var laterSelection = new ValidatedTicketSelections(List.of(
+                new ValidatedTicketSelection(
+                        "ticket-group:" + macroActivityId, macroActivityId, List.of("206")
+                )
+        ));
+        verificationRuns.create(new VerificationRunDraft(
+                laterRunId, serviceId, 3, processVersionId, userId,
+                VerificationScope.PROCESS, null, null, laterSelection
+        ));
+        assertThat(jdbcTemplate.queryForList(
+                "SELECT ticket_id FROM verification_ticket_selections WHERE run_id = ?",
+                String.class, runId
+        )).containsExactlyInAnyOrder("204", "205");
+        assertThat(jdbcTemplate.queryForList(
+                "SELECT ticket_id FROM verification_ticket_selections WHERE run_id = ?",
+                String.class, laterRunId
+        )).containsExactly("206");
+
+        UUID staleRunId = UUID.randomUUID();
+        assertThatThrownBy(() -> verificationRuns.create(new VerificationRunDraft(
+                staleRunId, serviceId, 2, processVersionId, userId,
+                VerificationScope.PROCESS, null, null, selected
+        )))
+                .isInstanceOf(VerificationStartFailure.class)
+                .hasMessageContaining("Service configuration changed");
+        assertThat(jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM verification_runs WHERE id = ?",
+                Integer.class, staleRunId
+        )).isZero();
     }
 
 }

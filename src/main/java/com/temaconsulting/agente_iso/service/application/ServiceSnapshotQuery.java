@@ -33,7 +33,10 @@ public class ServiceSnapshotQuery implements ServiceSnapshotReader {
                 service.revision(),
                 service.processes().stream()
                         .map(this::toAssignment)
-                        .toList()
+                        .toList(),
+                service.sources().redmineProject() == null
+                        ? null
+                        : service.sources().redmineProject().id()
         );
     }
 
