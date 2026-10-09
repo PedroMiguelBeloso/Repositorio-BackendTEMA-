@@ -215,7 +215,7 @@ public class RedmineAdapter implements IntegrationProbe, RedmineProjectCatalog, 
                 throw new ApiException(ProblemCode.NOT_FOUND, HttpStatus.NOT_FOUND,
                         "No se encontró el ticket solicitado", List.of());
             }
-            throw ex;
+            throw sourceFailure(ex.health(), "No se pudo consultar el ticket en Redmine");
         }
         JsonNode issue = payload.get("issue");
         if (issue == null || issue.isEmpty()) {

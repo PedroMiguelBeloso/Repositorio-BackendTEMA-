@@ -47,6 +47,7 @@ class ServiceSnapshotQueryTest {
 
         assertThat(snapshot.serviceId()).isEqualTo(serviceId);
         assertThat(snapshot.revision()).isEqualTo(4);
+        assertThat(snapshot.redmineProjectId()).isEqualTo("redmine-1");
         assertThat(snapshot.processAssignments()).containsExactly(
                 new ServiceSnapshotReader.ProcessAssignment(processId, versionId)
         );

@@ -5,6 +5,8 @@ import com.sun.net.httpserver.HttpServer;
 import com.temaconsulting.agente_iso.integration.application.SourceProbeException;
 import com.temaconsulting.agente_iso.service.application.TicketSummary;
 import com.temaconsulting.agente_iso.shared.application.ApiException;
+import com.temaconsulting.agente_iso.shared.application.ProblemCode;
+import org.springframework.http.HttpStatus;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -138,6 +140,30 @@ class RedmineAdapterTest {
                     .hasMessageContaining("historial");
         } finally {
             issueOnlyServer.stop(0);
+        }
+    }
+
+    @Test
+    void ticketReadFailuresBecomeSafeProblemDetailsWithoutRemoteResponseContent() throws IOException {
+        HttpServer unavailableServer = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        unavailableServer.createContext("/redmine/issues/", exchange ->
+                write(exchange, 503, "{\"error\":\"secret-api-key must not leak\"}"));
+        unavailableServer.start();
+        try {
+            RedmineAdapter redmine = new RedmineAdapter(RestClient.builder(), true,
+                    "http://127.0.0.1:" + unavailableServer.getAddress().getPort() + "/redmine",
+                    "test-redmine-key", "PT1S");
+
+            assertThatThrownBy(() -> redmine.getTicket("12", "204"))
+                    .isInstanceOf(ApiException.class)
+                    .satisfies(error -> {
+                        ApiException apiError = (ApiException) error;
+                        assertThat(apiError.code()).isEqualTo(ProblemCode.SOURCE_UNAVAILABLE);
+                        assertThat(apiError.httpStatus()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
+                        assertThat(apiError.safeMessage()).doesNotContain("secret-api-key");
+                    });
+        } finally {
+            unavailableServer.stop(0);
         }
     }
 

@@ -175,4 +175,10 @@ La implementación de `POST /api/v1/verifications/preview` protege las invariant
 
 ## 7.1.1 — Verification preview
 
-Implemented `POST /api/v1/verifications/preview` as a read-only M2 use case. Domain invariants live in `verification.domain` and `process.domain`; `VerificationContextLoader` resolves the exact published M1 version, service configuration, scope and catalog definitions for both the preview and future execution use cases. HTTP validation/error mapping stays in `verification.api`. Context loading performs no external-source calls or persistence. The preview response shape remains unchanged; the aligned OpenAPI YAML was not present in this checkout.
+Implemented `POST /api/v1/verifications/preview` as a read-only M2 use case. Domain invariants live in `verification.domain` and `process.domain`; cross-object validation is coordinated by `VerificationScopeResolver`; HTTP validation/error mapping stays in `verification.api`. The preview does not create runs or call external sources. See `docs/7.1.1-domain-rule-placement.md` and `docs/7.1.1-alignment-report.md`.
+
+## 7.1.3 — Selección de tickets y cardinalidad
+
+`POST /api/v1/verifications` vuelve a resolver el alcance y los grupos publicados, comprueba que `serviceRevision` siga vigente y valida la selección recibida sin inferir tickets por nombre ni reemplazar IDs elegidos. `ONE` requiere exactamente un ticket; `MULTIPLE`, uno o más. Cada ID se consulta mediante `RedmineTicketReader` y debe pertenecer al proyecto Redmine configurado para el servicio. Si falla la validación, no se crea la ejecución.
+
+El run y sus filas de `verification_ticket_selections` se guardan en una transacción, conservando `run_id`, `group_id` y `ticket_id`. Las expectativas TICKET de una macroactividad comparten su grupo; los grupos de macroactividades distintas se validan por separado. Ver [docs/7.1.3-ticket-selection.md](docs/7.1.3-ticket-selection.md) para el flujo y las reglas completas.

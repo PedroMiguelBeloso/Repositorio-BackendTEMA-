@@ -11,33 +11,43 @@ import com.temaconsulting.agente_iso.process.domain.EvidenceType;
 import com.temaconsulting.agente_iso.shared.api.ApiExceptionHandler;
 import com.temaconsulting.agente_iso.shared.api.ProblemDetailsFactory;
 import com.temaconsulting.agente_iso.shared.config.Configuration;
+import com.temaconsulting.agente_iso.service.domain.ServiceType;
+import com.temaconsulting.agente_iso.verification.application.CreatedVerificationRun;
 import com.temaconsulting.agente_iso.verification.application.VerificationPreviewService;
 import com.temaconsulting.agente_iso.verification.application.VerificationPreviewFailure;
+import com.temaconsulting.agente_iso.verification.application.VerificationStartService;
 import com.temaconsulting.agente_iso.verification.domain.PreviewExpectation;
 import com.temaconsulting.agente_iso.verification.domain.TicketSelectionGroup;
+import com.temaconsulting.agente_iso.verification.domain.ValidatedTicketSelection;
+import com.temaconsulting.agente_iso.verification.domain.ValidatedTicketSelections;
 import com.temaconsulting.agente_iso.verification.domain.VerificationPreview;
 import com.temaconsulting.agente_iso.verification.domain.VerificationScope;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(VerificationPreviewController.class)
+@WebMvcTest({VerificationPreviewController.class, VerificationRunController.class})
 @Import({
         SecurityConfig.class,
         JwtRoleConverter.class,
@@ -55,6 +65,9 @@ class VerificationPreviewControllerSecurityTest {
 
     @MockitoBean
     VerificationPreviewService previews;
+
+    @MockitoBean
+    VerificationStartService starts;
 
     @Test
     void adminCanRequestPreview() throws Exception {
@@ -177,6 +190,60 @@ class VerificationPreviewControllerSecurityTest {
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.code").value("TICKET_SELECTION_INVALID"))
                 .andExpect(jsonPath("$.details[0].field").value("macroActivityId"));
+    }
+
+    @Test
+    void adminCanStartRunAndReceivesTheValidatedSelections() throws Exception {
+        UUID serviceId = UUID.randomUUID();
+        UUID versionId = UUID.randomUUID();
+        UUID runId = UUID.randomUUID();
+        UUID adminId = UUID.randomUUID();
+        UUID macroId = UUID.randomUUID();
+        String groupId = TicketSelectionGroup.stableIdFor(macroId);
+        ValidatedTicketSelections selected = new ValidatedTicketSelections(List.of(
+                new ValidatedTicketSelection(groupId, macroId, List.of("204", "205"))
+        ));
+        when(starts.start(any(), eq(5), eq(adminId), anyList())).thenReturn(new CreatedVerificationRun(
+                runId,
+                serviceId,
+                ServiceType.SOFTWARE_FACTORY,
+                5,
+                versionId,
+                "drive-folder",
+                "Drive",
+                "redmine-project",
+                "Redmine",
+                VerificationScope.PROCESS,
+                null,
+                null,
+                "QUEUED",
+                adminId,
+                Instant.parse("2026-10-08T12:00:00Z"),
+                selected
+        ));
+
+        mockMvc.perform(post("/api/v1/verifications")
+                        .with(jwt().jwt(token -> token.subject(adminId.toString()))
+                                .authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "serviceId": "%s",
+                                  "serviceRevision": 5,
+                                  "processVersionId": "%s",
+                                  "scope": "PROCESS",
+                                  "ticketSelections": [
+                                    {"groupId": "%s", "ticketIds": ["204", "205"]}
+                                  ]
+                                }
+                                """.formatted(serviceId, versionId, groupId)))
+                .andExpect(status().isAccepted())
+                .andExpect(header().exists(HttpHeaders.LOCATION))
+                .andExpect(jsonPath("$.id").value(runId.toString()))
+                .andExpect(jsonPath("$.serviceRevisionSnapshot").value(5))
+                .andExpect(jsonPath("$.ticketSelections[0].groupId").value(groupId))
+                .andExpect(jsonPath("$.ticketSelections[0].ticketIds[0]").value("204"))
+                .andExpect(jsonPath("$.ticketSelections[0].ticketIds[1]").value("205"));
     }
 
     @Test
