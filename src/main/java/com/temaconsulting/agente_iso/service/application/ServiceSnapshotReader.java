@@ -22,10 +22,35 @@ public interface ServiceSnapshotReader {
             ServiceType serviceType,
             ExternalSource driveFolder,
             ExternalSource redmineProject,
-            List<ProcessAssignment> processAssignments
+            List<ProcessAssignment> processAssignments,
+            String redmineProjectId
     ) {
-        public ServiceSnapshot(UUID serviceId, int revision, List<ProcessAssignment> processAssignments) {
-            this(serviceId, revision, processAssignments, null);
+        public ServiceSnapshot(
+                UUID serviceId,
+                int revision,
+                List<ProcessAssignment> processAssignments,
+                String redmineProjectId
+        ) {
+            this(serviceId, revision, null, null, null, processAssignments, redmineProjectId);
+        }
+
+        public ServiceSnapshot(
+                UUID serviceId,
+                int revision,
+                ServiceType serviceType,
+                ExternalSource driveFolder,
+                ExternalSource redmineProject,
+                List<ProcessAssignment> processAssignments
+        ) {
+            this(
+                    serviceId,
+                    revision,
+                    serviceType,
+                    driveFolder,
+                    redmineProject,
+                    processAssignments,
+                    redmineProject == null ? null : redmineProject.id()
+            );
         }
 
         public ServiceSnapshot {
@@ -33,7 +58,7 @@ public interface ServiceSnapshotReader {
         }
 
         public ServiceSnapshot(UUID serviceId, int revision, List<ProcessAssignment> processAssignments) {
-            this(serviceId, revision, null, null, null, processAssignments);
+            this(serviceId, revision, null, null, null, processAssignments, null);
         }
     }
 

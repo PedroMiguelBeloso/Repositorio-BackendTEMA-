@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
  * It deliberately depends only on public read/query boundaries of M1.
  */
 @Service
-public class VerificationPreviewService {
+public class VerificationPreviewService implements VerificationScopeResolver {
     private final VerificationContextLoader contextLoader;
 
     public VerificationPreviewService(VerificationContextLoader contextLoader) {
@@ -20,5 +20,10 @@ public class VerificationPreviewService {
     @Transactional(readOnly = true)
     public VerificationPreview preview(VerificationTarget target) {
         return VerificationContextPreviewMapper.toPreview(contextLoader.load(target));
+    }
+
+    @Override
+    public VerificationPreview resolve(VerificationTarget target) {
+        return preview(target);
     }
 }
