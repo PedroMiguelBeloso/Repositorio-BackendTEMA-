@@ -182,3 +182,32 @@ Implemented `POST /api/v1/verifications/preview` as a read-only M2 use case. Dom
 `POST /api/v1/verifications` vuelve a resolver el alcance y los grupos publicados, comprueba que `serviceRevision` siga vigente y valida la selección recibida sin inferir tickets por nombre ni reemplazar IDs elegidos. `ONE` requiere exactamente un ticket; `MULTIPLE`, uno o más. Cada ID se consulta mediante `RedmineTicketReader` y debe pertenecer al proyecto Redmine configurado para el servicio. Si falla la validación, no se crea la ejecución.
 
 El run y sus filas de `verification_ticket_selections` se guardan en una transacción, conservando `run_id`, `group_id` y `ticket_id`. Las expectativas TICKET de una macroactividad comparten su grupo; los grupos de macroactividades distintas se validan por separado. Ver [docs/7.1.3-ticket-selection.md](docs/7.1.3-ticket-selection.md) para el flujo y las reglas completas.
+
+## Integración OpenAI para aplicabilidad de M2 (TC-178)
+
+El backend usa el SDK oficial `openai-java` y la Responses API con salida
+estructurada. La IA solo propone la aplicabilidad de evidencias marcadas
+`CASE_DEPENDENT` cuando los datos estructurados no permiten resolverla. No
+consulta Drive/Redmine ni decide si una evidencia cumple. El puerto interno
+`ApplicabilityAiPort` queda disponible para el evaluador de TC-179; esta tarea
+no agrega un endpoint público ni ejecuta automáticamente la IA en una revisión.
+
+Para habilitar llamadas reales, configurar fuera del repositorio:
+
+```powershell
+$env:TEMA_OPENAI_ENABLED='true'
+$env:OPENAI_API_KEY='<clave-de-proyecto>'
+$env:TEMA_OPENAI_MODEL='<modelo-compatible-con-structured-outputs>'
+$env:TEMA_OPENAI_TIMEOUT='PT20S'
+```
+
+Sin clave, modelo o habilitación, el backend sigue iniciando y el puerto devuelve
+`UNDETERMINED`, con un límite técnico para revisión humana. El timeout permitido
+es mayor que cero y hasta 60 segundos; el SDK realiza como máximo un reintento
+de transporte y hay un segundo intento solo para una respuesta estructurada
+inválida. Las llamadas usan `store=false`; no se registran credenciales, prompts
+ni datos de tickets en logs. La entrada se limita a 20.000 caracteres.
+
+La ubicación de clases, el contrato interno y las responsabilidades de TC-179
+están en `docs/7.2.1-openai-integration.md`. Las pruebas de esta tarea usan un
+cliente simulado y no consumen la API real.
