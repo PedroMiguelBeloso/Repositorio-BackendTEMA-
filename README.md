@@ -211,3 +211,29 @@ ni datos de tickets en logs. La entrada se limita a 20.000 caracteres.
 La ubicación de clases, el contrato interno y las responsabilidades de TC-179
 están en `docs/7.2.1-openai-integration.md`. Las pruebas de esta tarea usan un
 cliente simulado y no consumen la API real.
+
+## M2 — 7.1.2 y TC-179
+
+El estado de la capa M2 queda separado en dos piezas:
+
+- `7.1.2` prepara el contexto de verificación con `VerificationContextLoader`, `VerificationContext`, `VerificationPreviewController` y la validación del proceso publicado, su asignación y la consistencia de los catálogos.
+- `TC-179` resuelve la aplicabilidad con `DefaultApplicabilityPolicy`, `EvaluationContext`, `ApplicabilityAssessment`, `ApplicabilityAiPort` y la integración `OpenAiApplicabilityAdapter` como fallback de `CASE_DEPENDENT`.
+
+Documentación técnica del módulo:
+- [src/main/java/com/temaconsulting/agente_iso/verification/README.md](src/main/java/com/temaconsulting/agente_iso/verification/README.md)
+
+Guía rápida de pruebas:
+
+```powershell
+$env:JAVA_HOME = 'C:\Program Files\Microsoft\jdk-21.0.12.101-hotspot'
+$env:Path = "$env:JAVA_HOME\bin;$env:Path"
+Set-Location 'C:\Users\User\OneDrive\Documentos\Repositorio-BackendTEMA-'
+.\mvnw -q -DskipTests compile
+.\mvnw -q -Dtest=VerificationContextLoaderTest test
+.\mvnw -q -Dtest="OpenAiApplicabilityAdapterTest,DriveDocumentaryAssessmentServiceTest" test
+```
+
+Estado actual:
+- Completado: contexto de verificación y política de aplicabilidad M2.
+- Pendiente: integración final de la decisión de aplicabilidad con la pipeline completa del resultado de verificación y la persistencia/human review final.
+- La suite completa del repositorio no se pudo verificar en esta máquina porque Docker/Testcontainers no está disponible (`docker --version` no existe en el entorno actual).
