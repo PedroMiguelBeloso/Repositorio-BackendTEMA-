@@ -8,8 +8,8 @@ import com.temaconsulting.agente_iso.integration.application.DriveEvidenceSearch
 import com.temaconsulting.agente_iso.integration.application.DriveEvidenceSearch.SearchRequest;
 import com.temaconsulting.agente_iso.integration.application.DriveEvidenceSearch.SearchResult;
 import com.temaconsulting.agente_iso.integration.domain.IntegrationSource;
-import com.temaconsulting.agente_iso.verification.application.DriveDocumentaryAssessmentService.ApplicabilityDecision;
-import com.temaconsulting.agente_iso.verification.application.DriveDocumentaryAssessmentService.ResultStatus;
+import com.temaconsulting.agente_iso.verification.domain.ApplicabilityDecision;
+import com.temaconsulting.agente_iso.verification.domain.ResultStatus;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
@@ -38,6 +38,9 @@ class DriveDocumentaryAssessmentServiceTest {
 
         assertThat(assessment.proposedStatus()).isEqualTo(ResultStatus.COMPLIES);
         assertThat(assessment.limitations()).anyMatch(text -> text.contains("no se revisó el contenido"));
+        assertThat(assessment.rationale()).contains("no se revisó el contenido")
+                .contains("la completitud")
+                .contains("la aprobación");
         assertThat(assessment.evidence()).singleElement().satisfies(reference -> {
             assertThat(reference.source()).isEqualTo(IntegrationSource.DRIVE);
             assertThat(reference.kind()).isEqualTo(Kind.DOCUMENT);
@@ -152,6 +155,28 @@ class DriveDocumentaryAssessmentServiceTest {
                 .isEqualTo(ResultStatus.REVIEW_REQUIRED);
         search.result = new SearchResult(DriveEvidenceSearch.Outcome.FOUND, null,
                 List.of(match("file-1", "A/Highlights.xls"), match("file-2", "B/Highlights.xls")));
+        assertThat(service.assess(ONE, ApplicabilityDecision.APPLIES).proposedStatus())
+                .isEqualTo(ResultStatus.REVIEW_REQUIRED);
+        search.result = SearchResult.found(List.of(new Match("file-1", "Different name",
+                Kind.DOCUMENT, "https://drive.google.com/file/d/file-1/view", "Different name")),
+                Cardinality.ONE);
+        assertThat(service.assess(ONE, ApplicabilityDecision.APPLIES).proposedStatus())
+                .isEqualTo(ResultStatus.REVIEW_REQUIRED);
+        SearchRequest nestedNomenclature = new SearchRequest("service-folder", Kind.DOCUMENT,
+                "Documentos/Highlights.xls", Cardinality.ONE);
+        search.result = SearchResult.found(List.of(new Match("file-1", "Highlights.xls",
+                Kind.DOCUMENT, "https://drive.google.com/file/d/file-1/view", "Unexpected/Highlights.xls")),
+                Cardinality.ONE);
+        assertThat(service.assess(nestedNomenclature, ApplicabilityDecision.APPLIES).proposedStatus())
+                .isEqualTo(ResultStatus.REVIEW_REQUIRED);
+        search.result = new SearchResult(DriveEvidenceSearch.Outcome.ABSENT, null,
+                List.of(match("file-1", "A/Highlights.xls")));
+        assertThat(service.assess(ONE, ApplicabilityDecision.APPLIES).proposedStatus())
+                .isEqualTo(ResultStatus.REVIEW_REQUIRED);
+        search.result = new SearchResult(DriveEvidenceSearch.Outcome.ABSENT, Problem.PERMISSION_ERROR, List.of());
+        assertThat(service.assess(ONE, ApplicabilityDecision.APPLIES).proposedStatus())
+                .isEqualTo(ResultStatus.REVIEW_REQUIRED);
+        search.result = null;
         assertThat(service.assess(ONE, ApplicabilityDecision.APPLIES).proposedStatus())
                 .isEqualTo(ResultStatus.REVIEW_REQUIRED);
     }

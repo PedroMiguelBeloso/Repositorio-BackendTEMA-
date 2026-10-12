@@ -8,6 +8,8 @@ import com.temaconsulting.agente_iso.integration.application.DriveEvidenceSearch
 import com.temaconsulting.agente_iso.integration.application.DriveEvidenceSearch.SearchRequest;
 import com.temaconsulting.agente_iso.integration.application.DriveEvidenceSearch.SearchResult;
 import com.temaconsulting.agente_iso.integration.domain.IntegrationSource;
+import com.temaconsulting.agente_iso.verification.domain.ApplicabilityDecision;
+import com.temaconsulting.agente_iso.verification.domain.ResultStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -19,7 +21,7 @@ import java.util.Objects;
 @Service
 public class DriveDocumentaryAssessmentService {
     private static final String SCOPE_LIMITATION =
-            "Solo se comprobó la existencia y la nomenclatura; no se revisó el contenido ni la aprobación.";
+            "Solo se comprobó la existencia y la nomenclatura; no se revisó el contenido, la completitud ni la aprobación.";
 
     private final DriveEvidenceSearch search;
     private final Clock clock;
@@ -44,17 +46,27 @@ public class DriveDocumentaryAssessmentService {
         }
 
         Objects.requireNonNull(request, "request");
-        SearchResult result = Objects.requireNonNull(search.search(request), "search result");
+        SearchResult result = search.search(request);
+        if (result == null || result.outcome() == null) {
+            return new Assessment(ResultStatus.REVIEW_REQUIRED,
+                    "Google Drive no devolvió un resultado de búsqueda confiable.",
+                    List.of("La respuesta de búsqueda fue nula o inconsistente."), List.of());
+        }
         Instant observedAt = clock.instant();
         List<EvidenceReference> references = result.matches().stream()
                 .map(match -> reference(match, observedAt))
                 .toList();
+        if (result.outcome() != DriveEvidenceSearch.Outcome.NOT_CHECKABLE && result.problem() != null) {
+            return inconsistent(references);
+        }
 
         return switch (result.outcome()) {
             case FOUND -> found(request, references);
-            case ABSENT -> new Assessment(ResultStatus.DOES_NOT_COMPLY,
-                    "La búsqueda completa no encontró la evidencia con la nomenclatura configurada.",
-                    List.of(), references);
+            case ABSENT -> references.isEmpty()
+                    ? new Assessment(ResultStatus.DOES_NOT_COMPLY,
+                            "La búsqueda completa no encontró la evidencia con la nomenclatura configurada.",
+                            List.of(), references)
+                    : inconsistent(references);
             case AMBIGUOUS -> new Assessment(ResultStatus.REVIEW_REQUIRED,
                     "Se esperaba una evidencia, pero se encontraron varias coincidencias.",
                     List.of("Debe revisarse cuál de las coincidencias corresponde al registro esperado."),
@@ -70,15 +82,42 @@ public class DriveDocumentaryAssessmentService {
                 || (request.cardinality() == Cardinality.ONE && references.size() != 1)
                 || references.stream().anyMatch(reference -> reference.kind() != request.kind()
                         || reference.externalId() == null || reference.externalId().isBlank()
-                        || reference.displayName() == null || reference.displayName().isBlank())) {
+                        || reference.displayName() == null || reference.displayName().isBlank()
+                        || !matchesNomenclature(request, reference))) {
             return new Assessment(ResultStatus.REVIEW_REQUIRED,
                     "La búsqueda devolvió coincidencias incompatibles con la expectativa configurada.",
                     List.of("Revisar la configuración y los resultados antes de emitir un dictamen."),
                     references);
         }
         return new Assessment(ResultStatus.COMPLIES,
-                "Se encontró la cantidad requerida de evidencias con la nomenclatura configurada.",
+                "Se encontró la cantidad requerida de evidencias con la nomenclatura configurada. "
+                        + "Esto acredita solo su existencia y nomenclatura; no se revisó el contenido, "
+                        + "la completitud ni la aprobación.",
                 List.of(SCOPE_LIMITATION), references);
+    }
+
+    private static boolean matchesNomenclature(SearchRequest request, EvidenceReference reference) {
+        if (request.officialNomenclature() == null || request.officialNomenclature().isBlank()) {
+            return false;
+        }
+        String[] expectedPath = request.officialNomenclature().split("/", -1);
+        String expectedName = expectedPath[expectedPath.length - 1];
+        if (!expectedName.equals(reference.displayName())) {
+            return false;
+        }
+        if (expectedPath.length > 1) {
+            return request.officialNomenclature().equals(reference.relativePath());
+        }
+        return reference.relativePath() == null
+                || reference.relativePath().equals(expectedName)
+                || reference.relativePath().endsWith("/" + expectedName);
+    }
+
+    private static Assessment inconsistent(List<EvidenceReference> references) {
+        return new Assessment(ResultStatus.REVIEW_REQUIRED,
+                "La búsqueda devolvió datos inconsistentes con el estado informado.",
+                List.of("Revisar la respuesta de Google Drive antes de emitir un dictamen."),
+                references);
     }
 
     private static EvidenceReference reference(Match match, Instant observedAt) {
@@ -98,9 +137,6 @@ public class DriveDocumentaryAssessmentService {
             case INCOMPLETE -> "La búsqueda terminó antes de revisar todo el ámbito configurado.";
         };
     }
-
-    public enum ApplicabilityDecision { APPLIES, NOT_APPLICABLE, UNDETERMINED }
-    public enum ResultStatus { COMPLIES, DOES_NOT_COMPLY, REVIEW_REQUIRED, NOT_APPLICABLE }
 
     /** Internal reference. The eventual API mapper follows the OpenAPI EvidenceReference schema. */
     public record EvidenceReference(Kind kind, IntegrationSource source, String externalId,

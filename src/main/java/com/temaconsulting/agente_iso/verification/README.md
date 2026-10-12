@@ -139,7 +139,17 @@ La trazabilidad se guarda en `ApplicabilityAssessment`:
 
 Esto se serializa luego en el DTO `ApplicabilityAssessmentResponse` sin perder la semántica del dominio.
 
-Para la evidencia documental, la cantidad y el tipo de resultado no se resuelven automáticamente a partir del nombre del archivo. `DriveDocumentaryAssessmentService.assess(...)` toma un `ApplicabilityDecision` ya resuelto y, si corresponde, realiza la búsqueda documental. Un resultado por ticket es válido para `TICKET`; para un documento o carpeta se evalúa el caso de cardinalidad (`ONE` o `MULTIPLE`) y no se reemplaza la regla de aplicabilidad por la búsqueda.
+### 7.1.4 — comprobación programada de evidencias
+
+`ProgrammedEvidenceCheckService.assess(...)` recibe una expectativa, el snapshot de fuentes del servicio, la aplicabilidad ya resuelta y, para `TICKET`, el ID del ticket seleccionado para ese resultado.
+
+- `NOT_APPLICABLE` devuelve `NOT_APPLICABLE` y `UNDETERMINED` devuelve `REVIEW_REQUIRED` antes de consultar cualquier fuente. Resolver aplicabilidad sigue siendo responsabilidad del paso anterior.
+- `DOCUMENT` y `FOLDER` usan `DriveEvidenceSearch` a través de `DriveDocumentaryAssessmentService`; la búsqueda recibe la carpeta del servicio, el tipo, la nomenclatura oficial del catálogo y la cardinalidad de M1.
+- Una búsqueda completa sin coincidencias solo produce `DOES_NOT_COMPLY`. Error de permisos, fuente faltante/inaccesible, búsqueda incompleta o datos inconsistentes producen `REVIEW_REQUIRED`.
+- `COMPLIES` documental acredita únicamente existencia y nomenclatura; no acredita contenido, completitud ni aprobación.
+- Cada evaluación `TICKET` consulta solo `RedmineTicketReader.getTicket(projectId, selectedTicketId)`, conserva `expectationId` y `subjectTicketId`, y adjunta el snapshot consultado como referencia. La existencia, `updatedAt` o `closed=true` no prueban por sí solos una condición de actividad; sin un control identificado, el estado queda `REVIEW_REQUIRED`.
+- `IMPUTATIONS` y `TOOL_RECORD` quedan `REVIEW_REQUIRED` mientras no exista un lector y una regla verificable.
+- El servicio devuelve propuestas internas; la persistencia de `verification_results`, el estado de ejecución y los endpoints permanecen en el flujo orquestador. No llama a OpenAI.
 
 ## Diagrama Mermaid
 
@@ -179,6 +189,7 @@ flowchart TD
 | `VerificationPreviewControllerSecurityTest` | preview de verificación, validación/seguridad del `POST /api/v1/verifications/preview` | Spring MVC + MockMvc + Mockito | Mockito, sin Docker |
 | `OpenAiApplicabilityAdapterTest` | validación de `AiApplicabilityRequest`, rechazo de referencias inventadas, ausencia de hechos, y no-IA para `ALWAYS` | JUnit + Mockito | Mock `OpenAIClient`/`ResponseService`, sin OpenAI real |
 | `DriveDocumentaryAssessmentServiceTest` | resultado documental según aplicabilidad, cardinalidad, ausencia, ambigüedad y estados `REVIEW_REQUIRED` | JUnit + FakeSearch | `FakeSearch` y `Clock.fixed`, sin Docker |
+| `ProgrammedEvidenceCheckServiceTest` | orquestación de Drive/Redmine, aplicabilidad, referencias, aislamiento por ticket y fuentes sin regla/lector | JUnit + lectores falsos | lectores falsos y `Clock.fixed`, sin credenciales ni Docker |
 
 ## Requisitos previos
 
