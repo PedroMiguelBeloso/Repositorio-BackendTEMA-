@@ -149,7 +149,15 @@ Esto se serializa luego en el DTO `ApplicabilityAssessmentResponse` sin perder l
 - `COMPLIES` documental acredita únicamente existencia y nomenclatura; no acredita contenido, completitud ni aprobación.
 - Cada evaluación `TICKET` consulta solo `RedmineTicketReader.getTicket(projectId, selectedTicketId)`, conserva `expectationId` y `subjectTicketId`, y adjunta el snapshot consultado como referencia. La existencia, `updatedAt` o `closed=true` no prueban por sí solos una condición de actividad; sin un control identificado, el estado queda `REVIEW_REQUIRED`.
 - `IMPUTATIONS` y `TOOL_RECORD` quedan `REVIEW_REQUIRED` mientras no exista un lector y una regla verificable.
-- El servicio devuelve propuestas internas; la persistencia de `verification_results`, el estado de ejecución y los endpoints permanecen en el flujo orquestador. No llama a OpenAI.
+- El servicio devuelve propuestas internas y no llama a OpenAI. TC-176 persiste por separado esas valoraciones mediante el contrato `VerificationResultPort`; la orquestación y el estado final del run quedan fuera de este servicio.
+
+### TC-176 — persistencia y consulta de resultados
+
+- `VerificationResultPort` es el contrato interno para que el futuro trabajador guarde una valoración evaluada y consulte el progreso persistido.
+- `JdbcVerificationResultRepository` valida la expectativa contra la versión y el alcance del run, valida los tickets seleccionados y escribe el resultado, sus dos listas de limitaciones y las referencias en una única transacción.
+- Una repetición idéntica es idempotente; una valoración distinta para la misma expectativa/unidad genera conflicto y no reemplaza la primera.
+- `GET /api/v1/verifications/{runId}/results` solo está disponible para runs `COMPLETED`. Los resultados se leen por página y sus relaciones en lote, con orden estable.
+- El tipo y la ubicación de evidencia se leen de la expectativa publicada. El historial humano se lee en orden cronológico; sus operaciones de escritura permanecen fuera del alcance.
 
 ## Diagrama Mermaid
 
@@ -190,12 +198,13 @@ flowchart TD
 | `OpenAiApplicabilityAdapterTest` | validación de `AiApplicabilityRequest`, rechazo de referencias inventadas, ausencia de hechos, y no-IA para `ALWAYS` | JUnit + Mockito | Mock `OpenAIClient`/`ResponseService`, sin OpenAI real |
 | `DriveDocumentaryAssessmentServiceTest` | resultado documental según aplicabilidad, cardinalidad, ausencia, ambigüedad y estados `REVIEW_REQUIRED` | JUnit + FakeSearch | `FakeSearch` y `Clock.fixed`, sin Docker |
 | `ProgrammedEvidenceCheckServiceTest` | orquestación de Drive/Redmine, aplicabilidad, referencias, aislamiento por ticket y fuentes sin regla/lector | JUnit + lectores falsos | lectores falsos y `Clock.fixed`, sin credenciales ni Docker |
+| `JdbcVerificationResultRepositoryIntegrationTest` | persistencia PostgreSQL, validaciones, transacciones, idempotencia/conflictos, progreso, paginación, seguridad y respuestas HTTP | Spring Boot + Testcontainers | PostgreSQL 17 en Docker; sin cuentas externas |
 
 ## Requisitos previos
 
 - Java 21 (`<java.version>21</java.version>` en `pom.xml`)
 - Maven wrapper del proyecto: `./mvnw`
-- Docker solo para pruebas Testcontainers del resto de la suite, no para estas clases M2 específicas.
+- Docker para la prueba de integración PostgreSQL de TC-176 y las demás pruebas que usan Testcontainers.
 
 ## Comandos exactos
 
@@ -217,7 +226,17 @@ Set-Location 'C:\Users\User\OneDrive\Documentos\Repositorio-BackendTEMA-'
 .\mvnw -q test
 ```
 
-Este comando se intentó ejecutar en esta máquina y terminó con exit code `1`. La razón de la no verificación de la suite completa aquí es que Docker no está instalado (`docker --version` no se reconoce), y varias pruebas del repositorio usan Testcontainers. No se inventa una salida exitosa.
+La suite completa se ejecutó durante la validación de TC-176 y terminó correctamente: 202 pruebas, sin fallas ni errores. Las pruebas que usan Testcontainers necesitan Docker.
+
+### TC-176 — persistencia PostgreSQL
+
+```bash
+./mvnw -Dtest=JdbcVerificationResultRepositoryIntegrationTest test
+```
+
+La clase contiene cuatro pruebas de integración y requiere Docker para iniciar
+PostgreSQL 17 mediante Testcontainers. No requiere cuentas reales de Drive,
+Redmine ni OpenAI.
 
 ### Solo tests 7.1.2
 
@@ -255,10 +274,10 @@ Set-Location 'C:\Users\User\OneDrive\Documentos\Repositorio-BackendTEMA-'
 
 ## Qué hacer si Docker no está disponible
 
-- No correr la suite completa del repositorio en esta máquina.
-- Ejecutar los tests unitarios de verificación y de aplicabilidad que no dependen de contenedores.
-- Para CI o otra máquina con Docker: correr `./mvnw test` en un runner con Docker habilitado.
-- En la capa M2 de este README, los cambios principales fueron validados con los comandos de clase y método que sí pudieron ejecutarse localmente.
+- Ejecutar los tests unitarios de verificación y aplicabilidad que no dependen de contenedores.
+- Omitir temporalmente la integración PostgreSQL de TC-176 y las demás pruebas
+  Testcontainers; no sustituirlas por mocks al validar transacciones o restricciones.
+- Para validar esos casos, ejecutar `./mvnw test` en un entorno con Docker habilitado.
 
 ## Prueba manual del preview
 
@@ -315,9 +334,11 @@ No se usa la API real de OpenAI en los tests. El adapter se valida con un client
 
 Completado:
 - 7.1.2: carga de contexto y preview del proceso de verificación.
+- 7.1.3: creación de runs y persistencia de selecciones de tickets.
+- TC-176: persistencia transaccional de resultados, consulta de progreso y endpoint paginado.
 - TC-178: integración de OpenAI para aplicabilidad.
 - TC-179: política determinista + fallback IA + contratos de salida.
 
 Pendiente en siguiente etapa:
-- integrar la decisión de aplicabilidad con la pipeline final de ejecución y persistencia del resultado de verificación.
-- cerrar la decisión humana y el flujo completo de comentario/resultado final del M2.
+- TC-175: trabajador asíncrono que evaluará y persistirá todas las unidades antes de completar el run.
+- tareas posteriores: escritura de decisiones humanas y flujo completo de comentarios/resultado final del M2.

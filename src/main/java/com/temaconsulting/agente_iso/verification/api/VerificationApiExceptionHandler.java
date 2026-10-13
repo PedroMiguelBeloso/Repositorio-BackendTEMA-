@@ -3,6 +3,9 @@ package com.temaconsulting.agente_iso.verification.api;
 import com.temaconsulting.agente_iso.shared.application.FieldProblem;
 import com.temaconsulting.agente_iso.shared.application.ProblemCode;
 import com.temaconsulting.agente_iso.verification.application.VerificationPreviewFailure;
+import com.temaconsulting.agente_iso.verification.application.VerificationResultConflictException;
+import com.temaconsulting.agente_iso.verification.application.VerificationResultQueryFailure;
+import com.temaconsulting.agente_iso.verification.application.VerificationResultValidationException;
 import com.temaconsulting.agente_iso.verification.application.VerificationStartFailure;
 import com.temaconsulting.agente_iso.verification.domain.VerificationDomainValidationException;
 import org.springframework.http.HttpStatus;
@@ -52,6 +55,31 @@ public class VerificationApiExceptionHandler {
         if (ex.field() != null) {
             problem.setProperty("details", List.of(new FieldProblem(ex.field(), ex.getMessage())));
         }
+        return ResponseEntity.status(status).body(problem);
+    }
+
+    @ExceptionHandler(VerificationResultValidationException.class)
+    public ResponseEntity<ProblemDetail> handleResultValidation(VerificationResultValidationException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
+        problem.setProperty("code", "VALIDATION_ERROR");
+        problem.setProperty("details", List.of(new FieldProblem(ex.field(), ex.getMessage())));
+        return ResponseEntity.badRequest().body(problem);
+    }
+
+    @ExceptionHandler(VerificationResultConflictException.class)
+    public ResponseEntity<ProblemDetail> handleResultConflict(VerificationResultConflictException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setProperty("code", "CONFLICT");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(problem);
+    }
+
+    @ExceptionHandler(VerificationResultQueryFailure.class)
+    public ResponseEntity<ProblemDetail> handleResultQueryFailure(VerificationResultQueryFailure ex) {
+        HttpStatus status = ex.kind() == VerificationResultQueryFailure.Kind.NOT_FOUND
+                ? HttpStatus.NOT_FOUND
+                : HttpStatus.CONFLICT;
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, ex.getMessage());
+        problem.setProperty("code", ex.kind().name());
         return ResponseEntity.status(status).body(problem);
     }
 }
