@@ -23,6 +23,7 @@ public record CreatedVerificationRun(
         String status,
         UUID startedBy,
         Instant startedAt,
-        ValidatedTicketSelections ticketSelections
+        ValidatedTicketSelections ticketSelections,
+        int total
 ) {
 }

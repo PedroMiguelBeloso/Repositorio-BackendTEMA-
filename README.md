@@ -233,8 +233,18 @@ disponibles. TC-176 agrega la persistencia de esas valoraciones y su consulta:
   paginados solo cuando el run está `COMPLETED`; la consulta tiene orden estable
   y carga las relaciones en lote. La migración V6 separa las limitaciones de
   aplicabilidad de las limitaciones generales del resultado.
-- TC-176 no implementa el trabajador asíncrono ni las escrituras de decisiones
-  humanas: son trabajo de etapas posteriores.
+- `TC-175` ejecuta cada run con un único trabajador `@Async` y una cola acotada.
+  El `POST /api/v1/verifications` guarda `QUEUED` con el `total` calculado,
+  confirma esa transacción y devuelve `202` con `Location`; el trabajador
+  pasa a `RUNNING`, persiste cada resultado mediante `VerificationResultPort`
+  de TC-176 y solo pasa a `COMPLETED` cuando el recuento real coincide con
+  `total`. `GET /api/v1/verifications/{runId}` lee el estado y el progreso
+  de PostgreSQL, sin consultar sistemas externos. ADMIN y LECTOR pueden leerlo.
+  Si falla el procesamiento, el run queda `FAILED`, conserva resultados
+  parciales y muestra un mensaje seguro. Al reiniciar el backend, los runs
+  `QUEUED` o `RUNNING` anteriores se marcan `FAILED`; no se reanudan.
+  `TEMA_VERIFICATION_QUEUE_CAPACITY` ajusta la cola (10 por defecto).
+- Las escrituras de decisiones humanas pertenecen a etapas posteriores.
 
 Documentación técnica del módulo:
 - [src/main/java/com/temaconsulting/agente_iso/verification/README.md](src/main/java/com/temaconsulting/agente_iso/verification/README.md)

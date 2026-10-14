@@ -16,6 +16,11 @@ import com.temaconsulting.agente_iso.verification.application.CreatedVerificatio
 import com.temaconsulting.agente_iso.verification.application.VerificationPreviewService;
 import com.temaconsulting.agente_iso.verification.application.VerificationPreviewFailure;
 import com.temaconsulting.agente_iso.verification.application.VerificationStartService;
+import com.temaconsulting.agente_iso.verification.application.VerificationRunDispatchService;
+import com.temaconsulting.agente_iso.verification.application.VerificationRunQueryService;
+import com.temaconsulting.agente_iso.verification.application.VerificationRunSnapshot;
+import com.temaconsulting.agente_iso.verification.application.VerificationResultProgress;
+import com.temaconsulting.agente_iso.verification.application.VerificationResultQueryFailure;
 import com.temaconsulting.agente_iso.verification.domain.PreviewExpectation;
 import com.temaconsulting.agente_iso.verification.domain.TicketSelectionGroup;
 import com.temaconsulting.agente_iso.verification.domain.ValidatedTicketSelection;
@@ -42,6 +47,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -68,6 +74,12 @@ class VerificationPreviewControllerSecurityTest {
 
     @MockitoBean
     VerificationStartService starts;
+
+    @MockitoBean
+    VerificationRunDispatchService dispatcher;
+
+    @MockitoBean
+    VerificationRunQueryService queries;
 
     @Test
     void adminCanRequestPreview() throws Exception {
@@ -219,7 +231,8 @@ class VerificationPreviewControllerSecurityTest {
                 "QUEUED",
                 adminId,
                 Instant.parse("2026-10-08T12:00:00Z"),
-                selected
+                selected,
+                4
         ));
 
         mockMvc.perform(post("/api/v1/verifications")
@@ -241,6 +254,8 @@ class VerificationPreviewControllerSecurityTest {
                 .andExpect(header().exists(HttpHeaders.LOCATION))
                 .andExpect(jsonPath("$.id").value(runId.toString()))
                 .andExpect(jsonPath("$.serviceRevisionSnapshot").value(5))
+                .andExpect(jsonPath("$.progress.total").value(4))
+                .andExpect(jsonPath("$.progress.processed").value(0))
                 .andExpect(jsonPath("$.ticketSelections[0].groupId").value(groupId))
                 .andExpect(jsonPath("$.ticketSelections[0].ticketIds[0]").value("204"))
                 .andExpect(jsonPath("$.ticketSelections[0].ticketIds[1]").value("205"));
@@ -261,5 +276,39 @@ class VerificationPreviewControllerSecurityTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void readerCanSeePersistedProgressButAnonymousCannot() throws Exception {
+        UUID runId = UUID.randomUUID();
+        UUID serviceId = UUID.randomUUID();
+        UUID versionId = UUID.randomUUID();
+        UUID adminId = UUID.randomUUID();
+        var run = new VerificationRunSnapshot(runId, serviceId, ServiceType.SOFTWARE_FACTORY, 4,
+                versionId, "folder-1", "Folder", "project-1", "Project", VerificationScope.PROCESS,
+                null, "case note", "RUNNING", adminId, Instant.parse("2026-10-08T12:00:00Z"),
+                null, null, 3, new ValidatedTicketSelections(List.of()));
+        when(queries.get(runId)).thenReturn(new VerificationRunQueryService.RunWithProgress(
+                run, new VerificationResultProgress(1, 1)));
+
+        mockMvc.perform(get("/api/v1/verifications/{runId}", runId)
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_READER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("RUNNING"))
+                .andExpect(jsonPath("$.progress.total").value(3))
+                .andExpect(jsonPath("$.progress.processed").value(1))
+                .andExpect(jsonPath("$.progress.reviewRequired").value(1))
+                .andExpect(jsonPath("$.sourceSnapshot.driveFolderId").value("folder-1"));
+        mockMvc.perform(get("/api/v1/verifications/{runId}", runId))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void unknownRunReturnsNotFound() throws Exception {
+        UUID runId = UUID.randomUUID();
+        when(queries.get(runId)).thenThrow(VerificationResultQueryFailure.notFound(runId));
+        mockMvc.perform(get("/api/v1/verifications/{runId}", runId)
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                .andExpect(status().isNotFound());
     }
 }

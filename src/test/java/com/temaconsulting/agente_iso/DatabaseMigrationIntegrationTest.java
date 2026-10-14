@@ -207,11 +207,13 @@ class DatabaseMigrationIntegrationTest {
         ));
         var created = verificationRuns.create(new VerificationRunDraft(
                 runId, serviceId, 3, processVersionId, userId,
-                VerificationScope.PROCESS, null, "Start note", selected
+                VerificationScope.PROCESS, null, "Start note", selected, 2
         ));
 
         assertThat(created.id()).isEqualTo(runId);
         assertThat(created.serviceRevisionSnapshot()).isEqualTo(3);
+        assertThat(created.total()).isEqualTo(2);
+        assertThat(verificationRuns.findById(runId).orElseThrow().total()).isEqualTo(2);
         assertThat(created.redmineProjectId()).isEqualTo("redmine-project-1");
         assertThat(created.ticketSelections().groups().getFirst().ticketIds())
                 .containsExactly("204", "205");
@@ -232,7 +234,7 @@ class DatabaseMigrationIntegrationTest {
         ));
         verificationRuns.create(new VerificationRunDraft(
                 laterRunId, serviceId, 3, processVersionId, userId,
-                VerificationScope.PROCESS, null, null, laterSelection
+                VerificationScope.PROCESS, null, null, laterSelection, 1
         ));
         assertThat(jdbcTemplate.queryForList(
                 "SELECT ticket_id FROM verification_ticket_selections WHERE run_id = ?",
@@ -246,7 +248,7 @@ class DatabaseMigrationIntegrationTest {
         UUID staleRunId = UUID.randomUUID();
         assertThatThrownBy(() -> verificationRuns.create(new VerificationRunDraft(
                 staleRunId, serviceId, 2, processVersionId, userId,
-                VerificationScope.PROCESS, null, null, selected
+                VerificationScope.PROCESS, null, null, selected, 2
         )))
                 .isInstanceOf(VerificationStartFailure.class)
                 .hasMessageContaining("Service configuration changed");

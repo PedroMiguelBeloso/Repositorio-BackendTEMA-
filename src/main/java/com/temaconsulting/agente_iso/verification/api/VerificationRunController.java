@@ -3,12 +3,17 @@ package com.temaconsulting.agente_iso.verification.api;
 import com.temaconsulting.agente_iso.verification.api.dto.StartVerificationRequest;
 import com.temaconsulting.agente_iso.verification.api.dto.VerificationRunResponse;
 import com.temaconsulting.agente_iso.verification.application.CreatedVerificationRun;
+import com.temaconsulting.agente_iso.verification.application.VerificationRunDispatchService;
+import com.temaconsulting.agente_iso.verification.application.VerificationRunQueryService;
+import com.temaconsulting.agente_iso.verification.application.VerificationRunSnapshot;
 import com.temaconsulting.agente_iso.verification.application.VerificationStartService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,9 +27,15 @@ import java.util.UUID;
 @RequestMapping("/api/v1/verifications")
 public class VerificationRunController {
     private final VerificationStartService starts;
+    private final VerificationRunDispatchService dispatcher;
+    private final VerificationRunQueryService queries;
 
-    public VerificationRunController(VerificationStartService starts) {
+    public VerificationRunController(VerificationStartService starts,
+                                     VerificationRunDispatchService dispatcher,
+                                     VerificationRunQueryService queries) {
         this.starts = starts;
+        this.dispatcher = dispatcher;
+        this.queries = queries;
     }
 
     @PostMapping
@@ -37,6 +48,7 @@ public class VerificationRunController {
         CreatedVerificationRun run = starts.start(
                 request.toTarget(), request.serviceRevision(), startedBy, request.toSelectionInputs()
         );
+        dispatcher.dispatch(run.id());
         List<VerificationRunResponse.TicketSelectionResponse> selections =
                 run.ticketSelections().groups().stream()
                         .map(selection -> new VerificationRunResponse.TicketSelectionResponse(
@@ -59,7 +71,7 @@ public class VerificationRunController {
                 run.macroActivityId(),
                 run.note(),
                 run.status(),
-                new VerificationRunResponse.RunProgress(0, 0, 0),
+                new VerificationRunResponse.RunProgress(run.total(), 0, 0),
                 run.startedBy(),
                 run.startedAt(),
                 null,
@@ -73,5 +85,26 @@ public class VerificationRunController {
         return ResponseEntity.accepted()
                 .header(HttpHeaders.LOCATION, location)
                 .body(response);
+    }
+
+    @GetMapping("/{runId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'READER')")
+    public VerificationRunResponse get(@PathVariable UUID runId) {
+        VerificationRunQueryService.RunWithProgress state = queries.get(runId);
+        VerificationRunSnapshot run = state.run();
+        List<VerificationRunResponse.TicketSelectionResponse> selections = run.ticketSelections().groups().stream()
+                .map(selection -> new VerificationRunResponse.TicketSelectionResponse(
+                        selection.groupId(), selection.ticketIds())).toList();
+        return new VerificationRunResponse(
+                run.id(), run.serviceId(), run.serviceTypeSnapshot(), run.serviceRevisionSnapshot(),
+                run.processVersionId(),
+                new VerificationRunResponse.ServiceSourceSnapshot(run.driveFolderId(), run.driveFolderName(),
+                        run.redmineProjectId(), run.redmineProjectName()),
+                run.scope(), run.macroActivityId(), run.note(), run.status(),
+                new VerificationRunResponse.RunProgress(run.total(),
+                        Math.toIntExact(state.progress().resultCount()),
+                        Math.toIntExact(state.progress().reviewRequiredCount())),
+                run.startedBy(), run.startedAt(), run.finishedAt(), run.failureMessage(), selections
+        );
     }
 }
