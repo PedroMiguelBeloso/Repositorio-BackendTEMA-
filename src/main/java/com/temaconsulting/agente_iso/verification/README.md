@@ -159,6 +159,25 @@ Esto se serializa luego en el DTO `ApplicabilityAssessmentResponse` sin perder l
 - `GET /api/v1/verifications/{runId}/results` solo está disponible para runs `COMPLETED`. Los resultados se leen por página y sus relaciones en lote, con orden estable.
 - El tipo y la ubicación de evidencia se leen de la expectativa publicada. El historial humano se lee en orden cronológico; sus operaciones de escritura permanecen fuera del alcance.
 
+### WBS 7.2.4 — decisión humana del estado final
+
+- `PUT /api/v1/verifications/{runId}/results/{resultId}/decision` requiere un
+  Administrador y un run `COMPLETED`. El body contiene la `revision` vigente,
+  `finalStatus` y un `rationale` no vacío.
+- Para aplicabilidad efectiva `APPLIES` se permiten `COMPLIES`,
+  `DOES_NOT_COMPLY` y `REVIEW_REQUIRED`. `NOT_APPLICABLE` solo se permite para
+  una expectativa `CASE_DEPENDENT` cuya aplicabilidad efectiva sea
+  `NOT_APPLICABLE`; `UNDETERMINED` no admite una decisión de estado final.
+- Cada confirmación o corrección agrega un evento `RESULT_STATUS` inmutable con
+  el usuario autenticado y la hora del `Clock`, actualiza `effectiveStatus` e
+  incrementa `revision` en una única transacción. `proposedStatus` y la
+  justificación de la evaluación automática permanecen intactos.
+- El bloqueo del resultado y la revisión condicional evitan registrar eventos
+  para revisiones obsoletas. El historial se ordena cronológicamente, con un
+  ordinal de inserción para decisiones con igual instante.
+- Las decisiones solo modifican el resultado solicitado; no inician otra
+  evaluación ni consultan Drive, Redmine u OpenAI.
+
 ## Diagrama Mermaid
 
 ```mermaid

@@ -2,9 +2,12 @@ package com.temaconsulting.agente_iso.verification.infrastructure;
 
 import com.temaconsulting.agente_iso.catalog.domain.EvidenceType;
 import com.temaconsulting.agente_iso.integration.domain.IntegrationSource;
+import com.temaconsulting.agente_iso.process.domain.ApplicabilityMode;
 import com.temaconsulting.agente_iso.shared.application.Page;
 import com.temaconsulting.agente_iso.verification.application.ApplicabilityAssessment;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultConflictException;
+import com.temaconsulting.agente_iso.verification.application.VerificationResultDecisionFailure;
+import com.temaconsulting.agente_iso.verification.application.VerificationResultDecisionTarget;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultProgress;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultRepository;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultValidationException;
@@ -25,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -180,6 +184,91 @@ public class JdbcVerificationResultRepository implements VerificationResultRepos
                 size,
                 total == null ? 0 : total
         );
+    }
+
+    @Override
+    public Optional<VerificationResultDecisionTarget> lockDecisionTarget(UUID runId, UUID resultId) {
+        Optional<VerificationResultDecisionTarget> locked = jdbc.query(
+                """
+                SELECT vr.revision, v.status::text AS run_status,
+                       vr.applicability_decision::text AS stored_applicability,
+                       ee.applicability::text AS applicability_mode
+                FROM verification_results vr
+                JOIN verification_runs v ON v.id = vr.run_id
+                JOIN evidence_expectations ee ON ee.id = vr.expectation_id
+                WHERE vr.run_id = ? AND vr.id = ?
+                FOR UPDATE OF vr
+                """,
+                (rs, rowNum) -> new VerificationResultDecisionTarget(
+                        rs.getString("run_status"),
+                        rs.getInt("revision"),
+                        ApplicabilityDecision.valueOf(rs.getString("stored_applicability")),
+                        ApplicabilityMode.valueOf(rs.getString("applicability_mode"))
+                ),
+                runId,
+                resultId
+        ).stream().findFirst();
+        if (locked.isEmpty()) {
+            return Optional.empty();
+        }
+        VerificationResultDecisionTarget target = locked.get();
+        Optional<ApplicabilityDecision> effectiveApplicability = jdbc.query(
+                """
+                SELECT applicability_value::text
+                FROM human_decisions
+                WHERE result_id = ? AND decision_type = 'APPLICABILITY'::human_decision_type
+                ORDER BY decided_at DESC, decision_order DESC
+                LIMIT 1
+                """,
+                (rs, rowNum) -> ApplicabilityDecision.valueOf(rs.getString(1)),
+                resultId
+        ).stream().findFirst();
+        return Optional.of(new VerificationResultDecisionTarget(
+                target.runStatus(),
+                target.revision(),
+                effectiveApplicability.orElse(target.effectiveApplicability()),
+                target.applicabilityMode()
+        ));
+    }
+
+    @Override
+    public VerificationResult saveStatusDecision(
+            UUID runId,
+            UUID resultId,
+            int expectedRevision,
+            ResultStatus finalStatus,
+            String rationale,
+            UUID decidedBy,
+            Instant decidedAt
+    ) {
+        jdbc.update(
+                """
+                INSERT INTO human_decisions (
+                    id, result_id, decided_by, decision_type, status_value, rationale, decided_at
+                ) VALUES (?, ?, ?, 'RESULT_STATUS'::human_decision_type, ?::result_status, ?, ?)
+                """,
+                UUID.randomUUID(),
+                resultId,
+                decidedBy,
+                finalStatus.name(),
+                rationale,
+                Timestamp.from(decidedAt)
+        );
+        int updated = jdbc.update(
+                """
+                UPDATE verification_results
+                SET effective_status = ?::result_status, revision = revision + 1
+                WHERE run_id = ? AND id = ? AND revision = ?
+                """,
+                finalStatus.name(),
+                runId,
+                resultId,
+                expectedRevision
+        );
+        if (updated != 1) {
+            throw VerificationResultDecisionFailure.conflict();
+        }
+        return loadResults(List.of(resultId)).getFirst();
     }
 
     private Optional<Expectation> findExpectation(UUID runId, UUID expectationId) {
@@ -402,7 +491,7 @@ public class JdbcVerificationResultRepository implements VerificationResultRepos
                        status_value::text AS status_value, rationale, decided_by, decided_at
                 FROM human_decisions
                 WHERE result_id IN (%s)
-                ORDER BY result_id, decided_at, id
+                ORDER BY result_id, decided_at, decision_order
                 """.formatted(placeholders),
                 (RowCallbackHandler) rs -> {
                     decisions.get(rs.getObject("result_id", UUID.class)).add(mapDecision(rs));
