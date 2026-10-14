@@ -52,6 +52,16 @@ public class VerificationStartService {
         ValidatedTicketSelections validated = ticketSelectionValidator.validate(
                 preview, selections, service.redmineProjectId()
         );
+        int total = preview.expectations().stream().mapToInt(expectation -> {
+            if (!expectation.isTicket()) {
+                return 1;
+            }
+            return validated.groups().stream()
+                    .filter(group -> group.groupId().equals(expectation.ticketSelectionGroupId()))
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("Validated ticket group is missing"))
+                    .ticketIds().size();
+        }).reduce(0, Math::addExact);
         return runs.create(new VerificationRunDraft(
                 UUID.randomUUID(),
                 target.serviceId(),
@@ -61,7 +71,8 @@ public class VerificationStartService {
                 target.scope(),
                 target.macroActivityId(),
                 target.note(),
-                validated
+                validated,
+                total
         ));
     }
 }

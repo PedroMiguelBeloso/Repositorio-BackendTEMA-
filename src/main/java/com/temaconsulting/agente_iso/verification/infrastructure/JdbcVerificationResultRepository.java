@@ -185,7 +185,8 @@ public class JdbcVerificationResultRepository implements VerificationResultRepos
     private Optional<Expectation> findExpectation(UUID runId, UUID expectationId) {
         List<Expectation> matches = jdbc.query(
                 """
-                SELECT ee.id, ee.macro_activity_id, ee.activity_id, ee.display_name,
+                SELECT ee.id, ee.macro_activity_id, ee.activity_id,
+                       COALESCE(ee.display_name, rd.canonical_name) AS display_name,
                        ee.location::text AS location, rd.evidence_type::text AS evidence_type
                 FROM verification_runs r
                 JOIN evidence_expectations ee ON ee.id = ?

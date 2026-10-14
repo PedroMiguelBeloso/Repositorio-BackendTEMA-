@@ -15,7 +15,8 @@ public record VerificationRunDraft(
         VerificationScope scope,
         UUID macroActivityId,
         String note,
-        ValidatedTicketSelections ticketSelections
+        ValidatedTicketSelections ticketSelections,
+        int total
 ) {
     public VerificationRunDraft {
         Objects.requireNonNull(id);
@@ -27,9 +28,13 @@ public record VerificationRunDraft(
         if (serviceRevision < 0) {
             throw new IllegalArgumentException("Service revision must not be negative");
         }
+        if (total < 0) {
+            throw new IllegalArgumentException("Total must not be negative");
+        }
         if (scope == VerificationScope.PROCESS && macroActivityId != null
                 || scope == VerificationScope.MACRO_ACTIVITY && macroActivityId == null) {
             throw new IllegalArgumentException("Macro activity ID does not match the run scope");
         }
     }
+
 }

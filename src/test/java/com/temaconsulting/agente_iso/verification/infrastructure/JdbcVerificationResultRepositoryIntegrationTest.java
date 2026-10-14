@@ -16,6 +16,10 @@ import com.temaconsulting.agente_iso.verification.application.VerificationResult
 import com.temaconsulting.agente_iso.verification.application.VerificationResultQueryService;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultValidationException;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultWriteCommand;
+import com.temaconsulting.agente_iso.verification.application.VerificationRunRepository;
+import com.temaconsulting.agente_iso.verification.application.VerificationRunQueryService;
+import com.temaconsulting.agente_iso.verification.application.VerificationRunWorker;
+import com.temaconsulting.agente_iso.verification.application.ProgrammedEvidenceCheckService;
 import com.temaconsulting.agente_iso.verification.domain.ApplicabilityDecision;
 import com.temaconsulting.agente_iso.verification.domain.DecisionOrigin;
 import com.temaconsulting.agente_iso.verification.domain.HumanDecisionType;
@@ -31,6 +35,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -48,6 +53,10 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -83,7 +92,97 @@ class JdbcVerificationResultRepositoryIntegrationTest {
     VerificationResultQueryService resultQueries;
 
     @Autowired
+    VerificationRunRepository runs;
+
+    @Autowired
+    VerificationRunQueryService runQueries;
+
+    @Autowired
+    VerificationRunWorker worker;
+
+    @MockitoBean
+    ProgrammedEvidenceCheckService programmedChecks;
+
+    @Autowired
     MockMvc mockMvc;
+
+    @Test
+    void asyncWorkerCompletesWithTheRealTc176ResultWriter() throws Exception {
+        Fixture fixture = createFixture();
+        jdbc.update("UPDATE verification_runs SET status = 'QUEUED'::run_status, total = 6 WHERE id = ?",
+                fixture.runId());
+        when(programmedChecks.assess(any(), any(), eq(ApplicabilityDecision.APPLIES), nullable(String.class)))
+                .thenAnswer(call -> {
+                    var expectation = (com.temaconsulting.agente_iso.verification.domain.VerificationContext.ExpectationContext)
+                            call.getArgument(0);
+                    String ticketId = call.getArgument(3);
+                    return new ProgrammedEvidenceCheckService.Assessment(expectation.expectationId(), ticketId,
+                            ResultStatus.REVIEW_REQUIRED, "Revisión del registro", List.of(), List.of());
+                });
+
+        worker.process(fixture.runId());
+        String state = "QUEUED";
+        for (int attempt = 0; attempt < 100; attempt++) {
+            state = runQueries.get(fixture.runId()).run().status();
+            if (state.equals("COMPLETED") || state.equals("FAILED")) break;
+            Thread.sleep(50);
+        }
+        assertThat(state).isEqualTo("COMPLETED");
+        var finished = runQueries.get(fixture.runId());
+        assertThat(finished.progress().resultCount()).isEqualTo(6);
+        assertThat(finished.progress().reviewRequiredCount()).isEqualTo(6);
+        assertThat(finished.run().finishedAt()).isNotNull();
+        assertThat(resultQueries.findCompletedRunResults(fixture.runId(), 0, 20).items()).hasSize(6);
+    }
+
+    @Test
+    void runProgressUsesPersistedResultsAndCompletesOnlyAtTotal() throws Exception {
+        Fixture fixture = createFixture();
+        jdbc.update("UPDATE verification_runs SET total = 6 WHERE id = ?", fixture.runId());
+        results.saveEvaluatedResult(command(fixture, fixture.documentExpectations().getFirst(), null,
+                ResultStatus.REVIEW_REQUIRED, ApplicabilityDecision.UNDETERMINED,
+                List.of("No hay datos suficientes"), List.of(), List.of()));
+
+        assertThat(runs.markCompleted(fixture.runId())).isFalse();
+        var partial = runQueries.get(fixture.runId());
+        assertThat(partial.run().status()).isEqualTo("RUNNING");
+        assertThat(partial.run().total()).isEqualTo(6);
+        assertThat(partial.progress().resultCount()).isEqualTo(1);
+        assertThat(partial.progress().reviewRequiredCount()).isEqualTo(1);
+        mockMvc.perform(get("/api/v1/verifications/{runId}", fixture.runId())
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_READER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.progress.total").value(6))
+                .andExpect(jsonPath("$.progress.processed").value(1));
+
+        for (int index = 1; index < fixture.documentExpectations().size(); index++) {
+            results.saveEvaluatedResult(command(fixture, fixture.documentExpectations().get(index), null,
+                    ResultStatus.COMPLIES, ApplicabilityDecision.APPLIES, List.of(), List.of(), List.of()));
+        }
+        for (String ticketId : List.of("204", "205")) {
+            results.saveEvaluatedResult(command(fixture, fixture.ticketExpectation(), ticketId,
+                    ResultStatus.REVIEW_REQUIRED, ApplicabilityDecision.APPLIES, List.of(), List.of(), List.of()));
+        }
+        assertThat(runs.markCompleted(fixture.runId())).isTrue();
+        var completed = runQueries.get(fixture.runId());
+        assertThat(completed.run().status()).isEqualTo("COMPLETED");
+        assertThat(completed.run().finishedAt()).isNotNull();
+        assertThat(completed.progress().resultCount()).isEqualTo(6);
+        assertThat(completed.progress().reviewRequiredCount()).isEqualTo(3);
+    }
+
+    @Test
+    void startupRecoveryFailsInterruptedRunAndKeepsPartialResults() {
+        Fixture fixture = createFixture();
+        jdbc.update("UPDATE verification_runs SET total = 6 WHERE id = ?", fixture.runId());
+        results.saveEvaluatedResult(command(fixture, fixture.documentExpectations().getFirst(), null,
+                ResultStatus.COMPLIES, ApplicabilityDecision.APPLIES, List.of(), List.of(), List.of()));
+        assertThat(runs.failInterruptedRuns()).isGreaterThanOrEqualTo(1);
+        var failed = runQueries.get(fixture.runId());
+        assertThat(failed.run().status()).isEqualTo("FAILED");
+        assertThat(failed.run().finishedAt()).isNotNull();
+        assertThat(failed.progress().resultCount()).isEqualTo(1);
+    }
 
     @Test
     void persistsAllResultStatesAndLoadsTheirCompleteIndependentEvaluations() {
