@@ -10,6 +10,7 @@ import com.temaconsulting.agente_iso.shared.api.ProblemDetailsFactory;
 import com.temaconsulting.agente_iso.shared.config.Configuration;
 import com.temaconsulting.agente_iso.verification.api.VerificationApiExceptionHandler;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultConflictException;
+import com.temaconsulting.agente_iso.verification.application.VerificationResultDecisionService;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultPort;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultProgress;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultQueryFailure;
@@ -26,37 +27,49 @@ import com.temaconsulting.agente_iso.verification.domain.HumanDecisionType;
 import com.temaconsulting.agente_iso.verification.domain.ResultStatus;
 import com.temaconsulting.agente_iso.verification.domain.VerificationResult;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.test.web.servlet.MvcResult;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
+import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -72,6 +85,8 @@ import static org.mockito.Mockito.when;
         Configuration.class
 })
 class JdbcVerificationResultRepositoryIntegrationTest {
+    private static final Instant DECISION_TIME = Instant.parse("2026-10-14T22:00:00Z");
+
     @Container
     static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:17-alpine");
 
@@ -89,6 +104,9 @@ class JdbcVerificationResultRepositoryIntegrationTest {
     VerificationResultPort results;
 
     @Autowired
+    VerificationResultDecisionService resultDecisions;
+
+    @Autowired
     VerificationResultQueryService resultQueries;
 
     @Autowired
@@ -103,8 +121,16 @@ class JdbcVerificationResultRepositoryIntegrationTest {
     @MockitoBean
     ProgrammedEvidenceCheckService programmedChecks;
 
+    @MockitoBean
+    Clock clock;
+
     @Autowired
     MockMvc mockMvc;
+
+    @BeforeEach
+    void useFixedClock() {
+        when(clock.instant()).thenReturn(DECISION_TIME);
+    }
 
     @Test
     void asyncWorkerCompletesWithTheRealTc176ResultWriter() throws Exception {
@@ -634,6 +660,420 @@ class JdbcVerificationResultRepositoryIntegrationTest {
                 .andExpect(jsonPath("$.items[0].humanDecisions[0].finalStatus").doesNotExist())
                 .andExpect(jsonPath("$.items[0].humanDecisions[1].finalStatus").value("REVIEW_REQUIRED"))
                 .andExpect(jsonPath("$.items[0].humanDecisions[1].applicabilityDecision").doesNotExist());
+    }
+
+    @Test
+    void confirmsAndCorrectsResultWithoutChangingTheSystemProposal() throws Exception {
+        Fixture fixture = createFixture();
+        VerificationResult saved = results.saveEvaluatedResult(command(
+                fixture,
+                fixture.documentExpectations().get(0),
+                null,
+                ResultStatus.REVIEW_REQUIRED,
+                ApplicabilityDecision.APPLIES,
+                List.of(),
+                List.of(),
+                List.of()
+        ));
+        jdbc.update("UPDATE verification_runs SET total = 1 WHERE id = ?", fixture.runId());
+        completeRun(fixture.runId());
+        var before = runQueries.get(fixture.runId());
+
+        String body = """
+                {"revision":1,"finalStatus":"COMPLIES",
+                 "rationale":"Evidencia verificada por el administrador.",
+                 "decidedBy":"%s"}
+                """.formatted(UUID.randomUUID());
+        mockMvc.perform(decisionRequest(fixture.runId(), saved.id(), fixture.userId(), "ADMIN", body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.proposedStatus").value("REVIEW_REQUIRED"))
+                .andExpect(jsonPath("$.effectiveStatus").value("COMPLIES"))
+                .andExpect(jsonPath("$.revision").value(2))
+                .andExpect(jsonPath("$.rationale").value("Evaluation rationale for REVIEW_REQUIRED"))
+                .andExpect(jsonPath("$.humanDecisions.length()").value(1))
+                .andExpect(jsonPath("$.humanDecisions[0].decisionType").value("RESULT_STATUS"))
+                .andExpect(jsonPath("$.humanDecisions[0].finalStatus").value("COMPLIES"))
+                .andExpect(jsonPath("$.humanDecisions[0].decidedBy").value(fixture.userId().toString()))
+                .andExpect(jsonPath("$.humanDecisions[0].decidedAt").value(DECISION_TIME.toString()));
+        mockMvc.perform(decisionRequest(
+                        fixture.runId(), saved.id(), fixture.userId(), "ADMIN",
+                        decisionBody(2, "DOES_NOT_COMPLY", "La evidencia no es válida.")
+                ))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.proposedStatus").value("REVIEW_REQUIRED"))
+                .andExpect(jsonPath("$.effectiveStatus").value("DOES_NOT_COMPLY"))
+                .andExpect(jsonPath("$.revision").value(3))
+                .andExpect(jsonPath("$.humanDecisions.length()").value(2))
+                .andExpect(jsonPath("$.humanDecisions[0].finalStatus").value("COMPLIES"))
+                .andExpect(jsonPath("$.humanDecisions[1].finalStatus").value("DOES_NOT_COMPLY"));
+
+        var after = runQueries.get(fixture.runId());
+        assertThat(after.run().total()).isEqualTo(before.run().total());
+        assertThat(after.progress().resultCount()).isEqualTo(before.progress().resultCount());
+        assertThat(before.progress().reviewRequiredCount()).isEqualTo(1);
+        assertThat(after.progress().reviewRequiredCount()).isZero();
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM human_decisions WHERE result_id = ?",
+                Long.class,
+                saved.id()
+        )).isEqualTo(2);
+        verifyNoInteractions(programmedChecks);
+    }
+
+    @Test
+    void confirmationWithTheSameEffectiveStateStillAppendsAnEvent() throws Exception {
+        Fixture fixture = createFixture();
+        VerificationResult saved = results.saveEvaluatedResult(command(
+                fixture,
+                fixture.documentExpectations().get(0),
+                null,
+                ResultStatus.REVIEW_REQUIRED,
+                ApplicabilityDecision.APPLIES,
+                List.of(),
+                List.of(),
+                List.of()
+        ));
+        completeRun(fixture.runId());
+
+        mockMvc.perform(decisionRequest(
+                        fixture.runId(), saved.id(), fixture.userId(), "ADMIN",
+                        decisionBody(1, "REVIEW_REQUIRED", "Confirmo el estado propuesto.")
+                ))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.proposedStatus").value("REVIEW_REQUIRED"))
+                .andExpect(jsonPath("$.effectiveStatus").value("REVIEW_REQUIRED"))
+                .andExpect(jsonPath("$.revision").value(2))
+                .andExpect(jsonPath("$.humanDecisions.length()").value(1));
+    }
+
+    @Test
+    void limitsStatusByEffectiveApplicabilityAndExpectationMode() throws Exception {
+        Fixture fixture = createFixture();
+        VerificationResult undetermined = results.saveEvaluatedResult(command(
+                fixture,
+                fixture.documentExpectations().get(0),
+                null,
+                ResultStatus.REVIEW_REQUIRED,
+                ApplicabilityDecision.UNDETERMINED,
+                List.of(),
+                List.of(),
+                List.of()
+        ));
+        VerificationResult applies = results.saveEvaluatedResult(command(
+                fixture,
+                fixture.documentExpectations().get(1),
+                null,
+                ResultStatus.COMPLIES,
+                ApplicabilityDecision.APPLIES,
+                List.of(),
+                List.of(),
+                List.of()
+        ));
+        jdbc.update(
+                "UPDATE evidence_expectations SET applicability = 'CASE_DEPENDENT'::applicability_mode WHERE id = ?",
+                fixture.documentExpectations().get(2)
+        );
+        VerificationResult notApplicable = results.saveEvaluatedResult(command(
+                fixture,
+                fixture.documentExpectations().get(2),
+                null,
+                ResultStatus.NOT_APPLICABLE,
+                ApplicabilityDecision.NOT_APPLICABLE,
+                List.of(),
+                List.of(),
+                List.of()
+        ));
+        VerificationResult always = results.saveEvaluatedResult(command(
+                fixture,
+                fixture.documentExpectations().get(3),
+                null,
+                ResultStatus.COMPLIES,
+                ApplicabilityDecision.APPLIES,
+                List.of(),
+                List.of(),
+                List.of()
+        ));
+        completeRun(fixture.runId());
+
+        mockMvc.perform(decisionRequest(
+                        fixture.runId(), undetermined.id(), fixture.userId(), "ADMIN",
+                        decisionBody(1, "COMPLIES", "No se puede decidir aplicabilidad.")
+                ))
+                .andExpect(status().isUnprocessableEntity());
+        mockMvc.perform(decisionRequest(
+                        fixture.runId(), applies.id(), fixture.userId(), "ADMIN",
+                        decisionBody(1, "NOT_APPLICABLE", "La expectativa no aplica.")
+                ))
+                .andExpect(status().isUnprocessableEntity());
+        mockMvc.perform(decisionRequest(
+                        fixture.runId(), always.id(), fixture.userId(), "ADMIN",
+                        decisionBody(1, "NOT_APPLICABLE", "La expectativa no aplica.")
+                ))
+                .andExpect(status().isUnprocessableEntity());
+        mockMvc.perform(decisionRequest(
+                        fixture.runId(), notApplicable.id(), fixture.userId(), "ADMIN",
+                        decisionBody(1, "NOT_APPLICABLE", "No corresponde para este caso.")
+                ))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.effectiveStatus").value("NOT_APPLICABLE"));
+    }
+
+    @Test
+    void returnsExpectedAuthorizationNotFoundConflictAndInputErrors() throws Exception {
+        Fixture fixture = createFixture();
+        VerificationResult saved = results.saveEvaluatedResult(command(
+                fixture,
+                fixture.documentExpectations().get(0),
+                null,
+                ResultStatus.COMPLIES,
+                ApplicabilityDecision.APPLIES,
+                List.of(),
+                List.of(),
+                List.of()
+        ));
+        completeRun(fixture.runId());
+        String validBody = decisionBody(1, "COMPLIES", "Decisión válida.");
+
+        mockMvc.perform(put("/api/v1/verifications/{runId}/results/{resultId}/decision",
+                        fixture.runId(), saved.id())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(validBody))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(decisionRequest(fixture.runId(), saved.id(), fixture.userId(), "READER", validBody))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(decisionRequest(
+                        fixture.runId(), UUID.randomUUID(), fixture.userId(), "ADMIN", validBody
+                ))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
+        mockMvc.perform(decisionRequest(
+                        UUID.randomUUID(), saved.id(), fixture.userId(), "ADMIN", validBody
+                ))
+                .andExpect(status().isNotFound());
+
+        Fixture secondFixture = createFixture();
+        VerificationResult foreignResult = results.saveEvaluatedResult(command(
+                secondFixture,
+                secondFixture.documentExpectations().get(0),
+                null,
+                ResultStatus.COMPLIES,
+                ApplicabilityDecision.APPLIES,
+                List.of(),
+                List.of(),
+                List.of()
+        ));
+        completeRun(secondFixture.runId());
+        mockMvc.perform(decisionRequest(
+                        fixture.runId(), foreignResult.id(), fixture.userId(), "ADMIN", validBody
+                ))
+                .andExpect(status().isNotFound());
+
+        Fixture runningFixture = createFixture();
+        VerificationResult runningResult = results.saveEvaluatedResult(command(
+                runningFixture,
+                runningFixture.documentExpectations().get(0),
+                null,
+                ResultStatus.COMPLIES,
+                ApplicabilityDecision.APPLIES,
+                List.of(),
+                List.of(),
+                List.of()
+        ));
+        mockMvc.perform(decisionRequest(
+                        runningFixture.runId(), runningResult.id(), runningFixture.userId(), "ADMIN",
+                        decisionBody(1, "COMPLIES", "Todavía no terminó.")
+                ))
+                .andExpect(status().isConflict());
+
+        mockMvc.perform(decisionRequest(
+                        fixture.runId(), saved.id(), fixture.userId(), "ADMIN", validBody
+                ))
+                .andExpect(status().isOk());
+        mockMvc.perform(decisionRequest(
+                        fixture.runId(), saved.id(), fixture.userId(), "ADMIN", validBody
+                ))
+                .andExpect(status().isConflict());
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM human_decisions WHERE result_id = ?",
+                Long.class,
+                saved.id()
+        )).isEqualTo(1);
+
+        for (String invalidBody : List.of(
+                "{",
+                "{\"finalStatus\":\"COMPLIES\",\"rationale\":\"falta revisión\"}",
+                "{\"revision\":1,\"finalStatus\":\"UNKNOWN\",\"rationale\":\"estado desconocido\"}",
+                "{\"revision\":1,\"finalStatus\":\"COMPLIES\",\"rationale\":\"\"}",
+                "{\"revision\":1,\"finalStatus\":\"COMPLIES\",\"rationale\":\"   \"}"
+        )) {
+            mockMvc.perform(decisionRequest(
+                            fixture.runId(), saved.id(), fixture.userId(), "ADMIN", invalidBody
+                    ))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.status").value(400))
+                    .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        }
+    }
+
+    @Test
+    void decisionIsolatedToOneTicketAndOneRun() throws Exception {
+        Fixture fixture = createFixture();
+        VerificationResult ticket204 = results.saveEvaluatedResult(command(
+                fixture, fixture.ticketExpectation(), "204", ResultStatus.REVIEW_REQUIRED,
+                ApplicabilityDecision.APPLIES, List.of(), List.of(), List.of()
+        ));
+        VerificationResult ticket205 = results.saveEvaluatedResult(command(
+                fixture, fixture.ticketExpectation(), "205", ResultStatus.DOES_NOT_COMPLY,
+                ApplicabilityDecision.APPLIES, List.of(), List.of(), List.of()
+        ));
+        Fixture anotherRun = createFixture();
+        VerificationResult otherRunTicket = results.saveEvaluatedResult(command(
+                anotherRun, anotherRun.ticketExpectation(), "204", ResultStatus.COMPLIES,
+                ApplicabilityDecision.APPLIES, List.of(), List.of(), List.of()
+        ));
+        completeRun(fixture.runId());
+        completeRun(anotherRun.runId());
+
+        mockMvc.perform(decisionRequest(
+                        fixture.runId(), ticket204.id(), fixture.userId(), "ADMIN",
+                        decisionBody(1, "COMPLIES", "Ticket 204 corregido.")
+                ))
+                .andExpect(status().isOk());
+
+        assertThat(resultsForCompletedFixture(fixture))
+                .filteredOn(result -> result.id().equals(ticket205.id()))
+                .singleElement()
+                .extracting(VerificationResult::effectiveStatus)
+                .isEqualTo(ResultStatus.DOES_NOT_COMPLY);
+        assertThat(resultsForCompletedFixture(anotherRun))
+                .filteredOn(result -> result.id().equals(otherRunTicket.id()))
+                .singleElement()
+                .extracting(VerificationResult::effectiveStatus)
+                .isEqualTo(ResultStatus.COMPLIES);
+    }
+
+    @Test
+    void rollsBackDecisionEventWhenUpdatingTheResultFails() {
+        Fixture fixture = createFixture();
+        VerificationResult saved = results.saveEvaluatedResult(command(
+                fixture,
+                fixture.documentExpectations().get(0),
+                null,
+                ResultStatus.REVIEW_REQUIRED,
+                ApplicabilityDecision.APPLIES,
+                List.of(),
+                List.of(),
+                List.of()
+        ));
+        completeRun(fixture.runId());
+        jdbc.execute("""
+                CREATE FUNCTION reject_test_result_decision_update() RETURNS trigger AS $$
+                BEGIN
+                    RAISE EXCEPTION 'forced decision write failure';
+                END;
+                $$ LANGUAGE plpgsql
+                """);
+        jdbc.execute("""
+                CREATE TRIGGER trg_test_result_decision_update
+                BEFORE UPDATE OF effective_status ON verification_results
+                FOR EACH ROW EXECUTE FUNCTION reject_test_result_decision_update()
+                """);
+        try {
+            assertThrows(
+                    org.springframework.dao.DataAccessException.class,
+                    () -> resultDecisions.decide(
+                            fixture.runId(),
+                            saved.id(),
+                            1,
+                            ResultStatus.COMPLIES,
+                            "Debe revertirse todo.",
+                            fixture.userId()
+                    )
+            );
+        } finally {
+            jdbc.execute("DROP TRIGGER IF EXISTS trg_test_result_decision_update ON verification_results");
+            jdbc.execute("DROP FUNCTION IF EXISTS reject_test_result_decision_update()");
+        }
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM human_decisions WHERE result_id = ?",
+                Long.class,
+                saved.id()
+        )).isZero();
+        assertThat(jdbc.queryForMap(
+                "SELECT effective_status::text AS status, revision FROM verification_results WHERE id = ?",
+                saved.id()
+        )).containsEntry("status", "REVIEW_REQUIRED").containsEntry("revision", 1);
+    }
+
+    @Test
+    void concurrentDecisionsWithSameRevisionOnlyAppendOneEvent() throws Exception {
+        Fixture fixture = createFixture();
+        VerificationResult saved = results.saveEvaluatedResult(command(
+                fixture,
+                fixture.documentExpectations().get(0),
+                null,
+                ResultStatus.REVIEW_REQUIRED,
+                ApplicabilityDecision.APPLIES,
+                List.of(),
+                List.of(),
+                List.of()
+        ));
+        completeRun(fixture.runId());
+        CountDownLatch ready = new CountDownLatch(2);
+        CountDownLatch start = new CountDownLatch(1);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            java.util.concurrent.Callable<MvcResult> request = () -> {
+                ready.countDown();
+                if (!start.await(5, TimeUnit.SECONDS)) {
+                    throw new IllegalStateException("Concurrent requests did not start");
+                }
+                return mockMvc.perform(decisionRequest(
+                        fixture.runId(), saved.id(), fixture.userId(), "ADMIN",
+                        decisionBody(1, "COMPLIES", "Decisión concurrente.")
+                )).andReturn();
+            };
+            Future<MvcResult> first = executor.submit(request);
+            Future<MvcResult> second = executor.submit(request);
+            assertThat(ready.await(5, TimeUnit.SECONDS)).isTrue();
+            start.countDown();
+            assertThat(List.of(
+                    first.get(10, TimeUnit.SECONDS).getResponse().getStatus(),
+                    second.get(10, TimeUnit.SECONDS).getResponse().getStatus()
+            )).containsExactlyInAnyOrder(200, 409);
+        } finally {
+            executor.shutdownNow();
+        }
+        assertThat(jdbc.queryForObject(
+                "SELECT COUNT(*) FROM human_decisions WHERE result_id = ?",
+                Long.class,
+                saved.id()
+        )).isEqualTo(1);
+        assertThat(jdbc.queryForObject(
+                "SELECT revision FROM verification_results WHERE id = ?",
+                Integer.class,
+                saved.id()
+        )).isEqualTo(2);
+    }
+
+    private MockHttpServletRequestBuilder decisionRequest(
+            UUID runId,
+            UUID resultId,
+            UUID authenticatedUser,
+            String role,
+            String body
+    ) {
+        return put("/api/v1/verifications/{runId}/results/{resultId}/decision", runId, resultId)
+                .with(jwt().jwt(token -> token.subject(authenticatedUser.toString()))
+                        .authorities(new SimpleGrantedAuthority("ROLE_" + role)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(body);
+    }
+
+    private String decisionBody(int revision, String status, String rationale) {
+        return """
+                {"revision":%d,"finalStatus":"%s","rationale":"%s"}
+                """.formatted(revision, status, rationale);
     }
 
     private List<VerificationResult> resultsForCompletedFixture(Fixture fixture) {

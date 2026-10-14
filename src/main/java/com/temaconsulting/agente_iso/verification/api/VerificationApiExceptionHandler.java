@@ -4,15 +4,18 @@ import com.temaconsulting.agente_iso.shared.application.FieldProblem;
 import com.temaconsulting.agente_iso.shared.application.ProblemCode;
 import com.temaconsulting.agente_iso.verification.application.VerificationPreviewFailure;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultConflictException;
+import com.temaconsulting.agente_iso.verification.application.VerificationResultDecisionFailure;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultQueryFailure;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultValidationException;
 import com.temaconsulting.agente_iso.verification.application.VerificationStartFailure;
 import com.temaconsulting.agente_iso.verification.domain.VerificationDomainValidationException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 
 import java.util.List;
 
@@ -81,5 +84,42 @@ public class VerificationApiExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, ex.getMessage());
         problem.setProperty("code", ex.kind().name());
         return ResponseEntity.status(status).body(problem);
+    }
+
+    @ExceptionHandler(VerificationResultDecisionFailure.class)
+    public ResponseEntity<ProblemDetail> handleResultDecisionFailure(VerificationResultDecisionFailure ex) {
+        HttpStatus status = switch (ex.kind()) {
+            case NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case CONFLICT -> HttpStatus.CONFLICT;
+            case INCOMPATIBLE_STATUS -> HttpStatus.UNPROCESSABLE_ENTITY;
+        };
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, ex.getMessage());
+        problem.setProperty("code", ex.kind().name());
+        return ResponseEntity.status(status).body(problem);
+    }
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidDecisionRequest(MethodArgumentNotValidException ex) {
+        List<FieldProblem> details = ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> new FieldProblem(error.getField(), "is required or has an invalid value"))
+                .toList();
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                "Request body contains invalid fields"
+        );
+        problem.setProperty("code", "VALIDATION_ERROR");
+        problem.setProperty("details", details);
+        return ResponseEntity.badRequest().body(problem);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ProblemDetail> handleUnreadableDecisionRequest(HttpMessageNotReadableException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                "Request body is invalid"
+        );
+        problem.setProperty("code", "VALIDATION_ERROR");
+        problem.setProperty("details", List.of(new FieldProblem("request", "Request body is invalid")));
+        return ResponseEntity.badRequest().body(problem);
     }
 }

@@ -1,0 +1,2 @@
+ALTER TABLE human_decisions
+    ADD COLUMN decision_order BIGINT GENERATED ALWAYS AS IDENTITY;
