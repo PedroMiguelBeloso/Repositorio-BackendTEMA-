@@ -11,6 +11,9 @@ import com.temaconsulting.agente_iso.shared.config.Configuration;
 import com.temaconsulting.agente_iso.verification.api.VerificationApiExceptionHandler;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultConflictException;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultDecisionService;
+import com.temaconsulting.agente_iso.verification.application.VerificationApplicabilityService;
+import com.temaconsulting.agente_iso.verification.application.VerificationResultDecisionFailure;
+import com.temaconsulting.agente_iso.verification.application.VerificationResultRecheck;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultPort;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultProgress;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultQueryFailure;
@@ -63,6 +66,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.mockito.ArgumentMatchers.any;
@@ -105,6 +109,12 @@ class JdbcVerificationResultRepositoryIntegrationTest {
 
     @Autowired
     VerificationResultDecisionService resultDecisions;
+
+    @Autowired
+    VerificationApplicabilityService applicabilityService;
+
+    @Autowired
+    JdbcVerificationResultRepository resultRepository;
 
     @Autowired
     VerificationResultQueryService resultQueries;
@@ -1056,6 +1066,161 @@ class JdbcVerificationResultRepositoryIntegrationTest {
         )).isEqualTo(2);
     }
 
+    @Test
+    void resolvesNotApplicableWithoutSourceCallsOrChangingTheAutomaticProposal() throws Exception {
+        Fixture fixture = createFixture(true);
+        VerificationResult saved = results.saveEvaluatedResult(command(fixture,
+                fixture.documentExpectations().getFirst(), null, ResultStatus.REVIEW_REQUIRED,
+                ApplicabilityDecision.UNDETERMINED, List.of("Sin hechos"), List.of("Pendiente"), List.of()));
+        completeRun(fixture.runId());
+
+        mockMvc.perform(applicabilityRequest(fixture.runId(), saved.id(), fixture.userId(), "ADMIN",
+                applicabilityBody(1, "NOT_APPLICABLE", "No hubo desarrollo.")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(saved.id().toString()))
+                .andExpect(jsonPath("$.proposedStatus").value("REVIEW_REQUIRED"))
+                .andExpect(jsonPath("$.effectiveStatus").value("NOT_APPLICABLE"))
+                .andExpect(jsonPath("$.applicability.decision").value("NOT_APPLICABLE"))
+                .andExpect(jsonPath("$.applicability.origin").value("HUMAN"))
+                .andExpect(jsonPath("$.humanDecisions[0].decisionType").value("APPLICABILITY"))
+                .andExpect(jsonPath("$.revision").value(2));
+        verifyNoInteractions(programmedChecks);
+        assertThat(jdbc.queryForMap("""
+                SELECT proposed_status::text AS proposed, applicability_decision::text AS automatic,
+                       applicability_origin::text AS origin FROM verification_results WHERE id = ?
+                """, saved.id()))
+                .containsEntry("proposed", "REVIEW_REQUIRED")
+                .containsEntry("automatic", "UNDETERMINED")
+                .containsEntry("origin", "DETERMINISTIC");
+        mockMvc.perform(applicabilityRequest(fixture.runId(), saved.id(), fixture.userId(), "ADMIN",
+                applicabilityBody(1, "APPLIES", "Segunda decisión")))
+                .andExpect(status().isConflict());
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM human_decisions WHERE result_id = ?",
+                Long.class, saved.id())).isEqualTo(1);
+    }
+
+    @Test
+    void resolvesAppliesForOneTicketAndKeepsItsSiblingAndRunProgress() throws Exception {
+        Fixture fixture = createFixture(true);
+        VerificationResult ticket204 = results.saveEvaluatedResult(command(fixture,
+                fixture.ticketExpectation(), "204", ResultStatus.REVIEW_REQUIRED,
+                ApplicabilityDecision.UNDETERMINED, List.of(), List.of(), List.of()));
+        VerificationResult ticket205 = results.saveEvaluatedResult(command(fixture,
+                fixture.ticketExpectation(), "205", ResultStatus.REVIEW_REQUIRED,
+                ApplicabilityDecision.UNDETERMINED, List.of(), List.of(), List.of()));
+        completeRun(fixture.runId());
+        when(programmedChecks.assess(any(), any(), eq(ApplicabilityDecision.APPLIES), eq("204")))
+                .thenReturn(new ProgrammedEvidenceCheckService.Assessment(fixture.ticketExpectation(), "204",
+                        ResultStatus.REVIEW_REQUIRED, "Redmine no puede demostrar el cambio", List.of("Sin historial"),
+                        List.of()));
+
+        mockMvc.perform(applicabilityRequest(fixture.runId(), ticket204.id(), fixture.userId(), "ADMIN",
+                applicabilityBody(1, "APPLIES", "El ticket 204 fue una corrección.")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.subjectTicketId").value("204"))
+                .andExpect(jsonPath("$.proposedStatus").value("REVIEW_REQUIRED"))
+                .andExpect(jsonPath("$.effectiveStatus").value("REVIEW_REQUIRED"))
+                .andExpect(jsonPath("$.applicability.decision").value("APPLIES"))
+                .andExpect(jsonPath("$.applicability.origin").value("HUMAN"))
+                .andExpect(jsonPath("$.revision").value(2));
+        assertThat(resultRepository.findByRunAndId(fixture.runId(), ticket205.id()).orElseThrow().revision())
+                .isEqualTo(1);
+        assertThat(resultRepository.progress(fixture.runId()).resultCount()).isEqualTo(2);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM human_decisions WHERE result_id = ?",
+                Long.class, ticket205.id())).isZero();
+    }
+
+    @Test
+    void appliesUsesTheRecheckOutcomeWithoutReplacingTheAutomaticProposal() throws Exception {
+        for (ResultStatus outcome : List.of(ResultStatus.COMPLIES, ResultStatus.DOES_NOT_COMPLY,
+                ResultStatus.REVIEW_REQUIRED)) {
+            Fixture fixture = createFixture(true);
+            VerificationResult pending = results.saveEvaluatedResult(command(fixture,
+                    fixture.documentExpectations().getFirst(), null, ResultStatus.REVIEW_REQUIRED,
+                    ApplicabilityDecision.UNDETERMINED, List.of(), List.of(), List.of()));
+            completeRun(fixture.runId());
+            when(programmedChecks.assess(any(), any(), eq(ApplicabilityDecision.APPLIES), eq(null)))
+                    .thenReturn(new ProgrammedEvidenceCheckService.Assessment(
+                            fixture.documentExpectations().getFirst(), null, outcome,
+                            "Resultado de la comprobación", List.of(), List.of()));
+
+            mockMvc.perform(applicabilityRequest(fixture.runId(), pending.id(), fixture.userId(), "ADMIN",
+                    applicabilityBody(1, "APPLIES", "El caso requiere el registro.")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.id").value(pending.id().toString()))
+                    .andExpect(jsonPath("$.proposedStatus").value("REVIEW_REQUIRED"))
+                    .andExpect(jsonPath("$.effectiveStatus").value(outcome.name()))
+                    .andExpect(jsonPath("$.applicability.origin").value("HUMAN"))
+                    .andExpect(jsonPath("$.revision").value(2));
+            assertThat(jdbc.queryForObject("""
+                    SELECT applicability_decision::text FROM verification_results WHERE id = ?
+                    """, String.class, pending.id())).isEqualTo("UNDETERMINED");
+        }
+    }
+
+    @Test
+    void applicabilityEndpointEnforcesAuthorizationStateAndInput() throws Exception {
+        Fixture fixture = createFixture(true);
+        VerificationResult pending = results.saveEvaluatedResult(command(fixture,
+                fixture.documentExpectations().getFirst(), null, ResultStatus.REVIEW_REQUIRED,
+                ApplicabilityDecision.UNDETERMINED, List.of(), List.of(), List.of()));
+        String valid = applicabilityBody(1, "NOT_APPLICABLE", "No corresponde.");
+        mockMvc.perform(post("/api/v1/verifications/{runId}/results/{resultId}/applicability",
+                fixture.runId(), pending.id()).contentType(MediaType.APPLICATION_JSON).content(valid))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(applicabilityRequest(fixture.runId(), pending.id(), fixture.userId(), "READER", valid))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(applicabilityRequest(fixture.runId(), pending.id(), fixture.userId(), "ADMIN", valid))
+                .andExpect(status().isConflict());
+        completeRun(fixture.runId());
+        mockMvc.perform(applicabilityRequest(fixture.runId(), UUID.randomUUID(), fixture.userId(), "ADMIN", valid))
+                .andExpect(status().isNotFound());
+        mockMvc.perform(applicabilityRequest(UUID.randomUUID(), pending.id(), fixture.userId(), "ADMIN", valid))
+                .andExpect(status().isNotFound());
+        for (String invalid : List.of("{}", applicabilityBody(1, "UNDETERMINED", "x"),
+                applicabilityBody(1, "APPLIES", "   "),
+                "{\"decision\":\"APPLIES\",\"rationale\":\"x\"}")) {
+            mockMvc.perform(applicabilityRequest(fixture.runId(), pending.id(), fixture.userId(), "ADMIN", invalid))
+                    .andExpect(status().isBadRequest());
+        }
+        VerificationResult always = results.saveEvaluatedResult(command(fixture,
+                fixture.documentExpectations().get(1), null, ResultStatus.REVIEW_REQUIRED,
+                ApplicabilityDecision.UNDETERMINED, List.of(), List.of(), List.of()));
+        mockMvc.perform(applicabilityRequest(fixture.runId(), always.id(), fixture.userId(), "ADMIN", valid))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void applicabilityDecisionAndResultUpdateRollBackTogetherOnDatabaseFailure() {
+        Fixture fixture = createFixture(true);
+        VerificationResult saved = results.saveEvaluatedResult(command(fixture,
+                fixture.documentExpectations().getFirst(), null, ResultStatus.REVIEW_REQUIRED,
+                ApplicabilityDecision.UNDETERMINED, List.of(), List.of(), List.of()));
+        completeRun(fixture.runId());
+        assertThrows(DataIntegrityViolationException.class, () -> resultRepository.saveApplicabilityDecision(
+                fixture.runId(), saved.id(), 1, ApplicabilityDecision.NOT_APPLICABLE,
+                "No corresponde.", UUID.randomUUID(), DECISION_TIME,
+                new VerificationResultRecheck(ResultStatus.NOT_APPLICABLE, "No aplica", List.of(), List.of())));
+        assertThat(resultRepository.findByRunAndId(fixture.runId(), saved.id()).orElseThrow().revision())
+                .isEqualTo(1);
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM human_decisions WHERE result_id = ?",
+                Long.class, saved.id())).isZero();
+    }
+
+    private MockHttpServletRequestBuilder applicabilityRequest(UUID runId, UUID resultId,
+            UUID authenticatedUser, String role, String body) {
+        return post("/api/v1/verifications/{runId}/results/{resultId}/applicability", runId, resultId)
+                .with(jwt().jwt(token -> token.subject(authenticatedUser.toString()))
+                        .authorities(new SimpleGrantedAuthority("ROLE_" + role)))
+                .contentType(MediaType.APPLICATION_JSON).content(body);
+    }
+
+    private String applicabilityBody(int revision, String decision, String rationale) {
+        return """
+                {"revision":%d,"decision":"%s","rationale":"%s"}
+                """.formatted(revision, decision, rationale);
+    }
+
     private MockHttpServletRequestBuilder decisionRequest(
             UUID runId,
             UUID resultId,
@@ -1112,6 +1277,10 @@ class JdbcVerificationResultRepositoryIntegrationTest {
     }
 
     private Fixture createFixture() {
+        return createFixture(false);
+    }
+
+    private Fixture createFixture(boolean pendingApplicability) {
         UUID userId = UUID.randomUUID();
         UUID processId = jdbc.query(
                 "SELECT id FROM processes WHERE code = 'START_UP'::process_code",
@@ -1195,7 +1364,7 @@ class JdbcVerificationResultRepositoryIntegrationTest {
                     INSERT INTO evidence_expectations (
                         id, macro_activity_id, activity_id, registry_definition_id, display_name,
                         applicability, cardinality, location, "order"
-                    ) VALUES (?, ?, ?, ?, ?, 'ALWAYS'::applicability_mode,
+                    ) VALUES (?, ?, ?, ?, ?, ?::applicability_mode,
                               'ONE'::cardinality_enum, ?::evidence_location, ?)
                     """,
                     expectationId,
@@ -1203,6 +1372,7 @@ class JdbcVerificationResultRepositoryIntegrationTest {
                     index == 3 ? activityId : null,
                     documentRegistryId,
                     "Document expectation " + (index + 1),
+                    pendingApplicability && index == 0 ? "CASE_DEPENDENT" : "ALWAYS",
                     index == 3 ? "ACTIVITY_RECORD" : "INPUT",
                     index + 1
             );
@@ -1225,12 +1395,13 @@ class JdbcVerificationResultRepositoryIntegrationTest {
                 INSERT INTO evidence_expectations (
                     id, macro_activity_id, registry_definition_id, display_name,
                     applicability, cardinality, location, "order"
-                ) VALUES (?, ?, ?, 'Ticket expectation', 'ALWAYS'::applicability_mode,
+                ) VALUES (?, ?, ?, 'Ticket expectation', ?::applicability_mode,
                           'MULTIPLE'::cardinality_enum, 'INPUT'::evidence_location, 5)
                 """,
                 ticketExpectationId,
                 macroId,
-                ticketRegistryId
+                ticketRegistryId,
+                pendingApplicability ? "CASE_DEPENDENT" : "ALWAYS"
         );
         jdbc.update(
                 """
