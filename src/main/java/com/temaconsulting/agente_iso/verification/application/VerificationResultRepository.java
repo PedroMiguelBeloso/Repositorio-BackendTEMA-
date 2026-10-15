@@ -19,6 +19,12 @@ public interface VerificationResultRepository {
 
     Optional<VerificationResultDecisionTarget> lockDecisionTarget(UUID runId, UUID resultId);
 
+    Optional<VerificationResult> findByRunAndId(UUID runId, UUID resultId);
+
+    VerificationResult saveApplicabilityDecision(UUID runId, UUID resultId, int expectedRevision,
+            com.temaconsulting.agente_iso.verification.domain.ApplicabilityDecision decision,
+            String rationale, UUID decidedBy, Instant decidedAt, VerificationResultRecheck recheck);
+
     VerificationResult saveStatusDecision(
             UUID runId,
             UUID resultId,

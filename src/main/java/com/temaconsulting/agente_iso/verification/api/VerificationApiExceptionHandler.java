@@ -91,7 +91,7 @@ public class VerificationApiExceptionHandler {
         HttpStatus status = switch (ex.kind()) {
             case NOT_FOUND -> HttpStatus.NOT_FOUND;
             case CONFLICT -> HttpStatus.CONFLICT;
-            case INCOMPATIBLE_STATUS -> HttpStatus.UNPROCESSABLE_ENTITY;
+            case INCOMPATIBLE_STATUS, INCOMPATIBLE_APPLICABILITY -> HttpStatus.UNPROCESSABLE_ENTITY;
         };
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, ex.getMessage());
         problem.setProperty("code", ex.kind().name());

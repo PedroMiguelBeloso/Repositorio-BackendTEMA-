@@ -4,6 +4,9 @@ import com.temaconsulting.agente_iso.shared.api.PageMapper;
 import com.temaconsulting.agente_iso.shared.application.Page;
 import com.temaconsulting.agente_iso.shared.dto.PageResponse;
 import com.temaconsulting.agente_iso.verification.api.dto.ResultStatusDecisionRequest;
+import com.temaconsulting.agente_iso.verification.api.dto.ResolveApplicabilityRequest;
+import com.temaconsulting.agente_iso.verification.application.VerificationApplicabilityService;
+import com.temaconsulting.agente_iso.verification.domain.ApplicabilityDecision;
 import com.temaconsulting.agente_iso.verification.api.dto.VerificationResultResponse;
 import com.temaconsulting.agente_iso.verification.api.mapper.VerificationResultApiMapper;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultDecisionService;
@@ -13,6 +16,7 @@ import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,15 +31,18 @@ import java.util.UUID;
 public class VerificationResultController {
     private final VerificationResultQueryService queries;
     private final VerificationResultDecisionService decisions;
+    private final VerificationApplicabilityService applicability;
     private final VerificationResultApiMapper mapper;
 
     public VerificationResultController(
             VerificationResultQueryService queries,
             VerificationResultDecisionService decisions,
+            VerificationApplicabilityService applicability,
             VerificationResultApiMapper mapper
     ) {
         this.queries = queries;
         this.decisions = decisions;
+        this.applicability = applicability;
         this.mapper = mapper;
     }
 
@@ -51,6 +58,19 @@ public class VerificationResultController {
                 results.items().stream().map(mapper::toResponse).toList(),
                 PageMapper.toPageInfo(results.page(), results.size(), results.totalElements())
         );
+    }
+
+    @PostMapping("/{runId}/results/{resultId}/applicability")
+    @PreAuthorize("hasRole('ADMIN')")
+    public VerificationResultResponse resolveApplicability(
+            @PathVariable UUID runId,
+            @PathVariable UUID resultId,
+            @Valid @RequestBody ResolveApplicabilityRequest request,
+            Authentication authentication
+    ) {
+        return mapper.toResponse(applicability.resolve(runId, resultId, request.revision(),
+                ApplicabilityDecision.valueOf(request.decision().name()), request.rationale(),
+                UUID.fromString(authentication.getName())));
     }
 
     @PutMapping("/{runId}/results/{resultId}/decision")

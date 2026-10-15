@@ -9,6 +9,7 @@ import com.temaconsulting.agente_iso.verification.application.VerificationResult
 import com.temaconsulting.agente_iso.verification.application.VerificationResultDecisionFailure;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultDecisionTarget;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultProgress;
+import com.temaconsulting.agente_iso.verification.application.VerificationResultRecheck;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultRepository;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultValidationException;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultWriteCommand;
@@ -187,6 +188,13 @@ public class JdbcVerificationResultRepository implements VerificationResultRepos
     }
 
     @Override
+    public Optional<VerificationResult> findByRunAndId(UUID runId, UUID resultId) {
+        List<UUID> ids = jdbc.query("SELECT id FROM verification_results WHERE run_id = ? AND id = ?",
+                (rs, rowNum) -> rs.getObject(1, UUID.class), runId, resultId);
+        return ids.isEmpty() ? Optional.empty() : Optional.of(loadResults(ids).getFirst());
+    }
+
+    @Override
     public Optional<VerificationResultDecisionTarget> lockDecisionTarget(UUID runId, UUID resultId) {
         Optional<VerificationResultDecisionTarget> locked = jdbc.query(
                 """
@@ -229,6 +237,66 @@ public class JdbcVerificationResultRepository implements VerificationResultRepos
                 effectiveApplicability.orElse(target.effectiveApplicability()),
                 target.applicabilityMode()
         ));
+    }
+
+    @Override
+    @Transactional
+    public VerificationResult saveApplicabilityDecision(UUID runId, UUID resultId, int expectedRevision,
+            ApplicabilityDecision decision, String rationale, UUID decidedBy, Instant decidedAt,
+            VerificationResultRecheck recheck) {
+        VerificationResultDecisionTarget target = lockDecisionTarget(runId, resultId)
+                .orElseThrow(VerificationResultDecisionFailure::notFound);
+        if (!"COMPLETED".equals(target.runStatus()) || target.revision() != expectedRevision) {
+            throw VerificationResultDecisionFailure.conflict();
+        }
+        if (target.applicabilityMode() != ApplicabilityMode.CASE_DEPENDENT) {
+            throw VerificationResultDecisionFailure.incompatibleApplicability();
+        }
+        if (target.effectiveApplicability() != ApplicabilityDecision.UNDETERMINED) {
+            throw VerificationResultDecisionFailure.conflict();
+        }
+        boolean alreadyDecided = Boolean.TRUE.equals(jdbc.queryForObject("""
+                SELECT EXISTS (SELECT 1 FROM human_decisions
+                  WHERE result_id = ? AND decision_type = 'APPLICABILITY'::human_decision_type)
+                """, Boolean.class, resultId));
+        boolean originallyUndetermined = Boolean.TRUE.equals(jdbc.queryForObject("""
+                SELECT applicability_decision = 'UNDETERMINED'::applicability_decision
+                FROM verification_results WHERE run_id = ? AND id = ?
+                """, Boolean.class, runId, resultId));
+        if (alreadyDecided || !originallyUndetermined) {
+            throw VerificationResultDecisionFailure.conflict();
+        }
+        int updated = jdbc.update("""
+                UPDATE verification_results
+                SET effective_status = ?::result_status, rationale = ?, revision = revision + 1
+                WHERE run_id = ? AND id = ? AND revision = ?
+                """, recheck.status().name(), recheck.rationale(), runId, resultId, expectedRevision);
+        if (updated != 1) {
+            throw VerificationResultDecisionFailure.conflict();
+        }
+        jdbc.update("""
+                INSERT INTO human_decisions
+                    (id, result_id, decided_by, decision_type, applicability_value, rationale, decided_at)
+                VALUES (?, ?, ?, 'APPLICABILITY'::human_decision_type,
+                    ?::applicability_decision, ?, ?)
+                """, UUID.randomUUID(), resultId, decidedBy, decision.name(), rationale,
+                Timestamp.from(decidedAt));
+        jdbc.update("DELETE FROM verification_result_limitations WHERE result_id = ?", resultId);
+        jdbc.update("DELETE FROM verification_result_evidence WHERE result_id = ?", resultId);
+        for (int index = 0; index < recheck.limitations().size(); index++) {
+            jdbc.update("INSERT INTO verification_result_limitations (result_id, position, text) VALUES (?, ?, ?)",
+                    resultId, index + 1, recheck.limitations().get(index));
+        }
+        for (VerificationResultWriteCommand.EvidenceReference reference : recheck.evidence()) {
+            jdbc.update("""
+                    INSERT INTO verification_result_evidence
+                        (result_id, kind, source, external_id, display_name, web_url, ticket_id, observed_at)
+                    VALUES (?, ?::evidence_type, ?::source_type, ?, ?, ?, ?, ?)
+                    """, resultId, reference.kind().name(), reference.source().name(),
+                    reference.externalId(), reference.displayName(), reference.webUrl(),
+                    reference.ticketId(), Timestamp.from(reference.observedAt()));
+        }
+        return loadResults(List.of(resultId)).getFirst();
     }
 
     @Override
@@ -501,6 +569,16 @@ public class JdbcVerificationResultRepository implements VerificationResultRepos
 
         Map<UUID, VerificationResult> byId = new HashMap<>();
         for (ResultRow row : rows) {
+            List<HumanDecisionEvent> history = decisions.get(row.id());
+            ApplicabilityAssessment effectiveApplicability = history.stream()
+                    .filter(event -> event.decisionType() == HumanDecisionType.APPLICABILITY)
+                    .reduce((previous, current) -> current)
+                    .map(event -> new ApplicabilityAssessment(
+                            ApplicabilityDecision.valueOf(event.applicabilityDecision().name()),
+                            DecisionOrigin.HUMAN, event.rationale(), List.of()))
+                    .orElseGet(() -> new ApplicabilityAssessment(row.applicabilityDecision(),
+                            row.applicabilityOrigin(), row.applicabilityRationale(),
+                            applicabilityLimitations.get(row.id())));
             byId.put(row.id(), new VerificationResult(
                     row.id(),
                     row.runId(),
@@ -511,12 +589,7 @@ public class JdbcVerificationResultRepository implements VerificationResultRepos
                     row.evidenceType(),
                     row.location(),
                     row.subjectTicketId(),
-                    new ApplicabilityAssessment(
-                            row.applicabilityDecision(),
-                            row.applicabilityOrigin(),
-                            row.applicabilityRationale(),
-                            applicabilityLimitations.get(row.id())
-                    ),
+                    effectiveApplicability,
                     row.proposedStatus(),
                     row.effectiveStatus(),
                     row.rationale(),
