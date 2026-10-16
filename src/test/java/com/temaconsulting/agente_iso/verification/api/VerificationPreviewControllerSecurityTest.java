@@ -10,6 +10,7 @@ import com.temaconsulting.agente_iso.process.domain.EvidenceLocation;
 import com.temaconsulting.agente_iso.process.domain.EvidenceType;
 import com.temaconsulting.agente_iso.shared.api.ApiExceptionHandler;
 import com.temaconsulting.agente_iso.shared.api.ProblemDetailsFactory;
+import com.temaconsulting.agente_iso.shared.application.Page;
 import com.temaconsulting.agente_iso.shared.config.Configuration;
 import com.temaconsulting.agente_iso.service.domain.ServiceType;
 import com.temaconsulting.agente_iso.verification.application.CreatedVerificationRun;
@@ -312,6 +313,69 @@ class VerificationPreviewControllerSecurityTest {
                 .andExpect(jsonPath("$.sourceSnapshot.driveFolderId").value("folder-1"));
         mockMvc.perform(get("/api/v1/verifications/{runId}", runId))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void adminAndReaderCanListRunHistoryButAnonymousCannot() throws Exception {
+        UUID runId = UUID.randomUUID();
+        UUID serviceId = UUID.randomUUID();
+        UUID versionId = UUID.randomUUID();
+        UUID adminId = UUID.randomUUID();
+        String groupId = TicketSelectionGroup.stableIdFor(UUID.randomUUID());
+        var run = new VerificationRunSnapshot(runId, serviceId, ServiceType.SOFTWARE_FACTORY, 4,
+                versionId, "folder-1", "Folder", "project-1", "Project", VerificationScope.PROCESS,
+                null, "case note", "FAILED", adminId, Instant.parse("2026-10-08T12:00:00Z"),
+                Instant.parse("2026-10-08T12:01:00Z"), "Safe failure", 3,
+                new ValidatedTicketSelections(List.of(
+                        new ValidatedTicketSelection(groupId,
+                                UUID.fromString(groupId.substring("ticket-group:".length())),
+                                List.of("204", "205"))
+                )));
+        when(queries.list(serviceId, 0, 20)).thenReturn(new Page<>(List.of(
+                new VerificationRunQueryService.RunWithProgress(run, new VerificationResultProgress(2, 1))
+        ), 0, 20, 1));
+
+        for (String role : List.of("ADMIN", "READER")) {
+            mockMvc.perform(get("/api/v1/verifications")
+                            .param("serviceId", serviceId.toString())
+                            .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_" + role))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.items[0].id").value(runId.toString()))
+                    .andExpect(jsonPath("$.items[0].status").value("FAILED"))
+                    .andExpect(jsonPath("$.items[0].progress.total").value(3))
+                    .andExpect(jsonPath("$.items[0].progress.processed").value(2))
+                    .andExpect(jsonPath("$.items[0].failureMessage").value("Safe failure"))
+                    .andExpect(jsonPath("$.items[0].ticketSelections[0].ticketIds[1]").value("205"))
+                    .andExpect(jsonPath("$.page.page").value(0))
+                    .andExpect(jsonPath("$.page.size").value(20))
+                    .andExpect(jsonPath("$.page.totalElements").value(1))
+                    .andExpect(jsonPath("$.page.totalPages").value(1));
+        }
+
+        mockMvc.perform(get("/api/v1/verifications"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void readerCanListUnfilteredEmptyHistoryWithDefaultPagination() throws Exception {
+        when(queries.list(null, 0, 20)).thenReturn(new Page<>(List.of(), 0, 20, 0));
+
+        mockMvc.perform(get("/api/v1/verifications")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_READER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items").isEmpty())
+                .andExpect(jsonPath("$.page.page").value(0))
+                .andExpect(jsonPath("$.page.size").value(20))
+                .andExpect(jsonPath("$.page.totalElements").value(0))
+                .andExpect(jsonPath("$.page.totalPages").value(0));
+    }
+
+    @Test
+    void malformedServiceIdIsRejectedByHistoryEndpoint() throws Exception {
+        mockMvc.perform(get("/api/v1/verifications")
+                        .param("serviceId", "not-a-uuid")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_READER"))))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

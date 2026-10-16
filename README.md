@@ -233,6 +233,12 @@ disponibles. TC-176 agrega la persistencia de esas valoraciones y su consulta:
   paginados solo cuando el run está `COMPLETED`; la consulta tiene orden estable
   y carga las relaciones en lote. La migración V6 separa las limitaciones de
   aplicabilidad de las limitaciones generales del resultado.
+- `GET /api/v1/verifications?serviceId={uuid}&page=0&size=20` (TC-182) lista
+  ejecuciones independientes para ADMIN y READER. El filtro por servicio es
+  opcional; el orden es `started_at DESC, id DESC`. La respuesta conserva los
+  snapshots de cada ejecución, sus selecciones de tickets, el total original y
+  el progreso calculado en lote desde los estados efectivos persistidos. La
+  migración V9 agrega índices para el historial global y filtrado por servicio.
 - `TC-175` ejecuta cada run con un único trabajador `@Async` y una cola acotada.
   El `POST /api/v1/verifications` guarda `QUEUED` con el `total` calculado,
   confirma esa transacción y devuelve `202` con `Location`; el trabajador
@@ -246,6 +252,93 @@ disponibles. TC-176 agrega la persistencia de esas valoraciones y su consulta:
   `TEMA_VERIFICATION_QUEUE_CAPACITY` ajusta la cola (10 por defecto).
 - Las escrituras de decisiones humanas pertenecen a etapas posteriores.
 
+### TC-182 — Historial de verificaciones
+
+`GET /api/v1/verifications` permite a los roles `ADMIN` y `READER` consultar
+las ejecuciones anteriores. Requiere JWT; sin autenticación responde `401`.
+La consulta no accede a Drive, Redmine ni OpenAI.
+
+Parámetros:
+
+| Parámetro | Requerido | Valor por defecto | Regla |
+| --- | --- | --- | --- |
+| `serviceId` | No | — | UUID; si se informa, filtra las ejecuciones de ese servicio. |
+| `page` | No | `0` | Índice de página basado en cero; debe ser mayor o igual a cero. |
+| `size` | No | `20` | Cantidad por página; debe estar entre `1` y `100`. |
+
+Ejemplos:
+
+```http
+GET /api/v1/verifications
+GET /api/v1/verifications?serviceId=3c7d1d56-e49e-4a4c-a1a4-fad72f988aae&page=0&size=20
+```
+
+La respuesta contiene `items` (ejecuciones con el mismo contrato que
+`GET /api/v1/verifications/{runId}`) y metadatos `page`:
+
+```json
+{
+  "items": [
+    {
+      "id": "3f4b1b1f-3b47-47bd-a1b0-5b6eb65fa48d",
+      "serviceId": "3c7d1d56-e49e-4a4c-a1a4-fad72f988aae",
+      "serviceTypeSnapshot": "SOFTWARE_FACTORY",
+      "serviceRevisionSnapshot": 4,
+      "processVersionId": "bccdb0da-a9b3-442f-8d94-78a26026a226",
+      "sourceSnapshot": {
+        "driveFolderId": "folder-id",
+        "driveFolderName": "Evidencias",
+        "redmineProjectId": "project-id",
+        "redmineProjectName": "Proyecto"
+      },
+      "scope": "PROCESS",
+      "macroActivityId": null,
+      "note": null,
+      "status": "COMPLETED",
+      "progress": {
+        "total": 12,
+        "processed": 12,
+        "reviewRequired": 2
+      },
+      "startedBy": "72a4ca04-3cbd-4ab2-8fd3-68b12ec621a2",
+      "startedAt": "2026-10-15T12:30:00Z",
+      "finishedAt": "2026-10-15T12:31:15Z",
+      "failureMessage": null,
+      "ticketSelections": []
+    }
+  ],
+  "page": {
+    "page": 0,
+    "size": 20,
+    "totalElements": 1,
+    "totalPages": 1
+  }
+}
+```
+
+El ejemplo es ilustrativo; `items` puede estar vacío. Las ejecuciones se
+ordenan por `startedAt` descendente y, si coinciden, por `id` descendente para
+que la paginación sea estable. Las ejecuciones `QUEUED`, `RUNNING`, `COMPLETED`
+y `FAILED` forman parte del historial. Un filtro válido sin coincidencias o una
+página fuera de rango devuelve `200`, `items: []` y los totales reales; si no
+hay ejecuciones, `totalElements` y `totalPages` son `0`.
+
+Cada fila refleja el snapshot persistido al iniciar esa ejecución —incluidos
+tipo/revisión del servicio, fuentes, versión de proceso, alcance, nota y tickets
+seleccionados—, no la configuración actual del servicio. `progress.total` es
+el total guardado en la ejecución; `processed` cuenta sus resultados
+persistidos y `reviewRequired` cuenta aquellos cuyo estado efectivo actual es
+`REVIEW_REQUIRED`. Por ello, una decisión humana posterior puede cambiar el
+progreso mostrado sin reescribir el total ni otros datos originales del run.
+Las selecciones y el progreso se leen en lote para los IDs de la página; el
+listado no carga evidencias ni detalles de resultados. Para abrir una ejecución
+se usa su `id` con `GET /api/v1/verifications/{runId}`; los resultados siguen
+consultándose por separado en `GET /api/v1/verifications/{runId}/results`.
+
+Un UUID mal formado, `page` negativo o `size` fuera de rango devuelve `400`
+con el formato de error de validación existente, sin exponer detalles internos.
+La migración Flyway V9 agrega índices para los recorridos globales y filtrados.
+
 Documentación técnica del módulo:
 - [src/main/java/com/temaconsulting/agente_iso/verification/README.md](src/main/java/com/temaconsulting/agente_iso/verification/README.md)
 
@@ -258,3 +351,7 @@ ejecutar la prueba de integración:
 
 El test requiere Docker disponible. La suite completa del backend también se
 ejecutó correctamente durante la validación de TC-176.
+
+La prueba de integración verifica también paginación del historial, desempate
+por ID, snapshots, selecciones y progreso actualizado por decisiones humanas.
+Para correr toda la suite backend: `./mvnw test`.

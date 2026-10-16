@@ -8,6 +8,7 @@ import com.temaconsulting.agente_iso.identity.infrastructure.SecurityConfig;
 import com.temaconsulting.agente_iso.shared.api.ApiExceptionHandler;
 import com.temaconsulting.agente_iso.shared.api.ProblemDetailsFactory;
 import com.temaconsulting.agente_iso.shared.config.Configuration;
+import com.temaconsulting.agente_iso.service.domain.ServiceType;
 import com.temaconsulting.agente_iso.verification.api.VerificationApiExceptionHandler;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultConflictException;
 import com.temaconsulting.agente_iso.verification.application.VerificationResultDecisionService;
@@ -22,12 +23,14 @@ import com.temaconsulting.agente_iso.verification.application.VerificationResult
 import com.temaconsulting.agente_iso.verification.application.VerificationResultWriteCommand;
 import com.temaconsulting.agente_iso.verification.application.VerificationRunRepository;
 import com.temaconsulting.agente_iso.verification.application.VerificationRunQueryService;
+import com.temaconsulting.agente_iso.verification.application.VerificationRunSnapshot;
 import com.temaconsulting.agente_iso.verification.application.VerificationRunWorker;
 import com.temaconsulting.agente_iso.verification.application.ProgrammedEvidenceCheckService;
 import com.temaconsulting.agente_iso.verification.domain.ApplicabilityDecision;
 import com.temaconsulting.agente_iso.verification.domain.DecisionOrigin;
 import com.temaconsulting.agente_iso.verification.domain.HumanDecisionType;
 import com.temaconsulting.agente_iso.verification.domain.ResultStatus;
+import com.temaconsulting.agente_iso.verification.domain.VerificationScope;
 import com.temaconsulting.agente_iso.verification.domain.VerificationResult;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,9 +57,11 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.sql.Timestamp;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -209,6 +214,174 @@ class JdbcVerificationResultRepositoryIntegrationTest {
         assertThat(completed.run().finishedAt()).isNotNull();
         assertThat(completed.progress().resultCount()).isEqualTo(6);
         assertThat(completed.progress().reviewRequiredCount()).isEqualTo(3);
+    }
+
+    @Test
+    void historyPagesAreStableFilteredAndKeepRunSnapshotsAndSelections() throws Exception {
+        Fixture fixture = createFixture();
+        jdbc.update("""
+                UPDATE services
+                SET revision = 2, service_type = 'SOFTWARE_FACTORY'::service_type,
+                    drive_folder_id = 'drive-at-start', drive_folder_name = 'Drive at start',
+                    redmine_project_id = 'redmine-at-start', redmine_project_name = 'Redmine at start'
+                WHERE id = ?
+                """, fixture.serviceId());
+
+        Instant sharedStartedAt = Instant.now().plusSeconds(60).truncatedTo(ChronoUnit.MICROS);
+        Timestamp startedAt = Timestamp.from(sharedStartedAt);
+        List<UUID> insertedRunIds = new ArrayList<>();
+        List<String> statuses = List.of("QUEUED", "RUNNING", "COMPLETED", "FAILED");
+        for (int index = 0; index < 23; index++) {
+            UUID runId = UUID.randomUUID();
+            String runStatus = statuses.get(index % statuses.size());
+            insertedRunIds.add(runId);
+            jdbc.update("""
+                    INSERT INTO verification_runs (
+                        id, service_id, process_version_id, started_by, service_revision_snapshot,
+                        scope, macro_activity_id, note, status, started_at, finished_at,
+                        failure_message, total
+                    ) VALUES (?, ?, ?, ?, 2, 'MACRO_ACTIVITY'::verification_scope, ?, ?, ?::run_status,
+                              ?, ?, ?, 4)
+                    """,
+                    runId,
+                    fixture.serviceId(),
+                    fixture.processVersionId(),
+                    fixture.userId(),
+                    fixture.macroActivityId(),
+                    "run note " + index,
+                    runStatus,
+                    startedAt,
+                    runStatus.equals("COMPLETED") || runStatus.equals("FAILED")
+                            ? Timestamp.from(sharedStartedAt.plusSeconds(10)) : null,
+                    runStatus.equals("FAILED") ? "Safe failure message" : null
+            );
+            if (index == 0) {
+                jdbc.update("""
+                        INSERT INTO verification_ticket_selections (run_id, group_id, ticket_id)
+                        VALUES (?, ?, '301'), (?, ?, '302')
+                        """,
+                        runId,
+                        "ticket-group:" + fixture.macroActivityId(),
+                        runId,
+                        "ticket-group:" + fixture.macroActivityId()
+                );
+            }
+        }
+        jdbc.update("""
+                UPDATE services
+                SET revision = 3, service_type = 'PROJECT_ERP'::service_type,
+                    drive_folder_id = 'drive-current', drive_folder_name = 'Current Drive',
+                    redmine_project_id = 'redmine-current', redmine_project_name = 'Current Redmine'
+                WHERE id = ?
+                """, fixture.serviceId());
+
+        var firstPage = runs.list(fixture.serviceId(), 0, 20);
+        var secondPage = runs.list(fixture.serviceId(), 1, 20);
+        List<UUID> actualIds = new ArrayList<>(firstPage.items().stream()
+                .map(run -> run.id()).toList());
+        actualIds.addAll(secondPage.items().stream().map(run -> run.id()).toList());
+        List<VerificationRunSnapshot> allRuns = new ArrayList<>(firstPage.items());
+        allRuns.addAll(secondPage.items());
+        List<UUID> expectedIds = jdbc.query(
+                """
+                SELECT id FROM verification_runs
+                WHERE service_id = ?
+                ORDER BY started_at DESC, id DESC
+                """,
+                (rs, rowNum) -> rs.getObject("id", UUID.class),
+                fixture.serviceId()
+        );
+
+        assertThat(firstPage.totalElements()).isEqualTo(24);
+        assertThat(firstPage.items()).hasSize(20);
+        assertThat(secondPage.items()).hasSize(4);
+        assertThat(actualIds).containsExactlyElementsOf(expectedIds);
+        assertThat(allRuns.stream().map(VerificationRunSnapshot::status))
+                .contains("QUEUED", "RUNNING", "COMPLETED", "FAILED");
+        assertThat(runs.list(UUID.randomUUID(), 0, 20).items()).isEmpty();
+        assertThat(runs.list(UUID.randomUUID(), 0, 20).totalElements()).isZero();
+        var unfilteredIds = runs.list(null, 0, 100).items().stream()
+                .map(VerificationRunSnapshot::id)
+                .toList();
+        assertThat(unfilteredIds).containsAll(insertedRunIds).contains(fixture.runId());
+
+        var snapshot = allRuns.stream()
+                .filter(run -> run.id().equals(insertedRunIds.getFirst()))
+                .findFirst().orElseThrow();
+        assertThat(snapshot.serviceTypeSnapshot()).isEqualTo(ServiceType.SOFTWARE_FACTORY);
+        assertThat(snapshot.serviceRevisionSnapshot()).isEqualTo(2);
+        assertThat(snapshot.processVersionId()).isEqualTo(fixture.processVersionId());
+        assertThat(snapshot.driveFolderId()).isEqualTo("drive-at-start");
+        assertThat(snapshot.driveFolderName()).isEqualTo("Drive at start");
+        assertThat(snapshot.redmineProjectId()).isEqualTo("redmine-at-start");
+        assertThat(snapshot.redmineProjectName()).isEqualTo("Redmine at start");
+        assertThat(snapshot.scope()).isEqualTo(VerificationScope.MACRO_ACTIVITY);
+        assertThat(snapshot.macroActivityId()).isEqualTo(fixture.macroActivityId());
+        assertThat(snapshot.startedBy()).isEqualTo(fixture.userId());
+        assertThat(snapshot.startedAt()).isEqualTo(sharedStartedAt);
+        assertThat(snapshot.note()).isEqualTo("run note 0");
+        assertThat(snapshot.total()).isEqualTo(4);
+        assertThat(snapshot.status()).isEqualTo("QUEUED");
+        assertThat(snapshot.ticketSelections().groups()).hasSize(1);
+        assertThat(snapshot.ticketSelections().groups().getFirst().ticketIds())
+                .containsExactly("301", "302");
+        var failedRun = firstPage.items().stream()
+                .filter(run -> run.status().equals("FAILED"))
+                .findFirst().orElseThrow();
+        assertThat(failedRun.failureMessage()).isEqualTo("Safe failure message");
+        var noSelections = allRuns.stream()
+                .filter(run -> run.id().equals(insertedRunIds.get(1)))
+                .findFirst().orElseThrow();
+        assertThat(noSelections.ticketSelections().groups()).isEmpty();
+
+        mockMvc.perform(get("/api/v1/verifications")
+                        .param("serviceId", fixture.serviceId().toString())
+                        .param("page", "3")
+                        .param("size", "20")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_READER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items").isEmpty())
+                .andExpect(jsonPath("$.page.page").value(3))
+                .andExpect(jsonPath("$.page.totalElements").value(24))
+                .andExpect(jsonPath("$.page.totalPages").value(2));
+        mockMvc.perform(get("/api/v1/verifications")
+                        .param("size", "101")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        mockMvc.perform(get("/api/v1/verifications")
+                        .param("page", "-1")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void historyProgressUsesCurrentEffectiveResultStatus() {
+        Fixture fixture = createFixture();
+        jdbc.update("UPDATE verification_runs SET total = 1 WHERE id = ?", fixture.runId());
+        VerificationResult result = results.saveEvaluatedResult(command(
+                fixture,
+                fixture.documentExpectations().getFirst(),
+                null,
+                ResultStatus.REVIEW_REQUIRED,
+                ApplicabilityDecision.APPLIES,
+                List.of(),
+                List.of(),
+                List.of()
+        ));
+
+        var beforeDecision = runQueries.list(fixture.serviceId(), 0, 20).items().getFirst();
+        assertThat(beforeDecision.progress()).isEqualTo(new VerificationResultProgress(1, 1));
+        completeRun(fixture.runId());
+        resultDecisions.decide(
+                fixture.runId(), result.id(), 1, ResultStatus.COMPLIES, "Revisión humana completada.",
+                fixture.userId()
+        );
+
+        var afterDecision = runQueries.list(fixture.serviceId(), 0, 20).items().getFirst();
+        assertThat(afterDecision.run().total()).isEqualTo(1);
+        assertThat(afterDecision.progress()).isEqualTo(new VerificationResultProgress(1, 0));
     }
 
     @Test

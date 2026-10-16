@@ -148,6 +148,35 @@ public class JdbcVerificationResultRepository implements VerificationResultRepos
     }
 
     @Override
+    public Map<UUID, VerificationResultProgress> progress(List<UUID> runIds) {
+        if (runIds.isEmpty()) {
+            return Map.of();
+        }
+        String placeholders = String.join(",", Collections.nCopies(runIds.size(), "?"));
+        Map<UUID, VerificationResultProgress> progressByRun = new HashMap<>();
+        jdbc.query(
+                """
+                SELECT run_id,
+                       COUNT(*) AS result_count,
+                       COUNT(*) FILTER (WHERE effective_status = 'REVIEW_REQUIRED'::result_status)
+                           AS review_required_count
+                FROM verification_results
+                WHERE run_id IN (%s)
+                GROUP BY run_id
+                """.formatted(placeholders),
+                (RowCallbackHandler) rs -> progressByRun.put(
+                        rs.getObject("run_id", UUID.class),
+                        new VerificationResultProgress(
+                                rs.getLong("result_count"),
+                                rs.getLong("review_required_count")
+                        )
+                ),
+                runIds.toArray()
+        );
+        return Map.copyOf(progressByRun);
+    }
+
+    @Override
     public Optional<String> findRunStatus(UUID runId) {
         return jdbc.query(
                 "SELECT status::text FROM verification_runs WHERE id = ?",

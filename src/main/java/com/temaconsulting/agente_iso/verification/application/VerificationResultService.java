@@ -5,6 +5,8 @@ import com.temaconsulting.agente_iso.verification.domain.ResultStatus;
 import com.temaconsulting.agente_iso.verification.domain.VerificationResult;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -27,6 +29,11 @@ public class VerificationResultService implements VerificationResultPort {
             throw VerificationResultQueryFailure.notFound(runId);
         }
         return results.progress(runId);
+    }
+
+    @Override
+    public Map<UUID, VerificationResultProgress> progress(List<UUID> runIds) {
+        return results.progress(runIds);
     }
 
     private void validateAssessment(VerificationResultWriteCommand command) {

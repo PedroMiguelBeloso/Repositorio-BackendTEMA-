@@ -1,7 +1,10 @@
 package com.temaconsulting.agente_iso.verification.application;
 
+import com.temaconsulting.agente_iso.shared.application.Page;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -18,6 +21,26 @@ public class VerificationRunQueryService {
         VerificationRunSnapshot run = runs.findById(id)
                 .orElseThrow(() -> VerificationResultQueryFailure.notFound(id));
         return new RunWithProgress(run, results.progress(id));
+    }
+
+    public Page<RunWithProgress> list(UUID serviceId, int page, int size) {
+        if (page < 0) {
+            throw new VerificationResultValidationException("page", "page must not be negative");
+        }
+        if (size < 1 || size > 100) {
+            throw new VerificationResultValidationException("size", "size must be between 1 and 100");
+        }
+
+        Page<VerificationRunSnapshot> result = runs.list(serviceId, page, size);
+        List<UUID> runIds = result.items().stream().map(VerificationRunSnapshot::id).toList();
+        Map<UUID, VerificationResultProgress> progressByRun = results.progress(runIds);
+        List<RunWithProgress> items = result.items().stream()
+                .map(run -> new RunWithProgress(
+                        run,
+                        progressByRun.getOrDefault(run.id(), new VerificationResultProgress(0, 0))
+                ))
+                .toList();
+        return new Page<>(items, result.page(), result.size(), result.totalElements());
     }
 
     public record RunWithProgress(VerificationRunSnapshot run, VerificationResultProgress progress) {}

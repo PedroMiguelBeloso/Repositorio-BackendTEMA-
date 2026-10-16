@@ -23,7 +23,9 @@ This revision contains the Identity, M1 process/service/catalog, and M2 verifica
 
 ## Important scope note
 
-M1 owns the published service/process/catalog configuration. M2 reads those public application boundaries to form an in-memory verification context; this task does not implement external evidence retrieval or verification-run persistence.
+The 7.1.1 preview slice did not implement external evidence retrieval or run
+persistence. Later M2 slices add those capabilities; TC-182 adds read-only
+history without changing the execution or result-writing flows.
 
 ## Task 7.1.1 — Verification preview and domain-rule alignment
 
@@ -36,6 +38,14 @@ M1 owns the published service/process/catalog configuration. M2 reads those publ
 - No Drive, Redmine, GPT, verification-run persistence, ticket-selection persistence, or new database migration was added for this preview-only task.
 - Added domain, context-loader, and controller security tests plus `docs/7.1.1-domain-rule-placement.md`.
 - The supplied DBML does not model an explicit ticket-context foreign key for documentary evidence. The implementation therefore uses only typed evidence data (`DOCUMENT` + `CASE_DEPENDENT`) for the permitted contextual association and never inspects visible names.
+
+## Task 7.2.5 — Verification run history
+
+- Added `GET /api/v1/verifications` with optional service filtering, zero-based pagination, and stable newest-first ordering by start time and run ID.
+- History responses reuse the run detail contract and return the snapshots, selected tickets, persisted total, and current effective-result progress.
+- Ticket selections and result progress are loaded in batches for the selected page; no evidence or result-detail graph is loaded by the history query.
+- Explicitly allowed ADMIN and READER in both the security matcher and controller; anonymous requests remain unauthorized.
+- Added Flyway V9 history indexes and PostgreSQL Testcontainers coverage for filtering, empty/out-of-range pages, stable pagination, snapshots, selections, states, and updated human-review progress.
 
 ## Task 7.1.2 — Verification context
 

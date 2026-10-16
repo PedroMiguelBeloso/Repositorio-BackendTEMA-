@@ -5,6 +5,8 @@ import com.temaconsulting.agente_iso.verification.domain.ResultStatus;
 import com.temaconsulting.agente_iso.verification.domain.VerificationResult;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -12,6 +14,8 @@ public interface VerificationResultRepository {
     VerificationResult save(VerificationResultWriteCommand command);
 
     VerificationResultProgress progress(UUID runId);
+
+    Map<UUID, VerificationResultProgress> progress(List<UUID> runIds);
 
     Optional<String> findRunStatus(UUID runId);
 
