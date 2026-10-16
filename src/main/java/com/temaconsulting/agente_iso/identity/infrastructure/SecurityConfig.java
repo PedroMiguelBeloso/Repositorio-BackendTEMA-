@@ -76,6 +76,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/services/*/tickets").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/verifications/preview").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/verifications").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/verifications")
+                                .hasAnyAuthority("ROLE_ADMIN", "ROLE_READER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/verifications/*/results")
                                 .hasAnyAuthority("ROLE_ADMIN", "ROLE_READER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/verifications/*")

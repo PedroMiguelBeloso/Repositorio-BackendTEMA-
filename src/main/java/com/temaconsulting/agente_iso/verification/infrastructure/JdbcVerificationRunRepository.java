@@ -6,6 +6,7 @@ import com.temaconsulting.agente_iso.verification.application.VerificationRunDra
 import com.temaconsulting.agente_iso.verification.application.VerificationRunRepository;
 import com.temaconsulting.agente_iso.verification.application.VerificationRunSnapshot;
 import com.temaconsulting.agente_iso.verification.application.VerificationStartFailure;
+import com.temaconsulting.agente_iso.shared.application.Page;
 import com.temaconsulting.agente_iso.verification.domain.ValidatedTicketSelection;
 import com.temaconsulting.agente_iso.verification.domain.ValidatedTicketSelections;
 import com.temaconsulting.agente_iso.verification.domain.VerificationScope;
@@ -18,6 +19,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +28,15 @@ import java.util.UUID;
 
 @Repository
 public class JdbcVerificationRunRepository implements VerificationRunRepository {
+    private static final String RUN_SELECT = """
+            SELECT id, service_id, service_type_snapshot::text AS service_type_snapshot,
+                   service_revision_snapshot, process_version_id, drive_folder_id,
+                   drive_folder_name, redmine_project_id, redmine_project_name,
+                   scope::text AS scope, macro_activity_id, note, status::text AS status,
+                   started_by, started_at, finished_at, failure_message, total
+            FROM verification_runs
+            """;
+
     private final JdbcTemplate jdbc;
 
     public JdbcVerificationRunRepository(JdbcTemplate jdbc) {
@@ -114,60 +125,115 @@ public class JdbcVerificationRunRepository implements VerificationRunRepository 
     @Override
     public Optional<VerificationRunSnapshot> findById(UUID id) {
         List<VerificationRunSnapshot> rows = jdbc.query(
-                """
-                SELECT id, service_id, service_type_snapshot::text AS service_type_snapshot,
-                       service_revision_snapshot, process_version_id, drive_folder_id,
-                       drive_folder_name, redmine_project_id, redmine_project_name,
-                       scope::text AS scope, macro_activity_id, note, status::text AS status,
-                       started_by, started_at, finished_at, failure_message, total
-                FROM verification_runs WHERE id = ?
-                """,
-                (rs, rowNum) -> new VerificationRunSnapshot(
-                        rs.getObject("id", UUID.class),
-                        rs.getObject("service_id", UUID.class),
-                        ServiceType.valueOf(rs.getString("service_type_snapshot")),
-                        rs.getInt("service_revision_snapshot"),
-                        rs.getObject("process_version_id", UUID.class),
-                        rs.getString("drive_folder_id"),
-                        rs.getString("drive_folder_name"),
-                        rs.getString("redmine_project_id"),
-                        rs.getString("redmine_project_name"),
-                        VerificationScope.valueOf(rs.getString("scope")),
-                        rs.getObject("macro_activity_id", UUID.class),
-                        rs.getString("note"),
-                        rs.getString("status"),
-                        rs.getObject("started_by", UUID.class),
-                        rs.getTimestamp("started_at").toInstant(),
-                        rs.getTimestamp("finished_at") == null ? null : rs.getTimestamp("finished_at").toInstant(),
-                        rs.getString("failure_message"),
-                        rs.getInt("total"),
-                        new ValidatedTicketSelections(List.of())
-                ), id
+                RUN_SELECT + " WHERE id = ?",
+                this::mapSnapshot,
+                id
         );
         if (rows.isEmpty()) {
             return Optional.empty();
         }
-        Map<String, List<String>> ticketsByGroup = new LinkedHashMap<>();
-        jdbc.query(
-                "SELECT group_id, ticket_id FROM verification_ticket_selections WHERE run_id = ? ORDER BY group_id, ticket_id",
-                (RowCallbackHandler) rs -> ticketsByGroup.computeIfAbsent(rs.getString("group_id"), ignored -> new ArrayList<>())
-                        .add(rs.getString("ticket_id")),
-                id
+        return Optional.of(withSelections(rows.getFirst(), loadTicketSelections(List.of(id)).get(id)));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<VerificationRunSnapshot> list(UUID serviceId, int page, int size) {
+        Long total = serviceId == null
+                ? jdbc.queryForObject("SELECT COUNT(*) FROM verification_runs", Long.class)
+                : jdbc.queryForObject(
+                        "SELECT COUNT(*) FROM verification_runs WHERE service_id = ?",
+                        Long.class,
+                        serviceId
+                );
+        long offset = Math.multiplyExact((long) page, size);
+        String orderAndPage = " ORDER BY started_at DESC, id DESC LIMIT ? OFFSET ?";
+        List<VerificationRunSnapshot> rows = serviceId == null
+                ? jdbc.query(RUN_SELECT + orderAndPage, this::mapSnapshot, size, offset)
+                : jdbc.query(
+                        RUN_SELECT + " WHERE service_id = ?" + orderAndPage,
+                        this::mapSnapshot,
+                        serviceId,
+                        size,
+                        offset
+                );
+        Map<UUID, ValidatedTicketSelections> selectionsByRun = loadTicketSelections(
+                rows.stream().map(VerificationRunSnapshot::id).toList()
         );
-        var selections = new ValidatedTicketSelections(ticketsByGroup.entrySet().stream()
-                .map(entry -> new ValidatedTicketSelection(
-                        entry.getKey(),
-                        UUID.fromString(entry.getKey().substring("ticket-group:".length())),
-                        entry.getValue()
-                ))
-                .toList());
-        VerificationRunSnapshot row = rows.getFirst();
-        return Optional.of(new VerificationRunSnapshot(
-                row.id(), row.serviceId(), row.serviceTypeSnapshot(), row.serviceRevisionSnapshot(),
-                row.processVersionId(), row.driveFolderId(), row.driveFolderName(), row.redmineProjectId(),
-                row.redmineProjectName(), row.scope(), row.macroActivityId(), row.note(), row.status(),
-                row.startedBy(), row.startedAt(), row.finishedAt(), row.failureMessage(), row.total(), selections
-        ));
+        List<VerificationRunSnapshot> items = rows.stream()
+                .map(run -> withSelections(run, selectionsByRun.get(run.id())))
+                .toList();
+        return new Page<>(items, page, size, total == null ? 0 : total);
+    }
+
+    private VerificationRunSnapshot mapSnapshot(ResultSet rs, int rowNum) throws SQLException {
+        Timestamp finishedAt = rs.getTimestamp("finished_at");
+        return new VerificationRunSnapshot(
+                rs.getObject("id", UUID.class),
+                rs.getObject("service_id", UUID.class),
+                ServiceType.valueOf(rs.getString("service_type_snapshot")),
+                rs.getInt("service_revision_snapshot"),
+                rs.getObject("process_version_id", UUID.class),
+                rs.getString("drive_folder_id"),
+                rs.getString("drive_folder_name"),
+                rs.getString("redmine_project_id"),
+                rs.getString("redmine_project_name"),
+                VerificationScope.valueOf(rs.getString("scope")),
+                rs.getObject("macro_activity_id", UUID.class),
+                rs.getString("note"),
+                rs.getString("status"),
+                rs.getObject("started_by", UUID.class),
+                rs.getTimestamp("started_at").toInstant(),
+                finishedAt == null ? null : finishedAt.toInstant(),
+                rs.getString("failure_message"),
+                rs.getInt("total"),
+                new ValidatedTicketSelections(List.of())
+        );
+    }
+
+    private Map<UUID, ValidatedTicketSelections> loadTicketSelections(List<UUID> runIds) {
+        if (runIds.isEmpty()) {
+            return Map.of();
+        }
+        String placeholders = String.join(",", Collections.nCopies(runIds.size(), "?"));
+        Map<UUID, Map<String, List<String>>> ticketsByRun = new LinkedHashMap<>();
+        jdbc.query(
+                """
+                SELECT run_id, group_id, ticket_id
+                FROM verification_ticket_selections
+                WHERE run_id IN (%s)
+                ORDER BY run_id, group_id, ticket_id
+                """.formatted(placeholders),
+                (RowCallbackHandler) rs -> ticketsByRun
+                        .computeIfAbsent(rs.getObject("run_id", UUID.class), ignored -> new LinkedHashMap<>())
+                        .computeIfAbsent(rs.getString("group_id"), ignored -> new ArrayList<>())
+                        .add(rs.getString("ticket_id")),
+                runIds.toArray()
+        );
+        Map<UUID, ValidatedTicketSelections> selectionsByRun = new LinkedHashMap<>();
+        for (UUID runId : runIds) {
+            Map<String, List<String>> ticketsByGroup = ticketsByRun.getOrDefault(runId, Map.of());
+            selectionsByRun.put(runId, new ValidatedTicketSelections(ticketsByGroup.entrySet().stream()
+                    .map(entry -> new ValidatedTicketSelection(
+                            entry.getKey(),
+                            UUID.fromString(entry.getKey().substring("ticket-group:".length())),
+                            entry.getValue()
+                    ))
+                    .toList()));
+        }
+        return selectionsByRun;
+    }
+
+    private VerificationRunSnapshot withSelections(
+            VerificationRunSnapshot run,
+            ValidatedTicketSelections selections
+    ) {
+        return new VerificationRunSnapshot(
+                run.id(), run.serviceId(), run.serviceTypeSnapshot(), run.serviceRevisionSnapshot(),
+                run.processVersionId(), run.driveFolderId(), run.driveFolderName(), run.redmineProjectId(),
+                run.redmineProjectName(), run.scope(), run.macroActivityId(), run.note(), run.status(),
+                run.startedBy(), run.startedAt(), run.finishedAt(), run.failureMessage(), run.total(),
+                selections
+        );
     }
 
     @Override

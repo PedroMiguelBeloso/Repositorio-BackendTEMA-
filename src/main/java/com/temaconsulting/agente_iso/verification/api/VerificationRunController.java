@@ -7,6 +7,9 @@ import com.temaconsulting.agente_iso.verification.application.VerificationRunDis
 import com.temaconsulting.agente_iso.verification.application.VerificationRunQueryService;
 import com.temaconsulting.agente_iso.verification.application.VerificationRunSnapshot;
 import com.temaconsulting.agente_iso.verification.application.VerificationStartService;
+import com.temaconsulting.agente_iso.shared.api.PageMapper;
+import com.temaconsulting.agente_iso.shared.application.Page;
+import com.temaconsulting.agente_iso.shared.dto.PageResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -36,6 +40,20 @@ public class VerificationRunController {
         this.starts = starts;
         this.dispatcher = dispatcher;
         this.queries = queries;
+    }
+
+    @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'READER')")
+    public PageResponse<VerificationRunResponse> list(
+            @RequestParam(required = false) UUID serviceId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
+    ) {
+        Page<VerificationRunQueryService.RunWithProgress> result = queries.list(serviceId, page, size);
+        return new PageResponse<>(
+                result.items().stream().map(this::toResponse).toList(),
+                PageMapper.toPageInfo(result.page(), result.size(), result.totalElements())
+        );
     }
 
     @PostMapping
@@ -90,7 +108,10 @@ public class VerificationRunController {
     @GetMapping("/{runId}")
     @PreAuthorize("hasAnyRole('ADMIN', 'READER')")
     public VerificationRunResponse get(@PathVariable UUID runId) {
-        VerificationRunQueryService.RunWithProgress state = queries.get(runId);
+        return toResponse(queries.get(runId));
+    }
+
+    private VerificationRunResponse toResponse(VerificationRunQueryService.RunWithProgress state) {
         VerificationRunSnapshot run = state.run();
         List<VerificationRunResponse.TicketSelectionResponse> selections = run.ticketSelections().groups().stream()
                 .map(selection -> new VerificationRunResponse.TicketSelectionResponse(
