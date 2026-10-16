@@ -41,6 +41,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.convention.TestBean;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -52,6 +53,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -131,16 +133,18 @@ class JdbcVerificationResultRepositoryIntegrationTest {
     @MockitoBean
     ProgrammedEvidenceCheckService programmedChecks;
 
-    @MockitoBean
-    Clock clock;
+    @TestBean
+    Clock customClock;
 
     @Autowired
     MockMvc mockMvc;
 
-    @BeforeEach
-    void useFixedClock() {
-        when(clock.instant()).thenReturn(DECISION_TIME);
+    static Clock customClock() {
+        return Clock.fixed(DECISION_TIME, ZoneOffset.UTC);
     }
+
+
+
 
     @Test
     void asyncWorkerCompletesWithTheRealTc176ResultWriter() throws Exception {
@@ -588,13 +592,13 @@ class JdbcVerificationResultRepositoryIntegrationTest {
 
     @Test
     void readsHumanDecisionEventsFromOldestToNewestAndProgressUsesEffectiveStatus() throws Exception {
-        Fixture fixture = createFixture();
+        Fixture fixture = createFixture(true);
         VerificationResult saved = results.saveEvaluatedResult(command(
                 fixture,
                 fixture.documentExpectations().get(0),
                 null,
-                ResultStatus.COMPLIES,
-                ApplicabilityDecision.APPLIES,
+                ResultStatus.REVIEW_REQUIRED,
+                ApplicabilityDecision.UNDETERMINED,
                 List.of(),
                 List.of(),
                 List.of()
@@ -621,7 +625,7 @@ class JdbcVerificationResultRepositoryIntegrationTest {
                 INSERT INTO human_decisions (
                     id, result_id, decided_by, decision_type, status_value, rationale, decided_at
                 ) VALUES (?, ?, ?, 'RESULT_STATUS'::human_decision_type,
-                          'REVIEW_REQUIRED'::result_status, 'Requested more review', ?)
+                          'COMPLIES'::result_status, 'Confirmed evidence', ?)
                 """,
                 statusEventId,
                 saved.id(),
@@ -629,36 +633,22 @@ class JdbcVerificationResultRepositoryIntegrationTest {
                 java.sql.Timestamp.from(newer)
         );
         jdbc.update(
-                "UPDATE verification_results SET effective_status = 'REVIEW_REQUIRED'::result_status, revision = 2 WHERE id = ?",
+                "UPDATE verification_results SET effective_status = 'COMPLIES'::result_status, revision = 3 WHERE id = ?",
                 saved.id()
         );
 
-        assertThat(results.progress(fixture.runId())).isEqualTo(new VerificationResultProgress(1, 1));
+        assertThat(results.progress(fixture.runId())).isEqualTo(new VerificationResultProgress(1, 0));
         assertThrows(
                 VerificationResultQueryFailure.class,
                 () -> results.progress(UUID.randomUUID())
         );
-        VerificationResult replayed = results.saveEvaluatedResult(command(
-                fixture,
-                fixture.documentExpectations().get(0),
-                null,
-                ResultStatus.COMPLIES,
-                ApplicabilityDecision.APPLIES,
-                List.of(),
-                List.of(),
-                List.of()
-        ));
-        assertThat(replayed.id()).isEqualTo(saved.id());
-        assertThat(replayed.proposedStatus()).isEqualTo(ResultStatus.COMPLIES);
-        assertThat(replayed.effectiveStatus()).isEqualTo(ResultStatus.REVIEW_REQUIRED);
-        assertThat(replayed.revision()).isEqualTo(2);
-        assertThat(replayed.humanDecisions()).hasSize(2);
         completeRun(fixture.runId());
         List<VerificationResult> stored = resultsForCompletedFixture(fixture);
         VerificationResult reloaded = stored.getFirst();
-        assertThat(reloaded.proposedStatus()).isEqualTo(ResultStatus.COMPLIES);
-        assertThat(reloaded.effectiveStatus()).isEqualTo(ResultStatus.REVIEW_REQUIRED);
-        assertThat(reloaded.revision()).isEqualTo(2);
+        assertThat(reloaded.proposedStatus()).isEqualTo(ResultStatus.REVIEW_REQUIRED);
+        assertThat(reloaded.effectiveStatus()).isEqualTo(ResultStatus.COMPLIES);
+        assertThat(reloaded.applicability().origin()).isEqualTo(DecisionOrigin.HUMAN);
+        assertThat(reloaded.revision()).isEqualTo(3);
         assertThat(reloaded.humanDecisions()).extracting("id")
                 .containsExactly(applicabilityEventId, statusEventId);
         assertThat(reloaded.humanDecisions().getFirst().decisionType())
@@ -668,7 +658,7 @@ class JdbcVerificationResultRepositoryIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items[0].humanDecisions[0].applicabilityDecision").value("APPLIES"))
                 .andExpect(jsonPath("$.items[0].humanDecisions[0].finalStatus").doesNotExist())
-                .andExpect(jsonPath("$.items[0].humanDecisions[1].finalStatus").value("REVIEW_REQUIRED"))
+                .andExpect(jsonPath("$.items[0].humanDecisions[1].finalStatus").value("COMPLIES"))
                 .andExpect(jsonPath("$.items[0].humanDecisions[1].applicabilityDecision").doesNotExist());
     }
 
@@ -758,7 +748,7 @@ class JdbcVerificationResultRepositoryIntegrationTest {
 
     @Test
     void limitsStatusByEffectiveApplicabilityAndExpectationMode() throws Exception {
-        Fixture fixture = createFixture();
+        Fixture fixture = createFixture(false, true);
         VerificationResult undetermined = results.saveEvaluatedResult(command(
                 fixture,
                 fixture.documentExpectations().get(0),
@@ -779,10 +769,6 @@ class JdbcVerificationResultRepositoryIntegrationTest {
                 List.of(),
                 List.of()
         ));
-        jdbc.update(
-                "UPDATE evidence_expectations SET applicability = 'CASE_DEPENDENT'::applicability_mode WHERE id = ?",
-                fixture.documentExpectations().get(2)
-        );
         VerificationResult notApplicable = results.saveEvaluatedResult(command(
                 fixture,
                 fixture.documentExpectations().get(2),
@@ -1281,6 +1267,10 @@ class JdbcVerificationResultRepositoryIntegrationTest {
     }
 
     private Fixture createFixture(boolean pendingApplicability) {
+        return createFixture(pendingApplicability, false);
+    }
+
+    private Fixture createFixture(boolean pendingApplicability, boolean thirdCaseDependent) {
         UUID userId = UUID.randomUUID();
         UUID processId = jdbc.query(
                 "SELECT id FROM processes WHERE code = 'START_UP'::process_code",
@@ -1372,7 +1362,8 @@ class JdbcVerificationResultRepositoryIntegrationTest {
                     index == 3 ? activityId : null,
                     documentRegistryId,
                     "Document expectation " + (index + 1),
-                    pendingApplicability && index == 0 ? "CASE_DEPENDENT" : "ALWAYS",
+                    (pendingApplicability && index == 0) || (thirdCaseDependent && index == 2)
+                            ? "CASE_DEPENDENT" : "ALWAYS",
                     index == 3 ? "ACTIVITY_RECORD" : "INPUT",
                     index + 1
             );

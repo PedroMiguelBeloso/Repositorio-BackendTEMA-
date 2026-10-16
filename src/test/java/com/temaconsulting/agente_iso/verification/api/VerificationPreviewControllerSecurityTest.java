@@ -151,6 +151,17 @@ class VerificationPreviewControllerSecurityTest {
     }
 
     @Test
+    void malformedJsonUsesTheVerificationProblemContract() throws Exception {
+        mockMvc.perform(post("/api/v1/verifications/preview")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.details[0].field").value("request"));
+    }
+
+    @Test
     void adminGetsBadRequestWhenProcessScopeContainsMacroActivityId() throws Exception {
         UUID serviceId = UUID.randomUUID();
         UUID versionId = UUID.randomUUID();

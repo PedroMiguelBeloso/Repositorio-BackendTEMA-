@@ -9,6 +9,8 @@ import com.temaconsulting.agente_iso.verification.application.VerificationResult
 import com.temaconsulting.agente_iso.verification.application.VerificationResultValidationException;
 import com.temaconsulting.agente_iso.verification.application.VerificationStartFailure;
 import com.temaconsulting.agente_iso.verification.domain.VerificationDomainValidationException;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -20,6 +22,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import java.util.List;
 
 @RestControllerAdvice(basePackageClasses = VerificationPreviewController.class)
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class VerificationApiExceptionHandler {
 
     @ExceptionHandler(VerificationDomainValidationException.class)
