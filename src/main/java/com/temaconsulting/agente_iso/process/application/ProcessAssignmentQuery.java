@@ -1,5 +1,10 @@
 package com.temaconsulting.agente_iso.process.application;
 
+import com.temaconsulting.agente_iso.process.application.model.ProcessAssignmentInfo;
+import com.temaconsulting.agente_iso.process.application.port.ProcessAssignmentReader;
+import com.temaconsulting.agente_iso.process.application.port.ProcessRepository;
+import com.temaconsulting.agente_iso.process.application.port.ProcessVersionRepository;
+
 import com.temaconsulting.agente_iso.process.domain.ProcessDefinition;
 import com.temaconsulting.agente_iso.process.domain.ProcessVersion;
 import org.springframework.stereotype.Service;

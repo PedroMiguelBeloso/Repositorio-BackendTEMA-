@@ -1,10 +1,15 @@
 package com.temaconsulting.agente_iso.verification.application;
 
+import com.temaconsulting.agente_iso.verification.application.model.TicketSelectionInput;
+import com.temaconsulting.agente_iso.verification.application.model.VerificationRunDraft;
+import com.temaconsulting.agente_iso.verification.application.port.VerificationRunRepository;
+import com.temaconsulting.agente_iso.verification.application.port.VerificationScopeResolver;
+
 import com.temaconsulting.agente_iso.process.domain.ApplicabilityMode;
 import com.temaconsulting.agente_iso.process.domain.Cardinality;
 import com.temaconsulting.agente_iso.process.domain.EvidenceLocation;
 import com.temaconsulting.agente_iso.process.domain.EvidenceType;
-import com.temaconsulting.agente_iso.service.application.ServiceSnapshotReader;
+import com.temaconsulting.agente_iso.service.application.port.ServiceSnapshotReader;
 import com.temaconsulting.agente_iso.verification.domain.PreviewExpectation;
 import com.temaconsulting.agente_iso.verification.domain.TicketSelectionGroup;
 import com.temaconsulting.agente_iso.verification.domain.ValidatedTicketSelection;

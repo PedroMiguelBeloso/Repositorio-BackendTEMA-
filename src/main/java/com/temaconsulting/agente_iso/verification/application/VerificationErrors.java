@@ -1,6 +1,8 @@
 package com.temaconsulting.agente_iso.verification.application;
 
-import com.temaconsulting.agente_iso.shared.application.ProblemCode;
+import com.temaconsulting.agente_iso.verification.application.error.VerificationPreviewFailure;
+
+import com.temaconsulting.agente_iso.shared.application.error.ProblemCode;
 
 import java.util.UUID;
 

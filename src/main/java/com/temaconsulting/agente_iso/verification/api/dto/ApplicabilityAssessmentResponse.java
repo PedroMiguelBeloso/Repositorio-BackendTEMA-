@@ -1,6 +1,6 @@
 package com.temaconsulting.agente_iso.verification.api.dto;
 
-import com.temaconsulting.agente_iso.verification.application.ApplicabilityAssessment;
+import com.temaconsulting.agente_iso.verification.application.model.ApplicabilityAssessment;
 import com.temaconsulting.agente_iso.verification.domain.ApplicabilityDecision;
 import com.temaconsulting.agente_iso.verification.domain.DecisionOrigin;
 

@@ -1,7 +1,11 @@
 package com.temaconsulting.agente_iso.service.application;
 
-import com.temaconsulting.agente_iso.process.application.ProcessAssignmentInfo;
-import com.temaconsulting.agente_iso.process.application.ProcessAssignmentReader;
+import com.temaconsulting.agente_iso.service.application.port.ServiceRepository;
+import com.temaconsulting.agente_iso.service.application.port.ServiceSourceResolver;
+import com.temaconsulting.agente_iso.service.application.model.ServiceWriteCommand;
+
+import com.temaconsulting.agente_iso.process.application.model.ProcessAssignmentInfo;
+import com.temaconsulting.agente_iso.process.application.port.ProcessAssignmentReader;
 import com.temaconsulting.agente_iso.process.domain.ProcessCode;
 import com.temaconsulting.agente_iso.process.domain.ProcessStatus;
 import com.temaconsulting.agente_iso.service.domain.ExternalSource;

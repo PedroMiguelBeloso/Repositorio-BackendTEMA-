@@ -1,5 +1,7 @@
 package com.temaconsulting.agente_iso.process.application;
 
+import com.temaconsulting.agente_iso.process.application.model.Violation;
+
 import com.temaconsulting.agente_iso.catalog.domain.EvidenceType;
 import com.temaconsulting.agente_iso.catalog.domain.RegistryDefinition;
 import com.temaconsulting.agente_iso.process.domain.Activity;

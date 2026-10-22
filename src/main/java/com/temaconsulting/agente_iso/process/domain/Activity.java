@@ -1,5 +1,7 @@
 package com.temaconsulting.agente_iso.process.domain;
 
+import com.temaconsulting.agente_iso.process.domain.error.DomainValidationException;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;

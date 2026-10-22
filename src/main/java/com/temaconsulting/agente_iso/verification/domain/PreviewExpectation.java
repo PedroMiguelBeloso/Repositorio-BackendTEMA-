@@ -1,5 +1,7 @@
 package com.temaconsulting.agente_iso.verification.domain;
 
+import com.temaconsulting.agente_iso.verification.domain.error.VerificationDomainValidationException;
+
 import com.temaconsulting.agente_iso.process.domain.ApplicabilityMode;
 import com.temaconsulting.agente_iso.process.domain.Cardinality;
 import com.temaconsulting.agente_iso.process.domain.EvidenceLocation;

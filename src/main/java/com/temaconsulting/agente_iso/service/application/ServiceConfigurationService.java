@@ -1,15 +1,20 @@
 package com.temaconsulting.agente_iso.service.application;
 
-import com.temaconsulting.agente_iso.process.application.ProcessAssignmentInfo;
-import com.temaconsulting.agente_iso.process.application.ProcessAssignmentReader;
+import com.temaconsulting.agente_iso.service.application.port.ServiceRepository;
+import com.temaconsulting.agente_iso.service.application.port.ServiceSourceResolver;
+import com.temaconsulting.agente_iso.service.application.model.ServiceView;
+import com.temaconsulting.agente_iso.service.application.model.ServiceWriteCommand;
+
+import com.temaconsulting.agente_iso.process.application.model.ProcessAssignmentInfo;
+import com.temaconsulting.agente_iso.process.application.port.ProcessAssignmentReader;
 import com.temaconsulting.agente_iso.process.domain.ProcessCode;
 import com.temaconsulting.agente_iso.process.domain.ProcessStatus;
 import com.temaconsulting.agente_iso.service.domain.ExternalSource;
 import com.temaconsulting.agente_iso.service.domain.Service;
 import com.temaconsulting.agente_iso.service.domain.ServiceProcessAssignment;
 import com.temaconsulting.agente_iso.service.domain.ServiceSources;
-import com.temaconsulting.agente_iso.service.domain.ServiceValidationException;
-import com.temaconsulting.agente_iso.shared.application.ApiException;
+import com.temaconsulting.agente_iso.service.domain.error.ServiceValidationException;
+import com.temaconsulting.agente_iso.shared.application.error.ApiException;
 import org.springframework.beans.factory.ObjectProvider;
 
 import java.time.Clock;

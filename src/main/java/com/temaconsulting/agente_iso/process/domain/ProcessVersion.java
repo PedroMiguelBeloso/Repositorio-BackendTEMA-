@@ -1,5 +1,9 @@
 package com.temaconsulting.agente_iso.process.domain;
 
+import com.temaconsulting.agente_iso.process.domain.error.DomainValidationException;
+import com.temaconsulting.agente_iso.process.domain.error.DraftNotEditableException;
+import com.temaconsulting.agente_iso.process.domain.error.RevisionMismatchException;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;

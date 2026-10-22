@@ -1,6 +1,6 @@
 package com.temaconsulting.agente_iso.verification.api.dto;
 
-import com.temaconsulting.agente_iso.verification.application.TicketSelectionInput;
+import com.temaconsulting.agente_iso.verification.application.model.TicketSelectionInput;
 import com.temaconsulting.agente_iso.verification.domain.VerificationScope;
 import com.temaconsulting.agente_iso.verification.domain.VerificationTarget;
 import jakarta.validation.Valid;

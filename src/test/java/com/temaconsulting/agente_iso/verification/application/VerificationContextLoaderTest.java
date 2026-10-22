@@ -1,12 +1,14 @@
 package com.temaconsulting.agente_iso.verification.application;
 
-import com.temaconsulting.agente_iso.catalog.application.RegistryDefinitionRepository;
+import com.temaconsulting.agente_iso.verification.application.error.VerificationPreviewFailure;
+
+import com.temaconsulting.agente_iso.catalog.application.port.RegistryDefinitionRepository;
 import com.temaconsulting.agente_iso.catalog.domain.EvidenceType;
 import com.temaconsulting.agente_iso.catalog.domain.RegistryDefinition;
-import com.temaconsulting.agente_iso.process.application.ProcessDefinitionReader;
-import com.temaconsulting.agente_iso.process.application.ProcessVersionNotFoundException;
-import com.temaconsulting.agente_iso.process.application.ProcessVersionNotPublishedException;
-import com.temaconsulting.agente_iso.process.application.PublishedProcessReader;
+import com.temaconsulting.agente_iso.process.application.port.ProcessDefinitionReader;
+import com.temaconsulting.agente_iso.process.application.error.ProcessVersionNotFoundException;
+import com.temaconsulting.agente_iso.process.application.error.ProcessVersionNotPublishedException;
+import com.temaconsulting.agente_iso.process.application.port.PublishedProcessReader;
 import com.temaconsulting.agente_iso.process.domain.Activity;
 import com.temaconsulting.agente_iso.process.domain.ApplicabilityMode;
 import com.temaconsulting.agente_iso.process.domain.Cardinality;
@@ -15,10 +17,10 @@ import com.temaconsulting.agente_iso.process.domain.EvidenceLocation;
 import com.temaconsulting.agente_iso.process.domain.MacroActivity;
 import com.temaconsulting.agente_iso.process.domain.ProcessStatus;
 import com.temaconsulting.agente_iso.process.domain.ProcessVersion;
-import com.temaconsulting.agente_iso.service.application.ServiceSnapshotReader;
+import com.temaconsulting.agente_iso.service.application.port.ServiceSnapshotReader;
 import com.temaconsulting.agente_iso.service.domain.ExternalSource;
 import com.temaconsulting.agente_iso.service.domain.ServiceType;
-import com.temaconsulting.agente_iso.shared.application.ProblemCode;
+import com.temaconsulting.agente_iso.shared.application.error.ProblemCode;
 import com.temaconsulting.agente_iso.verification.api.dto.VerificationPreviewResponse;
 import com.temaconsulting.agente_iso.verification.api.mapper.VerificationApiMapper;
 import com.temaconsulting.agente_iso.verification.domain.TicketSelectionPlanner;

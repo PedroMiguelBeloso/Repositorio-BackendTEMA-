@@ -1,12 +1,12 @@
 package com.temaconsulting.agente_iso.verification.application;
 
-import com.temaconsulting.agente_iso.integration.application.DriveEvidenceSearch;
-import com.temaconsulting.agente_iso.integration.application.DriveEvidenceSearch.Cardinality;
-import com.temaconsulting.agente_iso.integration.application.DriveEvidenceSearch.Kind;
-import com.temaconsulting.agente_iso.integration.application.DriveEvidenceSearch.Match;
-import com.temaconsulting.agente_iso.integration.application.DriveEvidenceSearch.Problem;
-import com.temaconsulting.agente_iso.integration.application.DriveEvidenceSearch.SearchRequest;
-import com.temaconsulting.agente_iso.integration.application.DriveEvidenceSearch.SearchResult;
+import com.temaconsulting.agente_iso.integration.application.port.DriveEvidenceSearch;
+import com.temaconsulting.agente_iso.integration.application.port.DriveEvidenceSearch.Cardinality;
+import com.temaconsulting.agente_iso.integration.application.port.DriveEvidenceSearch.Kind;
+import com.temaconsulting.agente_iso.integration.application.port.DriveEvidenceSearch.Match;
+import com.temaconsulting.agente_iso.integration.application.port.DriveEvidenceSearch.Problem;
+import com.temaconsulting.agente_iso.integration.application.port.DriveEvidenceSearch.SearchRequest;
+import com.temaconsulting.agente_iso.integration.application.port.DriveEvidenceSearch.SearchResult;
 import com.temaconsulting.agente_iso.integration.domain.IntegrationSource;
 import com.temaconsulting.agente_iso.verification.domain.ApplicabilityDecision;
 import com.temaconsulting.agente_iso.verification.domain.ResultStatus;

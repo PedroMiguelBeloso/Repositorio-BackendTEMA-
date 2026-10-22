@@ -1,8 +1,10 @@
 package com.temaconsulting.agente_iso.verification.application;
 
-import com.temaconsulting.agente_iso.catalog.application.RegistryDefinitionRepository;
+import com.temaconsulting.agente_iso.verification.application.model.VerificationRunSnapshot;
+
+import com.temaconsulting.agente_iso.catalog.application.port.RegistryDefinitionRepository;
 import com.temaconsulting.agente_iso.catalog.domain.RegistryDefinition;
-import com.temaconsulting.agente_iso.process.application.PublishedProcessReader;
+import com.temaconsulting.agente_iso.process.application.port.PublishedProcessReader;
 import com.temaconsulting.agente_iso.process.domain.Activity;
 import com.temaconsulting.agente_iso.process.domain.EvidenceExpectation;
 import com.temaconsulting.agente_iso.process.domain.MacroActivity;

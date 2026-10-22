@@ -1,5 +1,8 @@
 package com.temaconsulting.agente_iso.process.domain;
 
+import com.temaconsulting.agente_iso.process.domain.error.DraftNotEditableException;
+import com.temaconsulting.agente_iso.process.domain.error.RevisionMismatchException;
+
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;

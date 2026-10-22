@@ -1,5 +1,7 @@
 package com.temaconsulting.agente_iso.verification.domain;
 
+import com.temaconsulting.agente_iso.verification.domain.error.VerificationDomainValidationException;
+
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;

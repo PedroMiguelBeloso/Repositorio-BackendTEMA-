@@ -1,6 +1,6 @@
 package com.temaconsulting.agente_iso.service.api.dto;
 
-import com.temaconsulting.agente_iso.service.application.ServiceWriteCommand;
+import com.temaconsulting.agente_iso.service.application.model.ServiceWriteCommand;
 import com.temaconsulting.agente_iso.service.domain.ServiceStatus;
 import com.temaconsulting.agente_iso.service.domain.ServiceType;
 

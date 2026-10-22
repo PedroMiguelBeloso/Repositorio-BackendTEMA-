@@ -9,9 +9,9 @@ import com.openai.errors.RateLimitException;
 import com.openai.errors.UnauthorizedException;
 import com.openai.models.responses.ResponseCreateParams;
 import com.openai.models.responses.StructuredResponse;
-import com.temaconsulting.agente_iso.verification.application.AiApplicabilityAssessment;
-import com.temaconsulting.agente_iso.verification.application.AiApplicabilityRequest;
-import com.temaconsulting.agente_iso.verification.application.ApplicabilityAiPort;
+import com.temaconsulting.agente_iso.verification.application.model.AiApplicabilityAssessment;
+import com.temaconsulting.agente_iso.verification.application.model.AiApplicabilityRequest;
+import com.temaconsulting.agente_iso.verification.application.port.ApplicabilityAiPort;
 import com.temaconsulting.agente_iso.verification.domain.ApplicabilityDecision;
 
 import java.util.HashSet;

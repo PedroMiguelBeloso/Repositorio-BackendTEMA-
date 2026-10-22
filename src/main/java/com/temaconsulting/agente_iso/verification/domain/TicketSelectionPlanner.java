@@ -1,5 +1,7 @@
 package com.temaconsulting.agente_iso.verification.domain;
 
+import com.temaconsulting.agente_iso.verification.domain.error.TicketSelectionRuleViolation;
+
 import com.temaconsulting.agente_iso.process.domain.Cardinality;
 import com.temaconsulting.agente_iso.process.domain.EvidenceExpectation;
 import com.temaconsulting.agente_iso.process.domain.MacroActivity;

@@ -1,9 +1,11 @@
 package com.temaconsulting.agente_iso.catalog.application;
 
+import com.temaconsulting.agente_iso.catalog.application.port.RegistryDefinitionRepository;
+
 import com.temaconsulting.agente_iso.catalog.api.dto.CatalogDtos.CreateRegistryRequest;
 import com.temaconsulting.agente_iso.catalog.domain.EvidenceType;
 import com.temaconsulting.agente_iso.catalog.domain.RegistryDefinition;
-import com.temaconsulting.agente_iso.shared.application.Page;
+import com.temaconsulting.agente_iso.shared.application.model.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;

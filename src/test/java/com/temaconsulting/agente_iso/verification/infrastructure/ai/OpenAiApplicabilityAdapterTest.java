@@ -9,7 +9,7 @@ import com.openai.models.responses.StructuredResponseOutputItem;
 import com.openai.models.responses.StructuredResponseOutputMessage;
 import com.openai.services.blocking.ResponseService;
 import com.temaconsulting.agente_iso.process.domain.ApplicabilityMode;
-import com.temaconsulting.agente_iso.verification.application.AiApplicabilityRequest;
+import com.temaconsulting.agente_iso.verification.application.model.AiApplicabilityRequest;
 import com.temaconsulting.agente_iso.verification.domain.ApplicabilityDecision;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

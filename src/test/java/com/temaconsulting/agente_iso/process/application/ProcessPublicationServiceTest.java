@@ -1,10 +1,12 @@
 package com.temaconsulting.agente_iso.process.application;
 
-import com.temaconsulting.agente_iso.catalog.application.RegistryDefinitionRepository;
+import com.temaconsulting.agente_iso.process.application.port.ProcessVersionRepository;
+
+import com.temaconsulting.agente_iso.catalog.application.port.RegistryDefinitionRepository;
 import com.temaconsulting.agente_iso.process.domain.ProcessStatus;
 import com.temaconsulting.agente_iso.process.domain.ProcessVersion;
-import com.temaconsulting.agente_iso.shared.application.ApiException;
-import com.temaconsulting.agente_iso.shared.application.ProblemCode;
+import com.temaconsulting.agente_iso.shared.application.error.ApiException;
+import com.temaconsulting.agente_iso.shared.application.error.ProblemCode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

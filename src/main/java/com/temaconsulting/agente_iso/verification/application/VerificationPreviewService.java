@@ -1,5 +1,8 @@
 package com.temaconsulting.agente_iso.verification.application;
 
+import com.temaconsulting.agente_iso.verification.application.mapper.VerificationContextPreviewMapper;
+import com.temaconsulting.agente_iso.verification.application.port.VerificationScopeResolver;
+
 import com.temaconsulting.agente_iso.verification.domain.VerificationPreview;
 import com.temaconsulting.agente_iso.verification.domain.VerificationTarget;
 import org.springframework.stereotype.Service;

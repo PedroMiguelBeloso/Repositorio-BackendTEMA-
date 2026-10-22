@@ -13,7 +13,7 @@ import com.temaconsulting.agente_iso.process.domain.ProcessDefinition;
 import com.temaconsulting.agente_iso.process.domain.ProcessPolicy;
 import com.temaconsulting.agente_iso.process.domain.ProcessStatus;
 import com.temaconsulting.agente_iso.process.domain.ProcessVersion;
-import com.temaconsulting.agente_iso.service.application.ServiceSnapshotReader;
+import com.temaconsulting.agente_iso.service.application.port.ServiceSnapshotReader;
 import com.temaconsulting.agente_iso.service.domain.ExternalSource;
 import com.temaconsulting.agente_iso.service.domain.ServiceType;
 

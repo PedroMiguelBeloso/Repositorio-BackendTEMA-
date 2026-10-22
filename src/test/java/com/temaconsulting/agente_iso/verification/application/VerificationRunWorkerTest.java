@@ -1,7 +1,14 @@
 package com.temaconsulting.agente_iso.verification.application;
 
+import com.temaconsulting.agente_iso.verification.application.model.ApplicabilityAssessment;
+import com.temaconsulting.agente_iso.verification.application.port.VerificationResultPort;
+import com.temaconsulting.agente_iso.verification.application.model.VerificationResultProgress;
+import com.temaconsulting.agente_iso.verification.application.model.VerificationResultWriteCommand;
+import com.temaconsulting.agente_iso.verification.application.port.VerificationRunRepository;
+import com.temaconsulting.agente_iso.verification.application.model.VerificationRunSnapshot;
+
 import com.temaconsulting.agente_iso.catalog.domain.EvidenceType;
-import com.temaconsulting.agente_iso.integration.application.RedmineTicketReader;
+import com.temaconsulting.agente_iso.integration.application.port.RedmineTicketReader;
 import com.temaconsulting.agente_iso.process.domain.ApplicabilityMode;
 import com.temaconsulting.agente_iso.process.domain.Cardinality;
 import com.temaconsulting.agente_iso.process.domain.EvidenceLocation;

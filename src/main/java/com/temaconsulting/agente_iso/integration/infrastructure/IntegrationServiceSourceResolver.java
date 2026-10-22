@@ -1,10 +1,10 @@
 package com.temaconsulting.agente_iso.integration.infrastructure;
 
-import com.temaconsulting.agente_iso.integration.application.DriveFolderCatalog;
-import com.temaconsulting.agente_iso.integration.application.RedmineProjectCatalog;
+import com.temaconsulting.agente_iso.integration.application.port.DriveFolderCatalog;
+import com.temaconsulting.agente_iso.integration.application.port.RedmineProjectCatalog;
 import com.temaconsulting.agente_iso.integration.domain.ExternalFolder;
 import com.temaconsulting.agente_iso.integration.domain.ExternalProject;
-import com.temaconsulting.agente_iso.service.application.ServiceSourceResolver;
+import com.temaconsulting.agente_iso.service.application.port.ServiceSourceResolver;
 import com.temaconsulting.agente_iso.service.domain.ExternalSource;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;

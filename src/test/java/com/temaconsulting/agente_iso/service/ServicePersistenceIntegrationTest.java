@@ -2,14 +2,14 @@ package com.temaconsulting.agente_iso.service;
 
 import com.temaconsulting.agente_iso.service.application.ServiceConfigurationService;
 import com.temaconsulting.agente_iso.service.application.ServiceQueryService;
-import com.temaconsulting.agente_iso.service.application.ServiceRepository;
-import com.temaconsulting.agente_iso.service.application.ServiceWriteCommand;
+import com.temaconsulting.agente_iso.service.application.port.ServiceRepository;
+import com.temaconsulting.agente_iso.service.application.model.ServiceWriteCommand;
 import com.temaconsulting.agente_iso.service.domain.Service;
 import com.temaconsulting.agente_iso.service.domain.ServiceProcessAssignment;
 import com.temaconsulting.agente_iso.service.domain.ServiceSources;
 import com.temaconsulting.agente_iso.service.domain.ServiceStatus;
 import com.temaconsulting.agente_iso.service.domain.ServiceType;
-import com.temaconsulting.agente_iso.shared.application.ApiException;
+import com.temaconsulting.agente_iso.shared.application.error.ApiException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

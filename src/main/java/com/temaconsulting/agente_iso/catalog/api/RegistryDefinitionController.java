@@ -4,9 +4,9 @@ import com.temaconsulting.agente_iso.catalog.api.dto.CatalogDtos.*;
 import com.temaconsulting.agente_iso.catalog.application.RegistryCatalogService;
 import com.temaconsulting.agente_iso.catalog.domain.EvidenceType;
 import com.temaconsulting.agente_iso.catalog.domain.RegistryDefinition;
-import com.temaconsulting.agente_iso.shared.api.PageMapper;
-import com.temaconsulting.agente_iso.shared.application.Page;
-import com.temaconsulting.agente_iso.shared.dto.PageResponse;
+import com.temaconsulting.agente_iso.shared.api.mapper.PageMapper;
+import com.temaconsulting.agente_iso.shared.application.model.Page;
+import com.temaconsulting.agente_iso.shared.api.dto.PageResponse;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 

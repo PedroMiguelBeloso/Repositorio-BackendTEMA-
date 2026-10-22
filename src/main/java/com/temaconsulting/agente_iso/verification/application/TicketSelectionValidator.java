@@ -1,10 +1,13 @@
 package com.temaconsulting.agente_iso.verification.application;
 
-import com.temaconsulting.agente_iso.integration.application.RedmineTicketReader;
+import com.temaconsulting.agente_iso.verification.application.model.TicketSelectionInput;
+import com.temaconsulting.agente_iso.verification.application.error.VerificationStartFailure;
+
+import com.temaconsulting.agente_iso.integration.application.port.RedmineTicketReader;
 import com.temaconsulting.agente_iso.integration.domain.TicketSnapshot;
 import com.temaconsulting.agente_iso.process.domain.Cardinality;
-import com.temaconsulting.agente_iso.shared.application.ApiException;
-import com.temaconsulting.agente_iso.shared.application.ProblemCode;
+import com.temaconsulting.agente_iso.shared.application.error.ApiException;
+import com.temaconsulting.agente_iso.shared.application.error.ProblemCode;
 import com.temaconsulting.agente_iso.verification.domain.TicketSelectionGroup;
 import com.temaconsulting.agente_iso.verification.domain.ValidatedTicketSelection;
 import com.temaconsulting.agente_iso.verification.domain.ValidatedTicketSelections;

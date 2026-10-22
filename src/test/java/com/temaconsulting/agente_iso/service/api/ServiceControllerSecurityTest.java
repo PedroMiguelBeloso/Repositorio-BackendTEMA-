@@ -1,14 +1,14 @@
 package com.temaconsulting.agente_iso.service.api;
 
-import com.temaconsulting.agente_iso.identity.infrastructure.JsonAccessDeniedHandler;
-import com.temaconsulting.agente_iso.identity.infrastructure.JsonAuthenticationEntryPoint;
-import com.temaconsulting.agente_iso.identity.infrastructure.JwtRoleConverter;
-import com.temaconsulting.agente_iso.identity.infrastructure.SecurityConfig;
+import com.temaconsulting.agente_iso.identity.infrastructure.security.JsonAccessDeniedHandler;
+import com.temaconsulting.agente_iso.identity.infrastructure.security.JsonAuthenticationEntryPoint;
+import com.temaconsulting.agente_iso.identity.infrastructure.security.JwtRoleConverter;
+import com.temaconsulting.agente_iso.identity.infrastructure.security.SecurityConfig;
 import com.temaconsulting.agente_iso.service.application.ServiceConfigurationService;
 import com.temaconsulting.agente_iso.service.application.ServiceQueryService;
-import com.temaconsulting.agente_iso.shared.api.ApiExceptionHandler;
-import com.temaconsulting.agente_iso.shared.api.ProblemDetailsFactory;
-import com.temaconsulting.agente_iso.shared.application.Page;
+import com.temaconsulting.agente_iso.shared.api.error.ApiExceptionHandler;
+import com.temaconsulting.agente_iso.shared.api.error.ProblemDetailsFactory;
+import com.temaconsulting.agente_iso.shared.application.model.Page;
 import com.temaconsulting.agente_iso.shared.config.Configuration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

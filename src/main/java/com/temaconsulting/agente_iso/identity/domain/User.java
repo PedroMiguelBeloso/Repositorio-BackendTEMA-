@@ -1,5 +1,7 @@
 package com.temaconsulting.agente_iso.identity.domain;
 
+import com.temaconsulting.agente_iso.identity.domain.error.UserDomainValidationException;
+
 import java.time.Instant;
 import java.util.Locale;
 import java.util.UUID;

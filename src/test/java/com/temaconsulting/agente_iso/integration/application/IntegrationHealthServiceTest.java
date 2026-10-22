@@ -1,10 +1,13 @@
 package com.temaconsulting.agente_iso.integration.application;
 
+import com.temaconsulting.agente_iso.integration.application.port.IntegrationProbe;
+import com.temaconsulting.agente_iso.integration.application.error.SourceProbeException;
+
 import com.temaconsulting.agente_iso.integration.domain.IntegrationSource;
 import com.temaconsulting.agente_iso.integration.domain.IntegrationStatus;
 import com.temaconsulting.agente_iso.integration.domain.SourceHealth;
-import com.temaconsulting.agente_iso.shared.application.ApiException;
-import com.temaconsulting.agente_iso.shared.application.ProblemCode;
+import com.temaconsulting.agente_iso.shared.application.error.ApiException;
+import com.temaconsulting.agente_iso.shared.application.error.ProblemCode;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 

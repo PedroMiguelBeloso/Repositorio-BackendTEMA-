@@ -1,10 +1,12 @@
 package com.temaconsulting.agente_iso.identity.application;
 
+import com.temaconsulting.agente_iso.identity.application.error.DuplicateUserEmailException;
+
 import com.temaconsulting.agente_iso.identity.domain.Role;
 import com.temaconsulting.agente_iso.identity.domain.User;
 import com.temaconsulting.agente_iso.identity.domain.UserRepository;
-import com.temaconsulting.agente_iso.shared.dto.Page;
-import com.temaconsulting.agente_iso.shared.dto.PageInfo;
+import com.temaconsulting.agente_iso.shared.api.dto.Page;
+import com.temaconsulting.agente_iso.shared.api.dto.PageInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

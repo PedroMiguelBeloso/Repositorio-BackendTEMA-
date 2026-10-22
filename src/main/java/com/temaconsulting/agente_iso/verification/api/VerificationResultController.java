@@ -1,8 +1,8 @@
 package com.temaconsulting.agente_iso.verification.api;
 
-import com.temaconsulting.agente_iso.shared.api.PageMapper;
-import com.temaconsulting.agente_iso.shared.application.Page;
-import com.temaconsulting.agente_iso.shared.dto.PageResponse;
+import com.temaconsulting.agente_iso.shared.api.mapper.PageMapper;
+import com.temaconsulting.agente_iso.shared.application.model.Page;
+import com.temaconsulting.agente_iso.shared.api.dto.PageResponse;
 import com.temaconsulting.agente_iso.verification.api.dto.ResultStatusDecisionRequest;
 import com.temaconsulting.agente_iso.verification.api.dto.ResolveApplicabilityRequest;
 import com.temaconsulting.agente_iso.verification.application.VerificationApplicabilityService;

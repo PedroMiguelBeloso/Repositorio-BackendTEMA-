@@ -1,5 +1,10 @@
 package com.temaconsulting.agente_iso.verification.application;
 
+import com.temaconsulting.agente_iso.verification.application.error.VerificationResultDecisionFailure;
+import com.temaconsulting.agente_iso.verification.application.model.VerificationResultDecisionTarget;
+import com.temaconsulting.agente_iso.verification.application.port.VerificationResultRepository;
+import com.temaconsulting.agente_iso.verification.application.error.VerificationResultValidationException;
+
 import com.temaconsulting.agente_iso.process.domain.ApplicabilityMode;
 import com.temaconsulting.agente_iso.verification.domain.ApplicabilityDecision;
 import com.temaconsulting.agente_iso.verification.domain.ResultStatus;

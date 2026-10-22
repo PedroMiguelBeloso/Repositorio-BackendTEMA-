@@ -1,10 +1,19 @@
 package com.temaconsulting.agente_iso.verification.application;
 
+import com.temaconsulting.agente_iso.verification.application.model.AiApplicabilityRequest;
+import com.temaconsulting.agente_iso.verification.application.model.ApplicabilityAssessment;
+import com.temaconsulting.agente_iso.verification.application.model.EvaluationContext;
+import com.temaconsulting.agente_iso.verification.application.port.VerificationResultPort;
+import com.temaconsulting.agente_iso.verification.application.model.VerificationResultProgress;
+import com.temaconsulting.agente_iso.verification.application.model.VerificationResultWriteCommand;
+import com.temaconsulting.agente_iso.verification.application.port.VerificationRunRepository;
+import com.temaconsulting.agente_iso.verification.application.model.VerificationRunSnapshot;
+
 import com.temaconsulting.agente_iso.catalog.domain.EvidenceType;
-import com.temaconsulting.agente_iso.integration.application.RedmineTicketReader;
+import com.temaconsulting.agente_iso.integration.application.port.RedmineTicketReader;
 import com.temaconsulting.agente_iso.integration.domain.TicketSnapshot;
 import com.temaconsulting.agente_iso.process.domain.ApplicabilityMode;
-import com.temaconsulting.agente_iso.shared.application.ApiException;
+import com.temaconsulting.agente_iso.shared.application.error.ApiException;
 import com.temaconsulting.agente_iso.verification.domain.VerificationContext.ExpectationContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

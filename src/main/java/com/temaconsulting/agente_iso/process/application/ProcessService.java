@@ -1,12 +1,15 @@
 package com.temaconsulting.agente_iso.process.application;
 
-import com.temaconsulting.agente_iso.process.domain.DomainValidationException;
+import com.temaconsulting.agente_iso.process.application.error.DuplicateProcessCodeException;
+import com.temaconsulting.agente_iso.process.application.port.ProcessRepository;
+
+import com.temaconsulting.agente_iso.process.domain.error.DomainValidationException;
 import com.temaconsulting.agente_iso.process.domain.ProcessCode;
 import com.temaconsulting.agente_iso.process.domain.ProcessDefinition;
-import com.temaconsulting.agente_iso.shared.application.ApiException;
-import com.temaconsulting.agente_iso.shared.application.FieldProblem;
-import com.temaconsulting.agente_iso.shared.application.Page;
-import com.temaconsulting.agente_iso.shared.application.ProblemCode;
+import com.temaconsulting.agente_iso.shared.application.error.ApiException;
+import com.temaconsulting.agente_iso.shared.application.model.FieldProblem;
+import com.temaconsulting.agente_iso.shared.application.model.Page;
+import com.temaconsulting.agente_iso.shared.application.error.ProblemCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 

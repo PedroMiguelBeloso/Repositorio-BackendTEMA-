@@ -1,5 +1,11 @@
 package com.temaconsulting.agente_iso.verification.application;
 
+import com.temaconsulting.agente_iso.verification.application.model.ApplicabilityAssessment;
+import com.temaconsulting.agente_iso.verification.application.error.VerificationResultDecisionFailure;
+import com.temaconsulting.agente_iso.verification.application.port.VerificationResultRepository;
+import com.temaconsulting.agente_iso.verification.application.port.VerificationRunRepository;
+import com.temaconsulting.agente_iso.verification.application.model.VerificationRunSnapshot;
+
 import com.temaconsulting.agente_iso.catalog.domain.EvidenceType;
 import com.temaconsulting.agente_iso.process.domain.ApplicabilityMode;
 import com.temaconsulting.agente_iso.process.domain.Cardinality;

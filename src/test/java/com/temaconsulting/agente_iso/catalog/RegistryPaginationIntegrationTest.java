@@ -1,7 +1,7 @@
 package com.temaconsulting.agente_iso.catalog;
 
 import com.temaconsulting.agente_iso.catalog.api.RegistryDefinitionController;
-import com.temaconsulting.agente_iso.catalog.application.RegistryDefinitionRepository;
+import com.temaconsulting.agente_iso.catalog.application.port.RegistryDefinitionRepository;
 import com.temaconsulting.agente_iso.catalog.domain.EvidenceType;
 import com.temaconsulting.agente_iso.catalog.domain.RegistryDefinition;
 import org.junit.jupiter.api.Test;

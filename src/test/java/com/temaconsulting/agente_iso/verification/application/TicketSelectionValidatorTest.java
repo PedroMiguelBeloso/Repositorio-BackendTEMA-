@@ -1,6 +1,9 @@
 package com.temaconsulting.agente_iso.verification.application;
 
-import com.temaconsulting.agente_iso.integration.application.RedmineTicketReader;
+import com.temaconsulting.agente_iso.verification.application.model.TicketSelectionInput;
+import com.temaconsulting.agente_iso.verification.application.error.VerificationStartFailure;
+
+import com.temaconsulting.agente_iso.integration.application.port.RedmineTicketReader;
 import com.temaconsulting.agente_iso.integration.domain.TicketSnapshot;
 import com.temaconsulting.agente_iso.process.domain.ApplicabilityMode;
 import com.temaconsulting.agente_iso.process.domain.Cardinality;
@@ -107,8 +110,8 @@ class TicketSelectionValidatorTest {
     void rejectsMissingTicketsAndTicketsFromOtherProjects() {
         TicketSelectionGroup group = group(Cardinality.ONE);
         TicketSelectionValidator missingReader = validator((project, id) -> {
-            throw new com.temaconsulting.agente_iso.shared.application.ApiException(
-                    com.temaconsulting.agente_iso.shared.application.ProblemCode.NOT_FOUND,
+            throw new com.temaconsulting.agente_iso.shared.application.error.ApiException(
+                    com.temaconsulting.agente_iso.shared.application.error.ProblemCode.NOT_FOUND,
                     org.springframework.http.HttpStatus.NOT_FOUND,
                     "not found", List.of()
             );
@@ -123,8 +126,8 @@ class TicketSelectionValidatorTest {
     @Test
     void aRedmineFailureIsPropagatedAndCannotProduceAValidatedSelection() {
         TicketSelectionGroup group = group(Cardinality.ONE);
-        var unavailable = new com.temaconsulting.agente_iso.shared.application.ApiException(
-                com.temaconsulting.agente_iso.shared.application.ProblemCode.SOURCE_UNAVAILABLE,
+        var unavailable = new com.temaconsulting.agente_iso.shared.application.error.ApiException(
+                com.temaconsulting.agente_iso.shared.application.error.ProblemCode.SOURCE_UNAVAILABLE,
                 org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
                 "Redmine unavailable", List.of()
         );

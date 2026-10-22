@@ -1,5 +1,10 @@
 package com.temaconsulting.agente_iso.process.application;
 
+import com.temaconsulting.agente_iso.process.application.error.DuplicateOfficialVersionException;
+import com.temaconsulting.agente_iso.process.application.port.ProcessRepository;
+import com.temaconsulting.agente_iso.process.application.port.ProcessVersionRepository;
+import com.temaconsulting.agente_iso.process.application.error.StaleProcessVersionException;
+
 import com.temaconsulting.agente_iso.process.api.dto.ActivityInput;
 import com.temaconsulting.agente_iso.process.api.dto.CreateVersionRequest;
 import com.temaconsulting.agente_iso.process.api.dto.EvidenceExpectationInput;
@@ -7,15 +12,15 @@ import com.temaconsulting.agente_iso.process.api.dto.MacroActivityInput;
 import com.temaconsulting.agente_iso.process.api.dto.ProcessPolicyInput;
 import com.temaconsulting.agente_iso.process.api.dto.SaveDraftRequest;
 import com.temaconsulting.agente_iso.process.domain.Activity;
-import com.temaconsulting.agente_iso.process.domain.DomainValidationException;
-import com.temaconsulting.agente_iso.process.domain.DraftNotEditableException;
+import com.temaconsulting.agente_iso.process.domain.error.DomainValidationException;
+import com.temaconsulting.agente_iso.process.domain.error.DraftNotEditableException;
 import com.temaconsulting.agente_iso.process.domain.EvidenceExpectation;
 import com.temaconsulting.agente_iso.process.domain.EvidenceLocation;
 import com.temaconsulting.agente_iso.process.domain.MacroActivity;
 import com.temaconsulting.agente_iso.process.domain.ProcessPolicy;
 import com.temaconsulting.agente_iso.process.domain.ProcessVersion;
-import com.temaconsulting.agente_iso.process.domain.RevisionMismatchException;
-import com.temaconsulting.agente_iso.shared.application.Page;
+import com.temaconsulting.agente_iso.process.domain.error.RevisionMismatchException;
+import com.temaconsulting.agente_iso.shared.application.model.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
