@@ -183,9 +183,25 @@ Implemented `POST /api/v1/verifications/preview` as a read-only M2 use case. Dom
 
 El run y sus filas de `verification_ticket_selections` se guardan en una transacción, conservando `run_id`, `group_id` y `ticket_id`. Las expectativas TICKET de una macroactividad comparten su grupo; los grupos de macroactividades distintas se validan por separado. Ver [docs/7.1.3-ticket-selection.md](docs/7.1.3-ticket-selection.md) para el flujo y las reglas completas.
 
+## IA para aplicabilidad condicionada: Gemini
+
+El proveedor predeterminado ahora es Gemini. Se conserva OpenAI como opción, pero no se
+necesita su clave para ejecutar M2. Gemini solo interpreta evidencias `CASE_DEPENDENT`
+cuando la regla programada no resuelve la aplicabilidad. Sin clave, el backend arranca
+y devuelve `UNDETERMINED` para revisión humana.
+
+```powershell
+$env:TEMA_AI_PROVIDER='GEMINI'
+$env:GEMINI_API_KEY='<clave-entregada-por-TEMA>'
+# Opcional: $env:TEMA_GEMINI_MODEL='gemini-2.5-flash'
+.\mvnw.cmd spring-boot:run
+```
+
+La clave debe permanecer fuera de Git. La configuración y los límites de seguridad están
+en [docs/7.2.1-gemini-integration.md](docs/7.2.1-gemini-integration.md).
 ## Integración OpenAI para aplicabilidad de M2 (TC-178)
 
-El backend usa el SDK oficial `openai-java` y la Responses API con salida
+Si se selecciona `TEMA_AI_PROVIDER=OPENAI`, el backend usa el SDK oficial `openai-java` y la Responses API con salida
 estructurada. La IA solo propone la aplicabilidad de evidencias marcadas
 `CASE_DEPENDENT` cuando los datos estructurados no permiten resolverla. No
 consulta Drive/Redmine ni decide si una evidencia cumple. El puerto interno
@@ -195,6 +211,7 @@ no agrega un endpoint público ni ejecuta automáticamente la IA en una revisió
 Para habilitar llamadas reales, configurar fuera del repositorio:
 
 ```powershell
+$env:TEMA_AI_PROVIDER='OPENAI'
 $env:TEMA_OPENAI_ENABLED='true'
 $env:OPENAI_API_KEY='<clave-de-proyecto>'
 $env:TEMA_OPENAI_MODEL='<modelo-compatible-con-structured-outputs>'
