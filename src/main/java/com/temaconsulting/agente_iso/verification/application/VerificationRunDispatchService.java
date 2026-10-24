@@ -1,7 +1,9 @@
 package com.temaconsulting.agente_iso.verification.application;
 
-import com.temaconsulting.agente_iso.shared.application.ApiException;
-import com.temaconsulting.agente_iso.shared.application.ProblemCode;
+import com.temaconsulting.agente_iso.verification.application.port.VerificationRunRepository;
+
+import com.temaconsulting.agente_iso.shared.application.error.ApiException;
+import com.temaconsulting.agente_iso.shared.application.error.ProblemCode;
 import org.springframework.core.task.TaskRejectedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;

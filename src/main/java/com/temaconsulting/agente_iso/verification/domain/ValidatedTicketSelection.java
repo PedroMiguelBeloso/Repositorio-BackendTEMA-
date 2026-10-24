@@ -1,5 +1,7 @@
 package com.temaconsulting.agente_iso.verification.domain;
 
+import com.temaconsulting.agente_iso.verification.domain.error.VerificationDomainValidationException;
+
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;

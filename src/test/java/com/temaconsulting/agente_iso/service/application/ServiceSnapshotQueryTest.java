@@ -1,5 +1,8 @@
 package com.temaconsulting.agente_iso.service.application;
 
+import com.temaconsulting.agente_iso.service.application.port.ServiceRepository;
+import com.temaconsulting.agente_iso.service.application.port.ServiceSnapshotReader;
+
 import com.temaconsulting.agente_iso.service.domain.ExternalSource;
 import com.temaconsulting.agente_iso.service.domain.Service;
 import com.temaconsulting.agente_iso.service.domain.ServiceProcessAssignment;

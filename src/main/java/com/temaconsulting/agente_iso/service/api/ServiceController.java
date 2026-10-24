@@ -1,15 +1,17 @@
 package com.temaconsulting.agente_iso.service.api;
 
+import com.temaconsulting.agente_iso.service.api.mapper.ServiceApiMapper;
+
 import com.temaconsulting.agente_iso.service.api.dto.ServiceResponse;
 import com.temaconsulting.agente_iso.service.api.dto.ServiceWriteRequest;
 import com.temaconsulting.agente_iso.service.api.dto.VerifiableProcessResponse;
 import com.temaconsulting.agente_iso.service.application.ServiceConfigurationService;
 import com.temaconsulting.agente_iso.service.application.ServiceQueryService;
-import com.temaconsulting.agente_iso.service.application.ServiceView;
-import com.temaconsulting.agente_iso.service.application.TicketSummary;
-import com.temaconsulting.agente_iso.shared.api.PageMapper;
-import com.temaconsulting.agente_iso.shared.application.Page;
-import com.temaconsulting.agente_iso.shared.dto.PageResponse;
+import com.temaconsulting.agente_iso.service.application.model.ServiceView;
+import com.temaconsulting.agente_iso.service.application.model.TicketSummary;
+import com.temaconsulting.agente_iso.shared.api.mapper.PageMapper;
+import com.temaconsulting.agente_iso.shared.application.model.Page;
+import com.temaconsulting.agente_iso.shared.api.dto.PageResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;

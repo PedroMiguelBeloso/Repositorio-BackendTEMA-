@@ -1,6 +1,6 @@
 package com.temaconsulting.agente_iso.identity.domain;
 
-import com.temaconsulting.agente_iso.shared.dto.Page;
+import com.temaconsulting.agente_iso.shared.api.dto.Page;
 
 import java.util.Optional;
 import java.util.UUID;

@@ -1,27 +1,29 @@
 package com.temaconsulting.agente_iso.verification.api;
 
-import com.temaconsulting.agente_iso.identity.infrastructure.JsonAccessDeniedHandler;
-import com.temaconsulting.agente_iso.identity.infrastructure.JsonAuthenticationEntryPoint;
-import com.temaconsulting.agente_iso.identity.infrastructure.JwtRoleConverter;
-import com.temaconsulting.agente_iso.identity.infrastructure.SecurityConfig;
+import com.temaconsulting.agente_iso.verification.api.error.VerificationApiExceptionHandler;
+
+import com.temaconsulting.agente_iso.identity.infrastructure.security.JsonAccessDeniedHandler;
+import com.temaconsulting.agente_iso.identity.infrastructure.security.JsonAuthenticationEntryPoint;
+import com.temaconsulting.agente_iso.identity.infrastructure.security.JwtRoleConverter;
+import com.temaconsulting.agente_iso.identity.infrastructure.security.SecurityConfig;
 import com.temaconsulting.agente_iso.process.domain.ApplicabilityMode;
 import com.temaconsulting.agente_iso.process.domain.Cardinality;
 import com.temaconsulting.agente_iso.process.domain.EvidenceLocation;
 import com.temaconsulting.agente_iso.process.domain.EvidenceType;
-import com.temaconsulting.agente_iso.shared.api.ApiExceptionHandler;
-import com.temaconsulting.agente_iso.shared.api.ProblemDetailsFactory;
-import com.temaconsulting.agente_iso.shared.application.Page;
+import com.temaconsulting.agente_iso.shared.api.error.ApiExceptionHandler;
+import com.temaconsulting.agente_iso.shared.api.error.ProblemDetailsFactory;
+import com.temaconsulting.agente_iso.shared.application.model.Page;
 import com.temaconsulting.agente_iso.shared.config.Configuration;
 import com.temaconsulting.agente_iso.service.domain.ServiceType;
-import com.temaconsulting.agente_iso.verification.application.CreatedVerificationRun;
+import com.temaconsulting.agente_iso.verification.application.model.CreatedVerificationRun;
 import com.temaconsulting.agente_iso.verification.application.VerificationPreviewService;
-import com.temaconsulting.agente_iso.verification.application.VerificationPreviewFailure;
+import com.temaconsulting.agente_iso.verification.application.error.VerificationPreviewFailure;
 import com.temaconsulting.agente_iso.verification.application.VerificationStartService;
 import com.temaconsulting.agente_iso.verification.application.VerificationRunDispatchService;
 import com.temaconsulting.agente_iso.verification.application.VerificationRunQueryService;
-import com.temaconsulting.agente_iso.verification.application.VerificationRunSnapshot;
-import com.temaconsulting.agente_iso.verification.application.VerificationResultProgress;
-import com.temaconsulting.agente_iso.verification.application.VerificationResultQueryFailure;
+import com.temaconsulting.agente_iso.verification.application.model.VerificationRunSnapshot;
+import com.temaconsulting.agente_iso.verification.application.model.VerificationResultProgress;
+import com.temaconsulting.agente_iso.verification.application.error.VerificationResultQueryFailure;
 import com.temaconsulting.agente_iso.verification.domain.PreviewExpectation;
 import com.temaconsulting.agente_iso.verification.domain.TicketSelectionGroup;
 import com.temaconsulting.agente_iso.verification.domain.ValidatedTicketSelection;
@@ -203,7 +205,7 @@ class VerificationPreviewControllerSecurityTest {
         UUID versionId = UUID.randomUUID();
         when(previews.preview(any())).thenThrow(
                 VerificationPreviewFailure.businessRule(
-                        com.temaconsulting.agente_iso.shared.application.ProblemCode.TICKET_SELECTION_INVALID,
+                        com.temaconsulting.agente_iso.shared.application.error.ProblemCode.TICKET_SELECTION_INVALID,
                         "macroActivityId",
                         "Incompatible ticket cardinality"));
 

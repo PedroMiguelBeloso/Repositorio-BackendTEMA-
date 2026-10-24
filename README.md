@@ -355,3 +355,8 @@ ejecutó correctamente durante la validación de TC-176.
 La prueba de integración verifica también paginación del historial, desempate
 por ID, snapshots, selecciones y progreso actualizado por decisiones humanas.
 Para correr toda la suite backend: `./mvnw test`.
+
+## Organización del código
+
+Ver [mapa de paquetes](docs/backend-package-map.md) para ubicar controladores,
+casos de uso, reglas de dominio, puertos y adaptadores.

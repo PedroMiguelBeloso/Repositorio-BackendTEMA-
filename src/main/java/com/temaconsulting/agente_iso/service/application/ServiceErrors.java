@@ -1,8 +1,8 @@
 package com.temaconsulting.agente_iso.service.application;
 
-import com.temaconsulting.agente_iso.shared.application.ApiException;
-import com.temaconsulting.agente_iso.shared.application.FieldProblem;
-import com.temaconsulting.agente_iso.shared.application.ProblemCode;
+import com.temaconsulting.agente_iso.shared.application.error.ApiException;
+import com.temaconsulting.agente_iso.shared.application.model.FieldProblem;
+import com.temaconsulting.agente_iso.shared.application.error.ProblemCode;
 import org.springframework.http.HttpStatus;
 
 import java.util.List;

@@ -1,10 +1,10 @@
 package com.temaconsulting.agente_iso.integration.api;
 
-import com.temaconsulting.agente_iso.integration.application.DriveFolderCatalog;
+import com.temaconsulting.agente_iso.integration.application.port.DriveFolderCatalog;
 import com.temaconsulting.agente_iso.integration.domain.ExternalFolder;
-import com.temaconsulting.agente_iso.shared.api.PageMapper;
-import com.temaconsulting.agente_iso.shared.application.Page;
-import com.temaconsulting.agente_iso.shared.dto.PageResponse;
+import com.temaconsulting.agente_iso.shared.api.mapper.PageMapper;
+import com.temaconsulting.agente_iso.shared.application.model.Page;
+import com.temaconsulting.agente_iso.shared.api.dto.PageResponse;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

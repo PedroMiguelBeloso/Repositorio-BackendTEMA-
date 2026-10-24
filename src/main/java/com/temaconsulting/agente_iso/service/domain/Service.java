@@ -1,5 +1,7 @@
 package com.temaconsulting.agente_iso.service.domain;
 
+import com.temaconsulting.agente_iso.service.domain.error.ServiceValidationException;
+
 import java.time.Instant;
 import java.util.HashSet;
 import java.util.List;

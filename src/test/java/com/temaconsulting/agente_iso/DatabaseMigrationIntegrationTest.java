@@ -1,11 +1,11 @@
 package com.temaconsulting.agente_iso;
 
-import com.temaconsulting.agente_iso.verification.application.VerificationRunDraft;
-import com.temaconsulting.agente_iso.verification.application.VerificationStartFailure;
+import com.temaconsulting.agente_iso.verification.application.model.VerificationRunDraft;
+import com.temaconsulting.agente_iso.verification.application.error.VerificationStartFailure;
 import com.temaconsulting.agente_iso.verification.domain.ValidatedTicketSelection;
 import com.temaconsulting.agente_iso.verification.domain.ValidatedTicketSelections;
 import com.temaconsulting.agente_iso.verification.domain.VerificationScope;
-import com.temaconsulting.agente_iso.verification.infrastructure.JdbcVerificationRunRepository;
+import com.temaconsulting.agente_iso.verification.infrastructure.persistence.JdbcVerificationRunRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -1,7 +1,7 @@
 package com.temaconsulting.agente_iso.verification.infrastructure.ai;
 
 import com.temaconsulting.agente_iso.process.domain.ApplicabilityMode;
-import com.temaconsulting.agente_iso.verification.application.AiApplicabilityRequest;
+import com.temaconsulting.agente_iso.verification.application.model.AiApplicabilityRequest;
 import com.temaconsulting.agente_iso.verification.domain.ApplicabilityDecision;
 import org.junit.jupiter.api.Test;
 

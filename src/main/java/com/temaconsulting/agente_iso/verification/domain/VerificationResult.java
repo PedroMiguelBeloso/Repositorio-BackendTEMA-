@@ -2,7 +2,7 @@ package com.temaconsulting.agente_iso.verification.domain;
 
 import com.temaconsulting.agente_iso.catalog.domain.EvidenceType;
 import com.temaconsulting.agente_iso.process.domain.EvidenceLocation;
-import com.temaconsulting.agente_iso.verification.application.ApplicabilityAssessment;
+import com.temaconsulting.agente_iso.verification.application.model.ApplicabilityAssessment;
 
 import java.util.List;
 import java.util.Objects;

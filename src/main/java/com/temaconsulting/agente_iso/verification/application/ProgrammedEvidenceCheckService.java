@@ -1,12 +1,12 @@
 package com.temaconsulting.agente_iso.verification.application;
 
 import com.temaconsulting.agente_iso.catalog.domain.EvidenceType;
-import com.temaconsulting.agente_iso.integration.application.DriveEvidenceSearch;
-import com.temaconsulting.agente_iso.integration.application.RedmineTicketReader;
+import com.temaconsulting.agente_iso.integration.application.port.DriveEvidenceSearch;
+import com.temaconsulting.agente_iso.integration.application.port.RedmineTicketReader;
 import com.temaconsulting.agente_iso.integration.domain.IntegrationSource;
 import com.temaconsulting.agente_iso.integration.domain.TicketSnapshot;
 import com.temaconsulting.agente_iso.process.domain.Cardinality;
-import com.temaconsulting.agente_iso.shared.application.ApiException;
+import com.temaconsulting.agente_iso.shared.application.error.ApiException;
 import com.temaconsulting.agente_iso.verification.domain.ApplicabilityDecision;
 import com.temaconsulting.agente_iso.verification.domain.ResultStatus;
 import com.temaconsulting.agente_iso.verification.domain.VerificationContext.ExpectationContext;

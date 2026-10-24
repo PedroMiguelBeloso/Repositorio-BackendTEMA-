@@ -1,11 +1,16 @@
 package com.temaconsulting.agente_iso.verification.application;
 
-import com.temaconsulting.agente_iso.integration.application.RedmineTicketReader;
+import com.temaconsulting.agente_iso.verification.application.model.TicketSelectionInput;
+import com.temaconsulting.agente_iso.verification.application.port.VerificationRunRepository;
+import com.temaconsulting.agente_iso.verification.application.port.VerificationScopeResolver;
+import com.temaconsulting.agente_iso.verification.application.error.VerificationStartFailure;
+
+import com.temaconsulting.agente_iso.integration.application.port.RedmineTicketReader;
 import com.temaconsulting.agente_iso.process.domain.ApplicabilityMode;
 import com.temaconsulting.agente_iso.process.domain.Cardinality;
 import com.temaconsulting.agente_iso.process.domain.EvidenceLocation;
 import com.temaconsulting.agente_iso.process.domain.EvidenceType;
-import com.temaconsulting.agente_iso.service.application.ServiceSnapshotReader;
+import com.temaconsulting.agente_iso.service.application.port.ServiceSnapshotReader;
 import com.temaconsulting.agente_iso.verification.domain.PreviewExpectation;
 import com.temaconsulting.agente_iso.verification.domain.TicketSelectionGroup;
 import com.temaconsulting.agente_iso.verification.domain.VerificationPreview;
@@ -55,8 +60,8 @@ class VerificationStartServiceTest {
         when(services.get(serviceId)).thenReturn(new ServiceSnapshotReader.ServiceSnapshot(
                 serviceId, 9, List.of(), "project-42"
         ));
-        var unavailable = new com.temaconsulting.agente_iso.shared.application.ApiException(
-                com.temaconsulting.agente_iso.shared.application.ProblemCode.SOURCE_UNAVAILABLE,
+        var unavailable = new com.temaconsulting.agente_iso.shared.application.error.ApiException(
+                com.temaconsulting.agente_iso.shared.application.error.ProblemCode.SOURCE_UNAVAILABLE,
                 org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
                 "Redmine unavailable", List.of()
         );

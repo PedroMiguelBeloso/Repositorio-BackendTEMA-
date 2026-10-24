@@ -1,5 +1,7 @@
 package com.temaconsulting.agente_iso.service.domain;
 
+import com.temaconsulting.agente_iso.service.domain.error.ServiceValidationException;
+
 public record ExternalSource(String id, String name) {
     public ExternalSource {
         if (id == null || id.isBlank()) {

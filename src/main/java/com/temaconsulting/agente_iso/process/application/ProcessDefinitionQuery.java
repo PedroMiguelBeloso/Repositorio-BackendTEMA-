@@ -1,5 +1,8 @@
 package com.temaconsulting.agente_iso.process.application;
 
+import com.temaconsulting.agente_iso.process.application.port.ProcessDefinitionReader;
+import com.temaconsulting.agente_iso.process.application.port.ProcessRepository;
+
 import com.temaconsulting.agente_iso.process.domain.ProcessDefinition;
 import org.springframework.stereotype.Service;
 

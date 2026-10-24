@@ -1,24 +1,26 @@
 package com.temaconsulting.agente_iso.identity.api;
 
+import com.temaconsulting.agente_iso.identity.api.error.IdentityApiExceptionHandler;
+
 import com.temaconsulting.agente_iso.identity.api.dto.TokenResponse;
 import com.temaconsulting.agente_iso.identity.api.dto.UserResponse;
 import com.temaconsulting.agente_iso.identity.api.mapper.UserApiMapper;
 import com.temaconsulting.agente_iso.identity.application.AuthService;
-import com.temaconsulting.agente_iso.identity.application.DuplicateUserEmailException;
-import com.temaconsulting.agente_iso.identity.application.InvalidCredentialsException;
+import com.temaconsulting.agente_iso.identity.application.error.DuplicateUserEmailException;
+import com.temaconsulting.agente_iso.identity.application.error.InvalidCredentialsException;
 import com.temaconsulting.agente_iso.identity.application.UserService;
 import com.temaconsulting.agente_iso.identity.domain.Role;
 import com.temaconsulting.agente_iso.identity.domain.User;
-import com.temaconsulting.agente_iso.identity.infrastructure.JsonAccessDeniedHandler;
-import com.temaconsulting.agente_iso.identity.infrastructure.JsonAuthenticationEntryPoint;
-import com.temaconsulting.agente_iso.identity.infrastructure.JwtRoleConverter;
-import com.temaconsulting.agente_iso.identity.infrastructure.SecurityConfig;
-import com.temaconsulting.agente_iso.shared.api.ApiExceptionHandler;
-import com.temaconsulting.agente_iso.shared.api.ProblemDetailsFactory;
+import com.temaconsulting.agente_iso.identity.infrastructure.security.JsonAccessDeniedHandler;
+import com.temaconsulting.agente_iso.identity.infrastructure.security.JsonAuthenticationEntryPoint;
+import com.temaconsulting.agente_iso.identity.infrastructure.security.JwtRoleConverter;
+import com.temaconsulting.agente_iso.identity.infrastructure.security.SecurityConfig;
+import com.temaconsulting.agente_iso.shared.api.error.ApiExceptionHandler;
+import com.temaconsulting.agente_iso.shared.api.error.ProblemDetailsFactory;
 import com.temaconsulting.agente_iso.shared.config.Configuration;
-import com.temaconsulting.agente_iso.shared.dto.Page;
-import com.temaconsulting.agente_iso.shared.dto.PageInfo;
-import com.temaconsulting.agente_iso.shared.dto.PageResponse;
+import com.temaconsulting.agente_iso.shared.api.dto.Page;
+import com.temaconsulting.agente_iso.shared.api.dto.PageInfo;
+import com.temaconsulting.agente_iso.shared.api.dto.PageResponse;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;

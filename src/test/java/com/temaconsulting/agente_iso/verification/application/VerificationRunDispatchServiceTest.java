@@ -1,6 +1,8 @@
 package com.temaconsulting.agente_iso.verification.application;
 
-import com.temaconsulting.agente_iso.shared.application.ApiException;
+import com.temaconsulting.agente_iso.verification.application.port.VerificationRunRepository;
+
+import com.temaconsulting.agente_iso.shared.application.error.ApiException;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.task.TaskRejectedException;
 

@@ -1,5 +1,7 @@
 package com.temaconsulting.agente_iso.identity.domain;
 
+import com.temaconsulting.agente_iso.identity.domain.error.UserDomainValidationException;
+
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;

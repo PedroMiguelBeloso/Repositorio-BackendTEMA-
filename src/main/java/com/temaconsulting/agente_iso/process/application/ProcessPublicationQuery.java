@@ -1,5 +1,10 @@
 package com.temaconsulting.agente_iso.process.application;
 
+import com.temaconsulting.agente_iso.process.application.error.ProcessVersionNotFoundException;
+import com.temaconsulting.agente_iso.process.application.error.ProcessVersionNotPublishedException;
+import com.temaconsulting.agente_iso.process.application.port.ProcessVersionRepository;
+import com.temaconsulting.agente_iso.process.application.port.PublishedProcessReader;
+
 import com.temaconsulting.agente_iso.process.domain.ProcessStatus;
 import com.temaconsulting.agente_iso.process.domain.ProcessVersion;
 import org.springframework.stereotype.Service;

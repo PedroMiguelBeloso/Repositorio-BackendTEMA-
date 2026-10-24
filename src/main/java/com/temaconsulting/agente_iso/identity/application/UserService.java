@@ -1,8 +1,10 @@
 package com.temaconsulting.agente_iso.identity.application;
 
+import com.temaconsulting.agente_iso.identity.application.error.DuplicateUserEmailException;
+
 import com.temaconsulting.agente_iso.identity.domain.User;
 import com.temaconsulting.agente_iso.identity.domain.UserRepository;
-import com.temaconsulting.agente_iso.shared.dto.Page;
+import com.temaconsulting.agente_iso.shared.api.dto.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

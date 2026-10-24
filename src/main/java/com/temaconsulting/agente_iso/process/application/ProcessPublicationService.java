@@ -1,15 +1,19 @@
 package com.temaconsulting.agente_iso.process.application;
 
-import com.temaconsulting.agente_iso.catalog.application.RegistryDefinitionRepository;
+import com.temaconsulting.agente_iso.process.application.port.ProcessVersionRepository;
+import com.temaconsulting.agente_iso.process.application.error.StaleProcessVersionException;
+import com.temaconsulting.agente_iso.process.application.model.Violation;
+
+import com.temaconsulting.agente_iso.catalog.application.port.RegistryDefinitionRepository;
 import com.temaconsulting.agente_iso.catalog.domain.RegistryDefinition;
-import com.temaconsulting.agente_iso.process.domain.DraftNotEditableException;
+import com.temaconsulting.agente_iso.process.domain.error.DraftNotEditableException;
 import com.temaconsulting.agente_iso.process.domain.EvidenceExpectation;
 import com.temaconsulting.agente_iso.process.domain.MacroActivity;
 import com.temaconsulting.agente_iso.process.domain.ProcessVersion;
-import com.temaconsulting.agente_iso.process.domain.RevisionMismatchException;
-import com.temaconsulting.agente_iso.shared.application.ApiException;
-import com.temaconsulting.agente_iso.shared.application.FieldProblem;
-import com.temaconsulting.agente_iso.shared.application.ProblemCode;
+import com.temaconsulting.agente_iso.process.domain.error.RevisionMismatchException;
+import com.temaconsulting.agente_iso.shared.application.error.ApiException;
+import com.temaconsulting.agente_iso.shared.application.model.FieldProblem;
+import com.temaconsulting.agente_iso.shared.application.error.ProblemCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

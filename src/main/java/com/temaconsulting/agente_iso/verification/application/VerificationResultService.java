@@ -1,5 +1,12 @@
 package com.temaconsulting.agente_iso.verification.application;
 
+import com.temaconsulting.agente_iso.verification.application.port.VerificationResultPort;
+import com.temaconsulting.agente_iso.verification.application.model.VerificationResultProgress;
+import com.temaconsulting.agente_iso.verification.application.error.VerificationResultQueryFailure;
+import com.temaconsulting.agente_iso.verification.application.port.VerificationResultRepository;
+import com.temaconsulting.agente_iso.verification.application.error.VerificationResultValidationException;
+import com.temaconsulting.agente_iso.verification.application.model.VerificationResultWriteCommand;
+
 import com.temaconsulting.agente_iso.verification.domain.ApplicabilityDecision;
 import com.temaconsulting.agente_iso.verification.domain.ResultStatus;
 import com.temaconsulting.agente_iso.verification.domain.VerificationResult;

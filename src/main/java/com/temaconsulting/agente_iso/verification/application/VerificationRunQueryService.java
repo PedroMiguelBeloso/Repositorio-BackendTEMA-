@@ -1,6 +1,13 @@
 package com.temaconsulting.agente_iso.verification.application;
 
-import com.temaconsulting.agente_iso.shared.application.Page;
+import com.temaconsulting.agente_iso.verification.application.port.VerificationResultPort;
+import com.temaconsulting.agente_iso.verification.application.model.VerificationResultProgress;
+import com.temaconsulting.agente_iso.verification.application.error.VerificationResultQueryFailure;
+import com.temaconsulting.agente_iso.verification.application.error.VerificationResultValidationException;
+import com.temaconsulting.agente_iso.verification.application.port.VerificationRunRepository;
+import com.temaconsulting.agente_iso.verification.application.model.VerificationRunSnapshot;
+
+import com.temaconsulting.agente_iso.shared.application.model.Page;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

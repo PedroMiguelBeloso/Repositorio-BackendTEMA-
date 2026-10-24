@@ -12,7 +12,7 @@
 | La nueva contraseña debe tener al menos 8 caracteres | `ChangePasswordRequest` / `CreateReaderRequest` | Es una regla de forma de la solicitud y está expresada en el contrato HTTP. |
 | La contraseña actual debe coincidir antes de cambiarla | `identity.application.AuthService.changePassword(...)` | Requiere consultar al usuario autenticado y usar un verificador de hashes; no es una regla que deba vivir en la entidad. |
 | El usuario afectado es el sujeto autenticado | `identity.api.AuthController` | El `userId` no proviene del cliente: se obtiene del contexto de seguridad/JWT. |
-| Solo `ADMIN` puede listar/crear usuarios | `identity.infrastructure.SecurityConfig` | Es una regla de autorización de transporte/seguridad, no una invariante interna de `User`. |
+| Solo `ADMIN` puede listar/crear usuarios | `identity.infrastructure.security.SecurityConfig` | Es una regla de autorización de transporte/seguridad, no una invariante interna de `User`. |
 | El correo debe ser único bajo concurrencia | `V4__identity_constraints.sql` | La comprobación previa de la aplicación mejora el error normal, pero el índice único en PostgreSQL es la garantía final ante solicitudes concurrentes. |
 | La respuesta pública nunca contiene `password_hash` | `UserResponse` + `UserApiMapper` | Se separa deliberadamente el modelo persistente del contrato HTTP público. |
 
