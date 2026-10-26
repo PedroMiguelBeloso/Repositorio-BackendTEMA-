@@ -16,6 +16,8 @@ import com.temaconsulting.agente_iso.shared.application.model.FieldProblem;
 import com.temaconsulting.agente_iso.shared.application.error.ProblemCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
@@ -32,6 +34,7 @@ import static com.temaconsulting.agente_iso.process.application.ProcessService.s
 
 @Service
 public class ProcessPublicationService {
+    private static final Logger log = LoggerFactory.getLogger(ProcessPublicationService.class);
 
     private final ProcessVersionRepository versions;
     private final RegistryDefinitionRepository registry;
@@ -88,7 +91,10 @@ public class ProcessPublicationService {
         version.publish(publishedAt);
 
         try {
-            return versions.publish(versionId, revision, publishedAt);
+            ProcessVersion published = versions.publish(versionId, revision, publishedAt);
+            log.info("process_version_published processId={} versionId={} revision={}",
+                    processId, versionId, revision);
+            return published;
         } catch (StaleProcessVersionException ex) {
             ProcessVersion latest = versions.findWithTree(versionId).orElse(null);
             if (latest != null && !latest.isEditable()) {

@@ -24,6 +24,22 @@ public record CreatedVerificationRun(
         UUID startedBy,
         Instant startedAt,
         ValidatedTicketSelections ticketSelections,
-        int total
+        int total,
+        String serviceNameSnapshot,
+        String processNameSnapshot,
+        String processOfficialVersionSnapshot,
+        String macroActivityNameSnapshot
 ) {
+    public CreatedVerificationRun(UUID id, UUID serviceId, ServiceType serviceTypeSnapshot,
+                                  int serviceRevisionSnapshot, UUID processVersionId,
+                                  String driveFolderId, String driveFolderName,
+                                  String redmineProjectId, String redmineProjectName,
+                                  VerificationScope scope, UUID macroActivityId, String note,
+                                  String status, UUID startedBy, Instant startedAt,
+                                  ValidatedTicketSelections ticketSelections, int total) {
+        this(id, serviceId, serviceTypeSnapshot, serviceRevisionSnapshot, processVersionId,
+                driveFolderId, driveFolderName, redmineProjectId, redmineProjectName,
+                scope, macroActivityId, note, status, startedBy, startedAt,
+                ticketSelections, total, null, null, null, null);
+    }
 }

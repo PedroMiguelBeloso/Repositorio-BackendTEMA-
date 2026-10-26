@@ -10,6 +10,8 @@ import com.temaconsulting.agente_iso.verification.domain.ApplicabilityDecision;
 import com.temaconsulting.agente_iso.verification.domain.ResultStatus;
 import com.temaconsulting.agente_iso.verification.domain.VerificationResult;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
@@ -17,6 +19,7 @@ import java.util.UUID;
 
 @Service
 public class VerificationResultDecisionService {
+    private static final Logger log = LoggerFactory.getLogger(VerificationResultDecisionService.class);
     private final VerificationResultRepository results;
     private final Clock clock;
 
@@ -45,7 +48,7 @@ public class VerificationResultDecisionService {
         if (!isStatusAllowed(target, finalStatus)) {
             throw VerificationResultDecisionFailure.incompatibleStatus();
         }
-        return results.saveStatusDecision(
+        VerificationResult result = results.saveStatusDecision(
                 runId,
                 resultId,
                 revision,
@@ -54,6 +57,9 @@ public class VerificationResultDecisionService {
                 decidedBy,
                 clock.instant()
         );
+        log.info("verification_result_decided runId={} resultId={} status={} actorId={}",
+                runId, resultId, finalStatus, decidedBy);
+        return result;
     }
 
     private boolean isStatusAllowed(VerificationResultDecisionTarget target, ResultStatus status) {

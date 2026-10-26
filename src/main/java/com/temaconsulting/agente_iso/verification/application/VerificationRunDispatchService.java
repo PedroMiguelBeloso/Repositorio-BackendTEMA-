@@ -7,12 +7,15 @@ import com.temaconsulting.agente_iso.shared.application.error.ProblemCode;
 import org.springframework.core.task.TaskRejectedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
 public class VerificationRunDispatchService {
+    private static final Logger log = LoggerFactory.getLogger(VerificationRunDispatchService.class);
     private final VerificationRunWorker worker;
     private final VerificationRunRepository runs;
 
@@ -25,6 +28,7 @@ public class VerificationRunDispatchService {
         try {
             worker.process(runId);
         } catch (TaskRejectedException ex) {
+            log.warn("verification_dispatch_rejected runId={}", runId);
             runs.markFailed(runId, "La cola de verificaciones está llena. Intente nuevamente.");
             throw new ApiException(ProblemCode.SOURCE_UNAVAILABLE, HttpStatus.SERVICE_UNAVAILABLE,
                     "La cola de verificaciones está llena. Intente nuevamente.", List.of());

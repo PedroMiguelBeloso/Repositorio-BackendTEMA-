@@ -373,6 +373,20 @@ La prueba de integración verifica también paginación del historial, desempate
 por ID, snapshots, selecciones y progreso actualizado por decisiones humanas.
 Para correr toda la suite backend: `./mvnw test`.
 
+## Observabilidad y reglas de tickets
+
+Cada respuesta incluye `X-Request-ID`; los errores `ProblemDetail` incluyen el mismo
+`requestId`. El trabajador asíncrono registra `runId` para seguir una verificación
+sin registrar cuerpos ni credenciales. La comprobación de **Servicio en herramienta
+de tracking** verifica la existencia del proyecto Redmine vinculado. Gemini puede
+interpretar campos personalizados e historial de tickets cuando la evidencia exige
+algo más que existencia. Sin `GEMINI_API_KEY` o con datos ambiguos, se solicita
+revisión humana. Los nombres del servicio y proceso se conservan como snapshot
+histórico desde la migración V10.
+
+Ver [comportamiento y matriz de pruebas](docs/m1-m2-hardening.md) y el
+[contrato OpenAPI actualizado](docs/tema-m1-m2-openapi.yaml).
+
 ## Organización del código
 
 Ver [mapa de paquetes](docs/backend-package-map.md) para ubicar controladores,

@@ -64,7 +64,7 @@ class VerificationRunWorkerTest {
                 List.of(new VerificationRunWorkLoader.WorkItem(expectation, List.of()))));
         when(applicability.assess(any())).thenReturn(ApplicabilityAssessment.deterministic(
                 ApplicabilityDecision.APPLIES, "Siempre aplicable"));
-        when(checks.assess(eq(expectation), any(), eq(ApplicabilityDecision.APPLIES), any()))
+        when(checks.assess(eq(expectation), any(), eq(ApplicabilityDecision.APPLIES), any(), any(), any()))
                 .thenAnswer(call -> new ProgrammedEvidenceCheckService.Assessment(expectationId,
                         call.getArgument(3), ResultStatus.REVIEW_REQUIRED, "Revisión humana",
                         List.of(), List.of()));
@@ -98,7 +98,7 @@ class VerificationRunWorkerTest {
                 List.of(new VerificationRunWorkLoader.WorkItem(expectation, List.of()))));
         when(applicability.assess(any())).thenReturn(ApplicabilityAssessment.deterministic(
                 ApplicabilityDecision.APPLIES, "Siempre aplicable"));
-        when(checks.assess(eq(expectation), any(), eq(ApplicabilityDecision.APPLIES), eq(null)))
+        when(checks.assess(eq(expectation), any(), eq(ApplicabilityDecision.APPLIES), eq(null), any(), any()))
                 .thenThrow(new IllegalStateException("internal failure"));
 
         worker.process(runId);

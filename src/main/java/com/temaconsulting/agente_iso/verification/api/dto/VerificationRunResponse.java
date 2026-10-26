@@ -23,7 +23,11 @@ public record VerificationRunResponse(
         Instant startedAt,
         Instant finishedAt,
         String failureMessage,
-        List<TicketSelectionResponse> ticketSelections
+        List<TicketSelectionResponse> ticketSelections,
+        String serviceNameSnapshot,
+        String processNameSnapshot,
+        String processOfficialVersionSnapshot,
+        String macroActivityNameSnapshot
 ) {
     public VerificationRunResponse {
         ticketSelections = List.copyOf(ticketSelections);

@@ -17,6 +17,7 @@ import com.temaconsulting.agente_iso.shared.application.error.ApiException;
 import com.temaconsulting.agente_iso.verification.domain.VerificationContext.ExpectationContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -48,9 +49,12 @@ public class VerificationRunWorker {
 
     @Async("verificationTaskExecutor")
     public void process(UUID runId) {
+        try (MDC.MDCCloseable ignored = MDC.putCloseable("runId", runId.toString())) {
         if (!runs.markRunning(runId)) {
+            log.warn("verification_transition_rejected phase=RUNNING runId={}", runId);
             return;
         }
+        log.info("verification_started runId={}", runId);
         try {
             VerificationRunSnapshot run = runs.findById(runId)
                     .orElseThrow(() -> new IllegalStateException("Run disappeared after transition"));
@@ -72,9 +76,12 @@ public class VerificationRunWorker {
             if (progress.resultCount() != run.total() || !runs.markCompleted(runId)) {
                 throw new IllegalStateException("Persisted result count does not match expected total");
             }
+            log.info("verification_completed runId={} processed={} total={}", runId,
+                    progress.resultCount(), run.total());
         } catch (Exception ex) {
-            log.error("Verification run {} failed with {}", runId, ex.getClass().getSimpleName());
+            log.error("verification_failed runId={} errorType={}", runId, ex.getClass().getSimpleName());
             runs.markFailed(runId, "La verificación no pudo completarse por un error interno.");
+        }
         }
     }
 
@@ -98,6 +105,29 @@ public class VerificationRunWorker {
                                 && run.redmineProjectId().equals(ticket.projectId())) {
                             addFact(facts, selected, "subject", "Asunto del ticket", ticket.subject());
                             addFact(facts, selected, "description", "Descripción del ticket", ticket.description());
+                            addFact(facts, selected, "status", "Estado del ticket", ticket.statusName());
+                            if (ticket.closed() != null) {
+                                addFact(facts, selected, "closed", "Cierre del ticket", ticket.closed().toString());
+                            }
+                            int fieldIndex = 0;
+                            for (TicketSnapshot.CustomField field : ticket.customFields().stream().limit(20).toList()) {
+                                addFact(facts, selected, "custom:" + fieldIndex++,
+                                        "Campo personalizado: " + field.name(),
+                                        field.value() == null ? null : String.valueOf(field.value()));
+                            }
+                            int journalIndex = 0;
+                            for (TicketSnapshot.JournalEntry journal : ticket.journals().stream().limit(20).toList()) {
+                                int currentJournal = journalIndex++;
+                                addFact(facts, selected, "journal:" + currentJournal,
+                                        "Nota del historial del ticket", journal.notes());
+                                int changeIndex = 0;
+                                for (TicketSnapshot.JournalChange change : journal.changes().stream().limit(10).toList()) {
+                                    addFact(facts, selected, "change:" + currentJournal + ":" + changeIndex++,
+                                            "Cambio del campo " + change.field(),
+                                            (change.oldValue() == null ? "" : change.oldValue())
+                                                    + " → " + (change.newValue() == null ? "" : change.newValue()));
+                                }
+                            }
                         }
                     } catch (ApiException ex) {
                         // Inaccessible external facts leave applicability pending; the programmed check
@@ -111,7 +141,8 @@ public class VerificationRunWorker {
                 run.serviceTypeSnapshot().name(), work.policies(), item.instructions(), facts
         ));
         ProgrammedEvidenceCheckService.Assessment assessment = checks.assess(
-                expectation, work.service(), decision.decision(), ticketId
+                expectation, work.service(), decision.decision(), ticketId,
+                work.policies(), item.instructions()
         );
         List<VerificationResultWriteCommand.EvidenceReference> evidence = assessment.evidenceReferences().stream()
                 .filter(reference -> reference.kind() != null && reference.source() != null
@@ -127,6 +158,8 @@ public class VerificationRunWorker {
                 decision.rationale(), decision.limitations(), assessment.proposedStatus(),
                 assessment.rationale(), assessment.limitations(), evidence
         ));
+        log.info("verification_result_saved runId={} expectationId={} ticketId={} proposedStatus={}",
+                run.id(), expectation.expectationId(), ticketId, assessment.proposedStatus());
     }
 
     private static void addFact(List<AiApplicabilityRequest.Fact> facts, String ticketId,

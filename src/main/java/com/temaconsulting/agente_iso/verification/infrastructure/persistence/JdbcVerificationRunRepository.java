@@ -33,7 +33,9 @@ public class JdbcVerificationRunRepository implements VerificationRunRepository 
                    service_revision_snapshot, process_version_id, drive_folder_id,
                    drive_folder_name, redmine_project_id, redmine_project_name,
                    scope::text AS scope, macro_activity_id, note, status::text AS status,
-                   started_by, started_at, finished_at, failure_message, total
+                   started_by, started_at, finished_at, failure_message, total,
+                   service_name_snapshot, process_name_snapshot,
+                   process_official_version_snapshot, macro_activity_name_snapshot
             FROM verification_runs
             """;
 
@@ -87,7 +89,9 @@ public class JdbcVerificationRunRepository implements VerificationRunRepository 
                        service_revision_snapshot, process_version_id, drive_folder_id,
                        drive_folder_name, redmine_project_id, redmine_project_name,
                        scope::text AS scope, macro_activity_id, note, status::text AS status,
-                       started_by, started_at, total
+                       started_by, started_at, total,
+                       service_name_snapshot, process_name_snapshot,
+                       process_official_version_snapshot, macro_activity_name_snapshot
                 FROM verification_runs WHERE id = ?
                 """,
                 (rs, rowNum) -> mapRun(rs, rowNum, run.ticketSelections()),
@@ -118,7 +122,9 @@ public class JdbcVerificationRunRepository implements VerificationRunRepository 
                 rs.getObject("started_by", UUID.class),
                 startedAt.toInstant(),
                 selections,
-                rs.getInt("total")
+                rs.getInt("total"),
+                rs.getString("service_name_snapshot"), rs.getString("process_name_snapshot"),
+                rs.getString("process_official_version_snapshot"), rs.getString("macro_activity_name_snapshot")
         );
     }
 
@@ -186,7 +192,9 @@ public class JdbcVerificationRunRepository implements VerificationRunRepository 
                 finishedAt == null ? null : finishedAt.toInstant(),
                 rs.getString("failure_message"),
                 rs.getInt("total"),
-                new ValidatedTicketSelections(List.of())
+                new ValidatedTicketSelections(List.of()),
+                rs.getString("service_name_snapshot"), rs.getString("process_name_snapshot"),
+                rs.getString("process_official_version_snapshot"), rs.getString("macro_activity_name_snapshot")
         );
     }
 
@@ -232,7 +240,8 @@ public class JdbcVerificationRunRepository implements VerificationRunRepository 
                 run.processVersionId(), run.driveFolderId(), run.driveFolderName(), run.redmineProjectId(),
                 run.redmineProjectName(), run.scope(), run.macroActivityId(), run.note(), run.status(),
                 run.startedBy(), run.startedAt(), run.finishedAt(), run.failureMessage(), run.total(),
-                selections
+                selections, run.serviceNameSnapshot(), run.processNameSnapshot(),
+                run.processOfficialVersionSnapshot(), run.macroActivityNameSnapshot()
         );
     }
 

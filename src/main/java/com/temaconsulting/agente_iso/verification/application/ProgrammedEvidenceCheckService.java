@@ -3,6 +3,9 @@ package com.temaconsulting.agente_iso.verification.application;
 import com.temaconsulting.agente_iso.catalog.domain.EvidenceType;
 import com.temaconsulting.agente_iso.integration.application.port.DriveEvidenceSearch;
 import com.temaconsulting.agente_iso.integration.application.port.RedmineTicketReader;
+import com.temaconsulting.agente_iso.integration.application.port.RedmineProjectCatalog;
+import com.temaconsulting.agente_iso.integration.domain.ExternalProject;
+import com.temaconsulting.agente_iso.verification.application.port.TicketEvidenceAiPort;
 import com.temaconsulting.agente_iso.integration.domain.IntegrationSource;
 import com.temaconsulting.agente_iso.integration.domain.TicketSnapshot;
 import com.temaconsulting.agente_iso.process.domain.Cardinality;
@@ -13,18 +16,26 @@ import com.temaconsulting.agente_iso.verification.domain.VerificationContext.Exp
 import com.temaconsulting.agente_iso.verification.domain.VerificationContext.ServiceContext;
 import com.temaconsulting.agente_iso.verification.domain.VerificationContext.SourceStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.text.Normalizer;
+import java.util.Locale;
 
 /** Evaluates one applicable expectation, or one explicitly selected ticket for that expectation. */
 @Service
 public class ProgrammedEvidenceCheckService {
+    private static final Logger log = LoggerFactory.getLogger(ProgrammedEvidenceCheckService.class);
     private final DriveDocumentaryAssessmentService driveAssessment;
     private final RedmineTicketReader tickets;
+    private final RedmineProjectCatalog projects;
+    private final TicketEvidenceAiPort ticketAi;
     private final Clock clock;
 
     public ProgrammedEvidenceCheckService(
@@ -32,8 +43,21 @@ public class ProgrammedEvidenceCheckService {
             RedmineTicketReader tickets,
             Clock clock
     ) {
+        this(driveAssessment, tickets, null, null, clock);
+    }
+
+    @Autowired
+    public ProgrammedEvidenceCheckService(
+            DriveDocumentaryAssessmentService driveAssessment,
+            RedmineTicketReader tickets,
+            RedmineProjectCatalog projects,
+            TicketEvidenceAiPort ticketAi,
+            Clock clock
+    ) {
         this.driveAssessment = Objects.requireNonNull(driveAssessment);
         this.tickets = Objects.requireNonNull(tickets);
+        this.projects = projects;
+        this.ticketAi = ticketAi;
         this.clock = Objects.requireNonNull(clock);
     }
 
@@ -43,6 +67,12 @@ public class ProgrammedEvidenceCheckService {
             ApplicabilityDecision applicability,
             String selectedTicketId
     ) {
+        return assess(expectation, service, applicability, selectedTicketId, List.of(), List.of());
+    }
+
+    public Assessment assess(ExpectationContext expectation, ServiceContext service,
+                             ApplicabilityDecision applicability, String selectedTicketId,
+                             List<String> policies, List<String> instructions) {
         Objects.requireNonNull(expectation, "expectation");
         Objects.requireNonNull(service, "service");
         Objects.requireNonNull(applicability, "applicability");
@@ -61,8 +91,9 @@ public class ProgrammedEvidenceCheckService {
 
         return switch (expectation.registry().evidenceType()) {
             case DOCUMENT, FOLDER -> assessDrive(expectation, service);
-            case TICKET -> assessTicket(expectation, service, selectedTicketId);
-            case IMPUTATIONS, TOOL_RECORD -> unsupportedSource(expectation);
+            case TICKET -> assessTicket(expectation, service, selectedTicketId, policies, instructions);
+            case TOOL_RECORD -> assessToolRecord(expectation, service);
+            case IMPUTATIONS -> unsupportedSource(expectation);
         };
     }
 
@@ -107,7 +138,9 @@ public class ProgrammedEvidenceCheckService {
     private Assessment assessTicket(
             ExpectationContext expectation,
             ServiceContext service,
-            String selectedTicketId
+            String selectedTicketId,
+            List<String> policies,
+            List<String> instructions
     ) {
         if (selectedTicketId == null || selectedTicketId.isBlank()) {
             return result(expectation, selectedTicketId, ResultStatus.REVIEW_REQUIRED,
@@ -146,6 +179,42 @@ public class ProgrammedEvidenceCheckService {
                     List.of(reference));
         }
 
+        String rule = normalize(expectation.displayName() + " " + expectation.registry().canonicalName());
+        if ((rule.contains("ticket existente") || rule.contains("existencia del ticket"))
+                && !rule.contains("actualiz") && !rule.contains("cerrad") && !rule.contains("valid")) {
+            return result(expectation, selectedTicketId, ResultStatus.COMPLIES,
+                    "El ticket #" + selectedTicketId + " existe en el proyecto Redmine vinculado al servicio.",
+                    List.of("Se comprobó existencia e identidad; no se evaluó contenido ni estado."), List.of(reference));
+        }
+        if (ticketAi != null) {
+            TicketEvidenceAiPort.Assessment proposal = ticketAi.assess(expectation.displayName(),
+                    expectation.registry().canonicalName(), expectation.registry().officialNomenclature(),
+                    policies, instructions, ticket);
+            ResultStatus status = proposal.status();
+            if (status == ResultStatus.COMPLIES && rule.contains("actualiz")
+                    && proposal.citedFields().stream().noneMatch(field ->
+                    field.equals("journals") || field.equals("customFields"))) {
+                status = ResultStatus.REVIEW_REQUIRED;
+            }
+            if (status == ResultStatus.COMPLIES && rule.contains("valid")
+                    && proposal.citedFields().stream().noneMatch(field ->
+                    field.equals("journals") || field.equals("customFields") || field.equals("description"))) {
+                status = ResultStatus.REVIEW_REQUIRED;
+            }
+            // A closed requirement cannot be satisfied by a ticket explicitly reported open.
+            if (rule.contains("cerrad") && Boolean.FALSE.equals(ticket.closed())) {
+                status = ResultStatus.DOES_NOT_COMPLY;
+            }
+            log.info("ticket_assessed ticketId={} expectationId={} proposedStatus={} model={} responseId={}",
+                    selectedTicketId, expectation.expectationId(), status, proposal.model(), proposal.responseId());
+            String provenance = proposal.model() == null ? "" : " Modelo: " + proposal.model()
+                    + (proposal.responseId() == null ? "." : "; respuesta: " + proposal.responseId() + ".");
+            return result(expectation, selectedTicketId, status,
+                    "Propuesta IA: " + proposal.rationale() + " Campos citados: " + proposal.citedFields()
+                            + "." + provenance,
+                    proposal.limitations(), List.of(reference));
+        }
+
         String rationale = "Se consultó el ticket #" + selectedTicketId + " del proyecto "
                 + ticket.projectId() + ": estado=" + observedStatus(ticket)
                 + ", closed=" + observedClosed(ticket.closed())
@@ -158,6 +227,51 @@ public class ProgrammedEvidenceCheckService {
         return result(expectation, selectedTicketId, ResultStatus.REVIEW_REQUIRED, rationale,
                 List.of("No hay una regla programable que identifique el campo, valor o cambio exigido por esta expectativa."),
                 List.of(reference));
+    }
+
+    private Assessment assessToolRecord(ExpectationContext expectation, ServiceContext service) {
+        String name = normalize(expectation.displayName() + " " + expectation.registry().canonicalName()
+                + " " + expectation.registry().key());
+        if (!name.contains("servicio en herramienta de tracking")
+                && !name.contains("servicio en redmine")) return unsupportedSource(expectation);
+        var source = service.redmineProject();
+        if (source.status() != SourceStatus.CONFIGURED) {
+            return result(expectation, null, ResultStatus.REVIEW_REQUIRED,
+                    "El servicio no tiene un proyecto Redmine vinculado.",
+                    List.of("No se puede comprobar la existencia del proyecto."), List.of());
+        }
+        if (projects == null) return unsupportedSource(expectation);
+        try {
+            ExternalProject project = projects.findById(source.id());
+            if (project == null) {
+                return result(expectation, null, ResultStatus.DOES_NOT_COMPLY,
+                        "El proyecto Redmine vinculado al servicio no existe.", List.of(), List.of());
+            }
+            if (!source.id().equals(project.id())) {
+                return result(expectation, null, ResultStatus.REVIEW_REQUIRED,
+                        "Redmine no confirmó la identidad del proyecto vinculado.",
+                        List.of("La respuesta no coincide con el proyecto configurado."), List.of());
+            }
+            var reference = new EvidenceReference(EvidenceType.TOOL_RECORD, IntegrationSource.REDMINE,
+                    project.id(), project.name(), null, clock.instant(), null, null);
+            log.info("tool_record_checked expectationId={} projectId={} status=COMPLIES",
+                    expectation.expectationId(), project.id());
+            return result(expectation, null, ResultStatus.COMPLIES,
+                    "Se comprobó mediante lectura que existe el proyecto Redmine vinculado al servicio.",
+                    List.of("No se evaluaron permisos sobre tickets individuales ni configuración del proyecto."),
+                    List.of(reference));
+        } catch (ApiException ex) {
+            log.warn("tool_record_check_failed expectationId={} projectId={} code={}",
+                    expectation.expectationId(), source.id(), ex.code());
+            return result(expectation, null, ResultStatus.REVIEW_REQUIRED,
+                    "No se pudo confirmar la existencia del proyecto Redmine vinculado.",
+                    List.of("La consulta a Redmine falló: " + ex.code()), List.of());
+        }
+    }
+
+    private static String normalize(String value) {
+        return Normalizer.normalize(value, Normalizer.Form.NFD).replaceAll("\\p{M}", "")
+                .toLowerCase(Locale.ROOT);
     }
 
     private Assessment unsupportedSource(ExpectationContext expectation) {

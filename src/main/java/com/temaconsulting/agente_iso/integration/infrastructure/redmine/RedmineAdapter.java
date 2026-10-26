@@ -144,14 +144,16 @@ public class RedmineAdapter implements IntegrationProbe, RedmineProjectCatalog, 
             JsonNode payload = getJson("/projects/{id}.json", "id", normalized);
             JsonNode project = payload.get("project");
             if (project == null || project.isEmpty()) {
-                return null;
+                throw new ApiException(ProblemCode.SOURCE_UNAVAILABLE, HttpStatus.SERVICE_UNAVAILABLE,
+                        "Redmine no devolvió un proyecto interpretable", List.of());
             }
             return fromProject(project);
         } catch (RedmineReadException ex) {
-            if (ex.health() == SourceHealth.PERMISSION_ERROR || ex.health() == SourceHealth.AUTH_ERROR) {
-                throw sourceFailure(ex.health(), "La conexión de Redmine no tiene acceso a ese proyecto");
+            if (ex.getCause() instanceof RestClientResponseException response
+                    && response.getStatusCode().value() == 404) {
+                return null;
             }
-            return null;
+            throw sourceFailure(ex.health(), "La conexión de Redmine no tiene acceso a ese proyecto");
         } catch (ApiException ex) {
             if (ex.httpStatus().value() == 404) {
                 return null;

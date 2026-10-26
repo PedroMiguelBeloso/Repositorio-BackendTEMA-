@@ -94,7 +94,9 @@ public class VerificationRunController {
                 run.startedAt(),
                 null,
                 null,
-                selections
+                selections,
+                run.serviceNameSnapshot(), run.processNameSnapshot(),
+                run.processOfficialVersionSnapshot(), run.macroActivityNameSnapshot()
         );
         String location = ServletUriComponentsBuilder.fromCurrentRequest()
                 .path("/{runId}")
@@ -125,7 +127,9 @@ public class VerificationRunController {
                 new VerificationRunResponse.RunProgress(run.total(),
                         Math.toIntExact(state.progress().resultCount()),
                         Math.toIntExact(state.progress().reviewRequiredCount())),
-                run.startedBy(), run.startedAt(), run.finishedAt(), run.failureMessage(), selections
+                run.startedBy(), run.startedAt(), run.finishedAt(), run.failureMessage(), selections,
+                run.serviceNameSnapshot(), run.processNameSnapshot(),
+                run.processOfficialVersionSnapshot(), run.macroActivityNameSnapshot()
         );
     }
 }

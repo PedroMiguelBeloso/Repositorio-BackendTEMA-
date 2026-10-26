@@ -61,11 +61,11 @@ class VerificationApplicabilityServiceTest {
     @Test
     void appliesChecksOnlyTheSelectedTicketAndDoesNotAssumeCompliance() {
         Fixture f = fixture(EvidenceType.TICKET, "204", ApplicabilityMode.CASE_DEPENDENT);
-        when(checks.assess(eq(f.expectation), eq(f.service), eq(ApplicabilityDecision.APPLIES), eq("204")))
+        when(checks.assess(eq(f.expectation), eq(f.service), eq(ApplicabilityDecision.APPLIES), eq("204"), any(), any()))
                 .thenReturn(new ProgrammedEvidenceCheckService.Assessment(f.expectation.expectationId(), "204",
                         ResultStatus.REVIEW_REQUIRED, "La fuente no permite comprobarlo", List.of("Sin acceso"), List.of()));
         service.resolve(f.runId, f.resultId, 1, ApplicabilityDecision.APPLIES, "Fue una corrección", f.userId);
-        verify(checks).assess(f.expectation, f.service, ApplicabilityDecision.APPLIES, "204");
+        verify(checks).assess(f.expectation, f.service, ApplicabilityDecision.APPLIES, "204", List.of(), List.of());
         verify(results).saveApplicabilityDecision(eq(f.runId), eq(f.resultId), eq(1),
                 eq(ApplicabilityDecision.APPLIES), eq("Fue una corrección"), eq(f.userId), eq(NOW),
                 org.mockito.ArgumentMatchers.argThat(recheck ->
@@ -97,7 +97,7 @@ class VerificationApplicabilityServiceTest {
     @Test
     void unexpectedRecheckFailureLeavesTheResultUntouched() {
         Fixture f = fixture(EvidenceType.TICKET, "204", ApplicabilityMode.CASE_DEPENDENT);
-        when(checks.assess(eq(f.expectation), eq(f.service), eq(ApplicabilityDecision.APPLIES), eq("204")))
+        when(checks.assess(eq(f.expectation), eq(f.service), eq(ApplicabilityDecision.APPLIES), eq("204"), any(), any()))
                 .thenThrow(new IllegalStateException("internal failure"));
         assertThatThrownBy(() -> service.resolve(f.runId, f.resultId, 1,
                 ApplicabilityDecision.APPLIES, "Fue una corrección", f.userId))

@@ -12,6 +12,8 @@ import com.temaconsulting.agente_iso.shared.application.model.Page;
 import com.temaconsulting.agente_iso.shared.application.error.ProblemCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 import java.util.List;
@@ -19,6 +21,7 @@ import java.util.UUID;
 
 @Service
 public class ProcessService {
+    private static final Logger log = LoggerFactory.getLogger(ProcessService.class);
 
     private final ProcessRepository processes;
     private final Clock clock;
@@ -51,7 +54,9 @@ public class ProcessService {
         }
 
         try {
-            return processes.insert(process);
+            ProcessDefinition saved = processes.insert(process);
+            log.info("process_created processId={} code={}", saved.id(), saved.code());
+            return saved;
         } catch (DuplicateProcessCodeException ex) {
             throw conflict("A process with code " + process.code().name() + " already exists");
         }

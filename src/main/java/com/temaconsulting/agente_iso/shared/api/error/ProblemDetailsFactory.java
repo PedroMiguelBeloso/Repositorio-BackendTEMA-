@@ -3,6 +3,8 @@ package com.temaconsulting.agente_iso.shared.api.error;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.stereotype.Component;
+import org.slf4j.MDC;
+import com.temaconsulting.agente_iso.shared.api.RequestCorrelationFilter;
 
 import com.temaconsulting.agente_iso.shared.application.error.ApiException;
 import com.temaconsulting.agente_iso.shared.application.error.ProblemCode;
@@ -20,8 +22,7 @@ public class ProblemDetailsFactory {
         if (!ex.details().isEmpty()) {
             problem.setProperty("details", ex.details());
         }
-
-        return problem;
+        return correlate(problem);
     }
 
     public ProblemDetail forSecurity(
@@ -31,7 +32,7 @@ public class ProblemDetailsFactory {
     ) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
         problem.setProperty("code", code.name());
-        return problem;
+        return correlate(problem);
     }
 
     public ProblemDetail forUnexpected(Exception ex) {
@@ -40,6 +41,12 @@ public class ProblemDetailsFactory {
                 "An unexpected error occurred"
         );
         problem.setProperty("code", ProblemCode.INTERNAL_ERROR.name());
+        return correlate(problem);
+    }
+
+    public static ProblemDetail correlate(ProblemDetail problem) {
+        String requestId = MDC.get(RequestCorrelationFilter.MDC_KEY);
+        if (requestId != null) problem.setProperty("requestId", requestId);
         return problem;
     }
 }

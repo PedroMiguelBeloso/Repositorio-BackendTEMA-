@@ -87,7 +87,8 @@ public class VerificationApplicabilityService {
             recheck = new VerificationResultRecheck(ResultStatus.NOT_APPLICABLE,
                     "El Administrador resolvió que esta evidencia no aplica.", List.of(), List.of());
         } else {
-            var assessment = checks.assess(expectation, work.service(), ApplicabilityDecision.APPLIES, ticketId);
+            var assessment = checks.assess(expectation, work.service(), ApplicabilityDecision.APPLIES,
+                    ticketId, work.policies(), item.instructions());
             if (!expectation.expectationId().equals(assessment.expectationId())
                     || !Objects.equals(ticketId, assessment.subjectTicketId())
                     || assessment.proposedStatus() == ResultStatus.NOT_APPLICABLE) {

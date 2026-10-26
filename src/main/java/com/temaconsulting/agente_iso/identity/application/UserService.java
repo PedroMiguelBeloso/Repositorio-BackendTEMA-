@@ -7,6 +7,8 @@ import com.temaconsulting.agente_iso.identity.domain.UserRepository;
 import com.temaconsulting.agente_iso.shared.api.dto.Page;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Clock;
@@ -14,6 +16,7 @@ import java.util.UUID;
 
 @Service
 public class UserService {
+    private static final Logger log = LoggerFactory.getLogger(UserService.class);
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -50,6 +53,8 @@ public class UserService {
                 clock.instant()
         );
 
-        return userRepository.insert(reader);
+        User created = userRepository.insert(reader);
+        log.info("reader_created userId={}", created.id());
+        return created;
     }
 }

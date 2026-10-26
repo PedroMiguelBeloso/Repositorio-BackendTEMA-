@@ -1,6 +1,11 @@
 package com.temaconsulting.agente_iso.verification.infrastructure.persistence;
 
 import com.temaconsulting.agente_iso.catalog.domain.EvidenceType;
+import com.temaconsulting.agente_iso.integration.application.port.DriveEvidenceSearch;
+import com.temaconsulting.agente_iso.integration.application.port.RedmineTicketReader;
+import com.temaconsulting.agente_iso.integration.domain.TicketSnapshot;
+import com.temaconsulting.agente_iso.verification.application.DriveDocumentaryAssessmentService;
+import com.temaconsulting.agente_iso.verification.application.port.TicketEvidenceAiPort;
 import com.temaconsulting.agente_iso.identity.infrastructure.security.JsonAccessDeniedHandler;
 import com.temaconsulting.agente_iso.identity.infrastructure.security.JsonAuthenticationEntryPoint;
 import com.temaconsulting.agente_iso.identity.infrastructure.security.JwtRoleConverter;
@@ -148,6 +153,66 @@ class JdbcVerificationResultRepositoryIntegrationTest {
         return Clock.fixed(DECISION_TIME, ZoneOffset.UTC);
     }
 
+    @Test
+    void publishedM1ConfigurationRunsWithFakeDriveRedmineAndAiAndPersistsHistory() throws Exception {
+        Fixture fixture = createFixture();
+        jdbc.update("""
+                UPDATE services SET revision = 2,
+                    drive_folder_id = 'folder-9', drive_folder_name = 'Servicio Drive',
+                    redmine_project_id = 'project-9', redmine_project_name = 'Servicio Redmine'
+                WHERE id = ?
+                """, fixture.serviceId());
+        UUID runId = UUID.randomUUID();
+        jdbc.update("""
+                INSERT INTO verification_runs (id, service_id, process_version_id, started_by,
+                    service_revision_snapshot, scope, macro_activity_id, status, total)
+                VALUES (?, ?, ?, ?, 2, 'MACRO_ACTIVITY'::verification_scope, ?, 'QUEUED'::run_status, 6)
+                """, runId, fixture.serviceId(), fixture.processVersionId(), fixture.userId(),
+                fixture.macroActivityId());
+        jdbc.update("""
+                INSERT INTO verification_ticket_selections (run_id, group_id, ticket_id)
+                VALUES (?, ?, '204'), (?, ?, '205')
+                """, runId, "ticket-group:" + fixture.macroActivityId(),
+                runId, "ticket-group:" + fixture.macroActivityId());
+
+        DriveEvidenceSearch drive = request -> DriveEvidenceSearch.SearchResult.found(
+                List.of(new DriveEvidenceSearch.Match("file-9", "Fixture.pdf",
+                        DriveEvidenceSearch.Kind.DOCUMENT, "https://drive.example/file-9", "Fixture.pdf")),
+                DriveEvidenceSearch.Cardinality.ONE);
+        RedmineTicketReader redmine = (projectId, ticketId) -> new TicketSnapshot(
+                ticketId, projectId, "Servicio Redmine", "Entrega validada", "Closed", "5", "Closed",
+                true, "Entrega revisada", null, DECISION_TIME, DECISION_TIME.minusSeconds(3600),
+                List.of(new TicketSnapshot.CustomField("7", "Validación", "Aprobada")), List.of());
+        TicketEvidenceAiPort ai = (name, canonical, nomenclature, policies, instructions, ticket) ->
+                new TicketEvidenceAiPort.Assessment(ResultStatus.COMPLIES,
+                        "El campo de validación indica aprobación.", List.of(),
+                        List.of("customFields"), "gemini-test", "response-test");
+        var realChecks = new ProgrammedEvidenceCheckService(
+                new DriveDocumentaryAssessmentService(drive, customClock()), redmine, null, ai,
+                customClock());
+        when(programmedChecks.assess(any(), any(), any(), nullable(String.class), any(), any()))
+                .thenAnswer(call -> realChecks.assess(call.getArgument(0), call.getArgument(1),
+                        call.getArgument(2), call.getArgument(3), call.getArgument(4), call.getArgument(5)));
+
+        worker.process(runId);
+        String status = "QUEUED";
+        for (int attempt = 0; attempt < 100; attempt++) {
+            status = runQueries.get(runId).run().status();
+            if (status.equals("COMPLETED") || status.equals("FAILED")) break;
+            Thread.sleep(50);
+        }
+        assertThat(status).isEqualTo("COMPLETED");
+        assertThat(runQueries.get(runId).progress().resultCount()).isEqualTo(6);
+        assertThat(resultQueries.findCompletedRunResults(runId, 0, 20).items()).hasSize(6)
+                .allSatisfy(result -> assertThat(result.proposedStatus()).isEqualTo(ResultStatus.COMPLIES));
+        mockMvc.perform(get("/api/v1/verifications/{runId}", runId)
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_READER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.serviceNameSnapshot").value("Result service"))
+                .andExpect(jsonPath("$.processNameSnapshot").value("Start Up"))
+                .andExpect(jsonPath("$.sourceSnapshot.driveFolderId").value("folder-9"));
+    }
+
 
 
 
@@ -156,7 +221,7 @@ class JdbcVerificationResultRepositoryIntegrationTest {
         Fixture fixture = createFixture();
         jdbc.update("UPDATE verification_runs SET status = 'QUEUED'::run_status, total = 6 WHERE id = ?",
                 fixture.runId());
-        when(programmedChecks.assess(any(), any(), eq(ApplicabilityDecision.APPLIES), nullable(String.class)))
+        when(programmedChecks.assess(any(), any(), eq(ApplicabilityDecision.APPLIES), nullable(String.class), any(), any()))
                 .thenAnswer(call -> {
                     var expectation = (com.temaconsulting.agente_iso.verification.domain.VerificationContext.ExpectationContext)
                             call.getArgument(0);
@@ -197,6 +262,7 @@ class JdbcVerificationResultRepositoryIntegrationTest {
         mockMvc.perform(get("/api/v1/verifications/{runId}", fixture.runId())
                         .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_READER"))))
                 .andExpect(status().isOk())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.header().exists("X-Request-ID"))
                 .andExpect(jsonPath("$.progress.total").value(6))
                 .andExpect(jsonPath("$.progress.processed").value(1));
 
@@ -219,6 +285,12 @@ class JdbcVerificationResultRepositoryIntegrationTest {
     @Test
     void historyPagesAreStableFilteredAndKeepRunSnapshotsAndSelections() throws Exception {
         Fixture fixture = createFixture();
+        String originalServiceName = jdbc.queryForObject("SELECT name FROM services WHERE id = ?",
+                String.class, fixture.serviceId());
+        String originalProcessName = jdbc.queryForObject("""
+                SELECT p.name FROM processes p JOIN process_versions pv ON pv.process_id = p.id
+                WHERE pv.id = ?
+                """, String.class, fixture.processVersionId());
         jdbc.update("""
                 UPDATE services
                 SET revision = 2, service_type = 'SOFTWARE_FACTORY'::service_type,
@@ -269,7 +341,7 @@ class JdbcVerificationResultRepositoryIntegrationTest {
         }
         jdbc.update("""
                 UPDATE services
-                SET revision = 3, service_type = 'PROJECT_ERP'::service_type,
+                SET revision = 3, name = 'Renamed service', service_type = 'PROJECT_ERP'::service_type,
                     drive_folder_id = 'drive-current', drive_folder_name = 'Current Drive',
                     redmine_project_id = 'redmine-current', redmine_project_name = 'Current Redmine'
                 WHERE id = ?
@@ -310,6 +382,10 @@ class JdbcVerificationResultRepositoryIntegrationTest {
                 .findFirst().orElseThrow();
         assertThat(snapshot.serviceTypeSnapshot()).isEqualTo(ServiceType.SOFTWARE_FACTORY);
         assertThat(snapshot.serviceRevisionSnapshot()).isEqualTo(2);
+        assertThat(snapshot.serviceNameSnapshot()).isEqualTo(originalServiceName);
+        assertThat(snapshot.processNameSnapshot()).isEqualTo(originalProcessName);
+        assertThat(snapshot.processOfficialVersionSnapshot()).isNotBlank();
+        assertThat(snapshot.macroActivityNameSnapshot()).isNotBlank();
         assertThat(snapshot.processVersionId()).isEqualTo(fixture.processVersionId());
         assertThat(snapshot.driveFolderId()).isEqualTo("drive-at-start");
         assertThat(snapshot.driveFolderName()).isEqualTo("Drive at start");
@@ -1268,7 +1344,7 @@ class JdbcVerificationResultRepositoryIntegrationTest {
                 fixture.ticketExpectation(), "205", ResultStatus.REVIEW_REQUIRED,
                 ApplicabilityDecision.UNDETERMINED, List.of(), List.of(), List.of()));
         completeRun(fixture.runId());
-        when(programmedChecks.assess(any(), any(), eq(ApplicabilityDecision.APPLIES), eq("204")))
+        when(programmedChecks.assess(any(), any(), eq(ApplicabilityDecision.APPLIES), eq("204"), any(), any()))
                 .thenReturn(new ProgrammedEvidenceCheckService.Assessment(fixture.ticketExpectation(), "204",
                         ResultStatus.REVIEW_REQUIRED, "Redmine no puede demostrar el cambio", List.of("Sin historial"),
                         List.of()));
@@ -1298,7 +1374,7 @@ class JdbcVerificationResultRepositoryIntegrationTest {
                     fixture.documentExpectations().getFirst(), null, ResultStatus.REVIEW_REQUIRED,
                     ApplicabilityDecision.UNDETERMINED, List.of(), List.of(), List.of()));
             completeRun(fixture.runId());
-            when(programmedChecks.assess(any(), any(), eq(ApplicabilityDecision.APPLIES), eq(null)))
+            when(programmedChecks.assess(any(), any(), eq(ApplicabilityDecision.APPLIES), eq(null), any(), any()))
                     .thenReturn(new ProgrammedEvidenceCheckService.Assessment(
                             fixture.documentExpectations().getFirst(), null, outcome,
                             "Resultado de la comprobación", List.of(), List.of()));
@@ -1503,8 +1579,8 @@ class JdbcVerificationResultRepositoryIntegrationTest {
         );
         jdbc.update(
                 """
-                INSERT INTO registry_definitions (id, key, canonical_name, evidence_type, preloaded)
-                VALUES (?, ?, 'Document evidence', 'DOCUMENT'::evidence_type, true)
+                INSERT INTO registry_definitions (id, key, canonical_name, evidence_type, official_nomenclature, preloaded)
+                VALUES (?, ?, 'Document evidence', 'DOCUMENT'::evidence_type, 'Fixture.pdf', true)
                 """,
                 documentRegistryId,
                 "RESULT-DOC-" + suffix

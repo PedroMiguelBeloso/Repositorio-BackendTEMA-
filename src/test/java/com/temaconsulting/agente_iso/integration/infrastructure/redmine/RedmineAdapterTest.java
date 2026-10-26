@@ -63,6 +63,7 @@ class RedmineAdapterTest {
         assertThat(second.items()).hasSize(1);
         assertThat(first.items().getFirst().id()).isNotEqualTo(second.items().getFirst().id());
         assertThat(redmine.resolveRedmineProject("12").name()).isEqualTo("Proyecto principal");
+        assertThat(redmine.findById("999")).isNull();
         assertThatThrownBy(() -> redmine.resolveRedmineProject("999"))
                 .isInstanceOf(ApiException.class)
                 .hasMessageContaining("no es accesible");

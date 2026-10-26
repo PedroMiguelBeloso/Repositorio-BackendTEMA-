@@ -1,0 +1,2802 @@
+openapi: 3.0.3
+info:
+  title: TEMA Consulting - API Módulos 1 y 2
+  version: 1.2.0-draft
+  description: Contrato propuesto para Flutter + Spring Boot. Basado en la Especificación Funcional v1.6 (Alcance
+    IA/Drive) y la Propuesta Funcional M1/M2 V9. M1 modela cuatro procesos; M2 verifica Start Up, Take Over
+    y Soporte y Software Factory. Calidad y Mejora Continua se modela pero no se asigna a servicios ni se ofrece
+    para M2. Las operaciones con fuentes externas son de solo lectura. La IA es un detalle interno y solo resuelve
+    aplicabilidad CASE_DEPENDENT cuando los datos estructurados no bastan. Los errores HTTP usan RFC 9457
+    (application/problem+json) con extensiones opcionales code, traceId y details. Los nombres de rutas,
+    paginación, JWT, revisiones y grupos de tickets son decisiones técnicas propuestas por este contrato, no requisitos
+    textuales de TEMA.
+  contact:
+    name: Equipo TEMA M1/M2
+servers:
+- url: http://localhost:8080/api/v1
+  description: Desarrollo local; configurable por ambiente
+security:
+- bearerAuth: []
+tags:
+- name: Autenticación
+  description: Sesión y cuenta propia
+- name: Usuarios
+  description: Alta de Lectores
+- name: Integraciones
+  description: Estado y selectores de fuentes; secretos fuera de la API
+- name: Catálogo
+  description: Registros y nomenclaturas precargados
+- name: Procesos M1
+  description: Procesos, versiones y borradores
+- name: Servicios M1
+  description: Servicios, fuentes y asignaciones
+- name: Verificaciones M2
+  description: Vista previa, ejecución, polling y resultados
+- name: Revisión humana M2
+  description: Decisiones auditadas sobre resultados
+paths:
+  /auth/login:
+    post:
+      tags:
+      - Autenticación
+      operationId: login
+      summary: Iniciar sesión
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+        '400':
+          description: Solicitud o cardinalidad inválida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: No autenticado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      security: []
+  /auth/me:
+    get:
+      tags:
+      - Autenticación
+      operationId: getCurrentUser
+      summary: Consultar usuario actual
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: No autenticado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+  /auth/password:
+    put:
+      tags:
+      - Autenticación
+      operationId: changeOwnPassword
+      summary: Cambiar contraseña propia
+      responses:
+        '204':
+          description: Sin contenido
+        '400':
+          description: Solicitud o cardinalidad inválida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '401':
+          description: No autenticado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+  /users:
+    get:
+      tags:
+      - Usuarios
+      operationId: listUsers
+      summary: Listar usuarios
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/User'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+                required:
+                - items
+                - page
+        '401':
+          description: No autenticado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '403':
+          description: Rol insuficiente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/size'
+      description: ADMIN.
+    post:
+      tags:
+      - Usuarios
+      operationId: createReader
+      summary: Crear usuario Lector
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Solicitud o cardinalidad inválida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '403':
+          description: Rol insuficiente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Conflicto de estado o revisión obsoleta
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateReaderRequest'
+      description: ADMIN. No crea Administradores.
+  /integrations/status:
+    get:
+      tags:
+      - Integraciones
+      operationId: getIntegrationStatus
+      summary: Consultar estado de Drive y Redmine
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IntegrationStatus'
+        '403':
+          description: Rol insuficiente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      description: ADMIN. No retorna URL sensibles ni secretos.
+  /integrations/test:
+    post:
+      tags:
+      - Integraciones
+      operationId: testIntegrations
+      summary: Probar conexiones externas
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IntegrationStatus'
+        '403':
+          description: Rol insuficiente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      description: ADMIN. Prueba lectura; no modifica las fuentes.
+  /integrations/drive/folders:
+    get:
+      tags:
+      - Integraciones
+      operationId: searchDriveFolders
+      summary: Buscar carpetas accesibles de Drive
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExternalFolder'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+                required:
+                - items
+                - page
+        '403':
+          description: Rol insuficiente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '503':
+          description: Fuente externa no disponible
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - name: query
+        in: query
+        schema:
+          type: string
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/size'
+      description: ADMIN. Selector de carpeta raíz del servicio. Devuelve solo carpetas accesibles; no archivos
+        ni contenido.
+  /integrations/redmine/projects:
+    get:
+      tags:
+      - Integraciones
+      operationId: listRedmineProjects
+      summary: Listar proyectos Redmine visibles
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ExternalProject'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+                required:
+                - items
+                - page
+        '403':
+          description: Rol insuficiente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '503':
+          description: Fuente externa no disponible
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/size'
+      description: ADMIN. Selector de proyecto del servicio.
+  /registry-definitions:
+    get:
+      tags:
+      - Catálogo
+      operationId: listRegistryDefinitions
+      summary: Listar catálogo de registros
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RegistryDefinition'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+                required:
+                - items
+                - page
+        '401':
+          description: No autenticado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - name: query
+        in: query
+        schema:
+          type: string
+      - name: evidenceType
+        in: query
+        schema:
+          $ref: '#/components/schemas/EvidenceType'
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/size'
+    post:
+      tags:
+      - Catálogo
+      operationId: createRegistryDefinition
+      summary: Crear registro nuevo controlado
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistryDefinition'
+        '400':
+          description: Solicitud o cardinalidad inválida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '403':
+          description: Rol insuficiente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Conflicto de estado o revisión obsoleta
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '422':
+          description: Regla funcional incumplida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRegistryRequest'
+      description: ADMIN. Para los cuatro procesos iniciales se usan registros precargados. Sin nomenclatura
+        no se publica un uso DOCUMENT/FOLDER.
+  /processes:
+    get:
+      tags:
+      - Procesos M1
+      operationId: listProcesses
+      summary: Listar procesos
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProcessDefinition'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+                required:
+                - items
+                - page
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/size'
+    post:
+      tags:
+      - Procesos M1
+      operationId: createProcess
+      summary: Crear definición de proceso
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessDefinition'
+        '403':
+          description: Rol insuficiente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Conflicto de estado o revisión obsoleta
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateProcessRequest'
+      description: ADMIN. En esta entrega solo los cuatro códigos del catálogo de procesos.
+  /processes/{processId}:
+    get:
+      tags:
+      - Procesos M1
+      operationId: getProcess
+      summary: Consultar proceso
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessDefinition'
+        '404':
+          description: No encontrado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - $ref: '#/components/parameters/processId'
+  /processes/{processId}/versions:
+    get:
+      tags:
+      - Procesos M1
+      operationId: listProcessVersions
+      summary: Consultar historial de versiones
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProcessVersion'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+                required:
+                - items
+                - page
+        '404':
+          description: No encontrado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - $ref: '#/components/parameters/processId'
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/size'
+    post:
+      tags:
+      - Procesos M1
+      operationId: createDraftVersion
+      summary: Crear borrador de versión
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessVersion'
+        '403':
+          description: Rol insuficiente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: No encontrado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Conflicto de estado o revisión obsoleta
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVersionRequest'
+      parameters:
+      - $ref: '#/components/parameters/processId'
+      description: ADMIN. copyFromVersionId opcional clona estructura del mismo proceso con nuevos IDs de nodos.
+  /processes/{processId}/versions/{versionId}:
+    get:
+      tags:
+      - Procesos M1
+      operationId: getProcessVersion
+      summary: Consultar versión con árbol completo
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessVersion'
+        '404':
+          description: No encontrado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - $ref: '#/components/parameters/processId'
+      - $ref: '#/components/parameters/versionId'
+    put:
+      tags:
+      - Procesos M1
+      operationId: saveDraftVersion
+      summary: Guardar árbol completo del borrador
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessVersion'
+        '400':
+          description: Solicitud o cardinalidad inválida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '403':
+          description: Rol insuficiente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: No encontrado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Conflicto de estado o revisión obsoleta
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '422':
+          description: Regla funcional incumplida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaveDraftRequest'
+      parameters:
+      - $ref: '#/components/parameters/processId'
+      - $ref: '#/components/parameters/versionId'
+      description: ADMIN. Solo DRAFT. Revision optimista; respuesta devuelve IDs asignados por servidor. El
+        borrador se guarda de forma atómica.
+  /processes/{processId}/versions/{versionId}/publish:
+    post:
+      tags:
+      - Procesos M1
+      operationId: publishVersion
+      summary: Validar y publicar versión
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessVersion'
+        '403':
+          description: Rol insuficiente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: No encontrado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Conflicto de estado o revisión obsoleta
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '422':
+          description: Regla funcional incumplida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                revision:
+                  type: integer
+                  minimum: 0
+              required:
+              - revision
+      parameters:
+      - $ref: '#/components/parameters/processId'
+      - $ref: '#/components/parameters/versionId'
+      description: ADMIN. Requiere macroactividades, actividades con instrucciones, expectativas válidas y
+        nomenclatura documental. Para el selector de Redmine, cada macroactividad admite como máximo una
+        entrada TICKET y todas sus expectativas TICKET deben tener la misma cardinalidad, porque comparten
+        un único conjunto de tickets seleccionados.
+        Publicada queda inmutable; cambios posteriores crean otra versión.
+  /services:
+    get:
+      tags:
+      - Servicios M1
+      operationId: listServices
+      summary: Listar servicios
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Service'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+                required:
+                - items
+                - page
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/size'
+    post:
+      tags:
+      - Servicios M1
+      operationId: createService
+      summary: Crear servicio
+      responses:
+        '201':
+          description: Creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '400':
+          description: Solicitud o cardinalidad inválida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '403':
+          description: Rol insuficiente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '422':
+          description: Regla funcional incumplida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceWriteRequest'
+      description: ADMIN. Asigna como máximo una versión publicada de cada proceso y los ID de la carpeta
+        Drive y proyecto Redmine seleccionados. Se rechazan dos versiones del mismo proceso. Kromli/tracking
+        se vinculan internamente; no hay selector de dataset.
+  /services/{serviceId}:
+    get:
+      tags:
+      - Servicios M1
+      operationId: getService
+      summary: Consultar servicio
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '404':
+          description: No encontrado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - $ref: '#/components/parameters/serviceId'
+    put:
+      tags:
+      - Servicios M1
+      operationId: updateService
+      summary: Reemplazar configuración de servicio
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Service'
+        '400':
+          description: Solicitud o cardinalidad inválida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '403':
+          description: Rol insuficiente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: No encontrado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Conflicto de estado o revisión obsoleta
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '422':
+          description: Regla funcional incumplida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ServiceWriteRequest'
+      parameters:
+      - $ref: '#/components/parameters/serviceId'
+      description: ADMIN. revision obligatoria. Se rechazan dos versiones del mismo proceso. Las ejecuciones
+        previas conservan la versión de proceso, el tipo y revisión del servicio y las fuentes usadas;
+        este cambio solo afecta nuevas ejecuciones.
+  /services/{serviceId}/verifiable-processes:
+    get:
+      tags:
+      - Servicios M1
+      operationId: listVerifiableProcesses
+      summary: Listar versiones habilitadas para M2
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VerifiableProcess'
+        '404':
+          description: No encontrado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - $ref: '#/components/parameters/serviceId'
+      description: Excluye Calidad y Mejora Continua aunque esté publicada en M1.
+  /services/{serviceId}/tickets:
+    get:
+      tags:
+      - Servicios M1
+      operationId: searchServiceTickets
+      summary: Buscar tickets del proyecto Redmine del servicio
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TicketSummary'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+                required:
+                - items
+                - page
+        '403':
+          description: Rol insuficiente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: No encontrado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '503':
+          description: Fuente externa no disponible
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - $ref: '#/components/parameters/serviceId'
+      - name: query
+        in: query
+        schema:
+          type: string
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/size'
+      description: ADMIN. Solo se usa durante selección previa a una ejecución. No incluye adjuntos. La API
+        nunca amplía el proyecto configurado.
+  /verifications/preview:
+    post:
+      tags:
+      - Verificaciones M2
+      operationId: previewVerification
+      summary: Obtener expectativas y grupos de tickets del alcance
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationPreview'
+        '400':
+          description: Solicitud o cardinalidad inválida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '403':
+          description: Rol insuficiente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: No encontrado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '422':
+          description: Regla funcional incumplida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerificationTarget'
+      description: ADMIN. No crea ejecución ni consulta archivos. Devuelve los grupos de tickets definidos
+        por las evidencias TICKET de cada macroactividad; la UI presenta exactamente esos grupos y no infiere
+        relaciones por el nombre visible. No decide aplicabilidad CASE_DEPENDENT.
+  /verifications:
+    post:
+      tags:
+      - Verificaciones M2
+      operationId: startVerification
+      summary: Iniciar nueva verificación
+      responses:
+        '202':
+          description: Aceptado; la ejecución continúa en segundo plano
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationRun'
+          headers:
+            Location:
+              description: URL de consulta de la ejecución
+              schema:
+                type: string
+        '400':
+          description: Solicitud o cardinalidad inválida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '403':
+          description: Rol insuficiente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: No encontrado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Conflicto de estado o revisión obsoleta
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '422':
+          description: Regla funcional incumplida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StartVerificationRequest'
+            example:
+              serviceId: f1855ff3-0e18-4b80-9620-891a75ef9651
+              serviceRevision: 2
+              processVersionId: 95c7f98b-8395-4f72-a727-9c3b31f75133
+              scope: MACRO_ACTIVITY
+              macroActivityId: 3e0e356f-e746-481b-a2e8-e22c20be59d5
+              note: Revisión de requerimiento
+              ticketSelections:
+              - groupId: 3e0e356f-e746-481b-a2e8-e22c20be59d5:ticket-input
+                ticketIds:
+                - '204'
+      description: ADMIN. Revalida alcance, cardinalidad y pertenencia de cada ticket al proyecto. ONE exige
+        exactamente un ID; MULTIPLE admite uno o más. Solo se consultan los IDs seleccionados. Cada POST crea
+        una ejecución independiente. No se envían archivos de Drive ni decisiones de aplicabilidad del usuario.
+    get:
+      tags:
+      - Verificaciones M2
+      operationId: listVerifications
+      summary: Consultar ejecuciones anteriores
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VerificationRun'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+                required:
+                - items
+                - page
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - name: serviceId
+        in: query
+        schema:
+          type: string
+          format: uuid
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/size'
+  /verifications/{runId}:
+    get:
+      tags:
+      - Verificaciones M2
+      operationId: getVerification
+      summary: Consultar estado para polling
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationRun'
+        '404':
+          description: No encontrado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - $ref: '#/components/parameters/runId'
+      description: Polling recomendado cada 2-3 s hasta COMPLETED/FAILED; no lanzar consultas superpuestas.
+  /verifications/{runId}/results:
+    get:
+      tags:
+      - Verificaciones M2
+      operationId: listVerificationResults
+      summary: Consultar resultados y referencias
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/VerificationResult'
+                  page:
+                    $ref: '#/components/schemas/PageInfo'
+                required:
+                - items
+                - page
+        '404':
+          description: No encontrado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Conflicto de estado o revisión obsoleta
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      parameters:
+      - $ref: '#/components/parameters/runId'
+      - $ref: '#/components/parameters/page'
+      - $ref: '#/components/parameters/size'
+      description: Disponible cuando run=COMPLETED. Cada ticket seleccionado tiene resultados propios para
+        expectativas TICKET; no se usa la validación de otro ticket para satisfacérselo.
+  /verifications/{runId}/results/{resultId}/applicability:
+    post:
+      tags:
+      - Revisión humana M2
+      operationId: resolveApplicability
+      summary: Resolver aplicabilidad indeterminada
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationResult'
+        '400':
+          description: Solicitud o cardinalidad inválida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '403':
+          description: Rol insuficiente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: No encontrado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Conflicto de estado o revisión obsoleta
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '422':
+          description: Regla funcional incumplida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveApplicabilityRequest'
+      parameters:
+      - $ref: '#/components/parameters/runId'
+      - $ref: '#/components/parameters/resultId'
+      description: ADMIN. Solo para CASE_DEPENDENT con UNDETERMINED. Agrega un evento humano de tipo
+        APPLICABILITY al historial del resultado sin borrar la propuesta previa. Si APPLIES, el backend
+        reevalúa esta evidencia, sin crear nueva ejecución.
+  /verifications/{runId}/results/{resultId}/decision:
+    put:
+      tags:
+      - Revisión humana M2
+      operationId: decideResult
+      summary: Confirmar o corregir resultado
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationResult'
+        '400':
+          description: Solicitud o cardinalidad inválida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '403':
+          description: Rol insuficiente
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '404':
+          description: No encontrado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '409':
+          description: Conflicto de estado o revisión obsoleta
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '422':
+          description: Regla funcional incumplida
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+        '500':
+          description: Error interno inesperado
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ProblemDetail'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecideResultRequest'
+      parameters:
+      - $ref: '#/components/parameters/runId'
+      - $ref: '#/components/parameters/resultId'
+      description: ADMIN. Agrega un evento humano de tipo RESULT_STATUS con estado final, motivo, usuario y
+        fecha; el estado efectivo se actualiza. Una corrección posterior agrega otro evento. No modifica la
+        propuesta automática ni ejecuciones anteriores. Sin hallazgos M3.
+components:
+  schemas:
+    Role:
+      type: string
+      enum:
+      - ADMIN
+      - READER
+    ProcessCode:
+      type: string
+      enum:
+      - START_UP
+      - TAKE_OVER
+      - SUPPORT_SOFTWARE_FACTORY
+      - QUALITY_CONTINUOUS_IMPROVEMENT
+      description: Los cuatro procesos entregados. QUALITY_CONTINUOUS_IMPROVEMENT se configura en M1 pero no
+        se verifica en M2.
+    ProcessStatus:
+      type: string
+      enum:
+      - DRAFT
+      - PUBLISHED
+      - ARCHIVED
+    ServiceType:
+      type: string
+      enum:
+      - SUPPORT_ARIBA
+      - SUPPORT_ERP
+      - SOFTWARE_FACTORY
+      - PROJECT_SAP_ARIBA
+      - PROJECT_ERP
+    EvidenceType:
+      type: string
+      enum:
+      - DOCUMENT
+      - FOLDER
+      - TICKET
+      - IMPUTATIONS
+      - TOOL_RECORD
+    EvidenceLocation:
+      type: string
+      enum:
+      - INPUT
+      - ACTIVITY_RECORD
+      - OUTPUT
+    ApplicabilityMode:
+      type: string
+      enum:
+      - ALWAYS
+      - CASE_DEPENDENT
+    ApplicabilityDecision:
+      type: string
+      enum:
+      - APPLIES
+      - NOT_APPLICABLE
+      - UNDETERMINED
+    HumanApplicabilityDecision:
+      type: string
+      enum:
+      - APPLIES
+      - NOT_APPLICABLE
+    Cardinality:
+      type: string
+      enum:
+      - ONE
+      - MULTIPLE
+      description: ONE exige exactamente una evidencia; MULTIPLE significa una o varias, nunca cero cuando
+        la evidencia es aplicable. Para una entrada TICKET, este valor controla si el selector de Redmine
+        permite exactamente un ticket o uno o más. Una entrada TICKET con MULTIPLE sigue siendo una sola
+        expectativa configurada en M1, no varias filas de entrada.
+    HumanDecisionType:
+      type: string
+      enum:
+      - APPLICABILITY
+      - RESULT_STATUS
+    VerificationScope:
+      type: string
+      enum:
+      - PROCESS
+      - MACRO_ACTIVITY
+    RunStatus:
+      type: string
+      enum:
+      - QUEUED
+      - RUNNING
+      - COMPLETED
+      - FAILED
+    ResultStatus:
+      type: string
+      enum:
+      - COMPLIES
+      - DOES_NOT_COMPLY
+      - REVIEW_REQUIRED
+      - NOT_APPLICABLE
+    DecisionOrigin:
+      type: string
+      enum:
+      - DETERMINISTIC
+      - AI_APPLICABILITY
+      - HUMAN
+      - NOT_EVALUATED
+    SourceType:
+      type: string
+      enum:
+      - DRIVE
+      - REDMINE
+      - IMPUTATIONS
+      - TOOL_RECORD
+    SourceHealth:
+      type: string
+      enum:
+      - AVAILABLE
+      - AUTH_ERROR
+      - PERMISSION_ERROR
+      - UNAVAILABLE
+      - NOT_CONFIGURED
+    ProblemCode:
+      type: string
+      enum:
+      - VALIDATION_ERROR
+      - INTERNAL_ERROR
+      - NOT_FOUND
+      - FORBIDDEN
+      - UNAUTHORIZED
+      - CONFLICT
+      - STALE_REVISION
+      - SOURCE_UNAVAILABLE
+      - SOURCE_PERMISSION_DENIED
+      - UNSUPPORTED_SCOPE
+      - TICKET_SELECTION_INVALID
+      - TICKET_OUTSIDE_PROJECT
+      - RUN_NOT_COMPLETE
+      - APPLICABILITY_NOT_PENDING
+    ProblemDetail:
+      type: object
+      description: >-
+        RFC 9457 Problem Details. Los campos code, traceId y details son extensiones
+        opcionales; las respuestas automáticas de Spring MVC pueden omitirlas.
+        Flutter debe basarse en status y usar detail, o title si detail falta, y usar
+        code solo cuando una regla funcional requiere una acción específica.
+      properties:
+        type:
+          type: string
+          format: uri
+          description: Tipo del problema; about:blank si no existe un URI específico.
+        title:
+          type: string
+          description: Resumen estable del estado HTTP.
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+          description: Explicación segura para mostrar al usuario.
+        instance:
+          type: string
+          description: Ruta o URI de la petición que produjo el error.
+        code:
+          $ref: '#/components/schemas/ProblemCode'
+        traceId:
+          type: string
+          description: Correlación opcional para soporte; también puede viajar en una cabecera.
+        details:
+          type: array
+          description: Errores por campo en validaciones; extensión no estándar.
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+              message:
+                type: string
+            required:
+            - field
+            - message
+      required:
+      - type
+      - title
+      - status
+    PageInfo:
+      type: object
+      properties:
+        page:
+          type: integer
+          minimum: 0
+        size:
+          type: integer
+          minimum: 1
+        totalElements:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+      required:
+      - page
+      - size
+      - totalElements
+      - totalPages
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+      required:
+      - email
+      - password
+    TokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        tokenType:
+          type: string
+          enum:
+          - Bearer
+        expiresAt:
+          type: string
+          format: date-time
+        user:
+          $ref: '#/components/schemas/User'
+      required:
+      - accessToken
+      - tokenType
+      - expiresAt
+      - user
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
+        role:
+          $ref: '#/components/schemas/Role'
+        active:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+      - id
+      - email
+      - displayName
+      - role
+      - active
+      - createdAt
+    CreateReaderRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        displayName:
+          type: string
+          minLength: 1
+        initialPassword:
+          type: string
+          format: password
+          minLength: 8
+      required:
+      - email
+      - displayName
+      - initialPassword
+      description: Solo crea un Lector. La creación del primer Administrador se realiza en el despliegue.
+    ChangePasswordRequest:
+      type: object
+      properties:
+        currentPassword:
+          type: string
+          format: password
+        newPassword:
+          type: string
+          format: password
+          minLength: 8
+      required:
+      - currentPassword
+      - newPassword
+    IntegrationStatus:
+      type: object
+      properties:
+        source:
+          type: string
+          enum:
+          - DRIVE
+          - REDMINE
+        status:
+          $ref: '#/components/schemas/SourceHealth'
+        checkedAt:
+          type: string
+          format: date-time
+        message:
+          type: string
+      required:
+      - source
+      - status
+      - checkedAt
+    ExternalFolder:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        path:
+          type: string
+        webUrl:
+          type: string
+          format: uri
+        parentId:
+          type: string
+      required:
+      - id
+      - name
+      - path
+    ExternalProject:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        identifier:
+          type: string
+      required:
+      - id
+      - name
+    TicketSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        subject:
+          type: string
+        status:
+          type: string
+        assignedTo:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+        projectId:
+          type: string
+      required:
+      - id
+      - subject
+      - status
+      - projectId
+      description: Resumen de Redmine, sin adjuntos. La consulta se restringe al proyecto del servicio.
+    RegistryDefinition:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        key:
+          type: string
+          description: Clave técnica estable y de solo lectura para asociar controles programados sin depender
+            del texto visible. Para registros nuevos sin control implementado, el resultado puede quedar REVIEW_REQUIRED.
+        canonicalName:
+          type: string
+        evidenceType:
+          $ref: '#/components/schemas/EvidenceType'
+        officialNomenclature:
+          type: string
+          description: Presente para DOCUMENT/FOLDER. Nombre o ruta exactos suministrados por TEMA.
+        preloaded:
+          type: boolean
+      required:
+      - id
+      - key
+      - canonicalName
+      - evidenceType
+      - preloaded
+    CreateRegistryRequest:
+      type: object
+      properties:
+        canonicalName:
+          type: string
+          minLength: 1
+        evidenceType:
+          $ref: '#/components/schemas/EvidenceType'
+        officialNomenclature:
+          type: string
+          minLength: 1
+      required:
+      - canonicalName
+      - evidenceType
+      description: Alta controlada para registros futuros. DOCUMENT/FOLDER requiere officialNomenclature. Los
+        precargados son de solo lectura.
+    ProcessDefinition:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        code:
+          $ref: '#/components/schemas/ProcessCode'
+        name:
+          type: string
+        m2Enabled:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+      required:
+      - id
+      - code
+      - name
+      - m2Enabled
+      - createdAt
+    CreateProcessRequest:
+      type: object
+      properties:
+        code:
+          $ref: '#/components/schemas/ProcessCode'
+        name:
+          type: string
+          minLength: 1
+      required:
+      - code
+      - name
+    CreateVersionRequest:
+      type: object
+      properties:
+        officialVersion:
+          type: string
+          minLength: 1
+        versionDate:
+          type: string
+          format: date
+        copyFromVersionId:
+          type: string
+          format: uuid
+      required:
+      - officialVersion
+      - versionDate
+      description: copyFromVersionId permite comenzar un borrador copiando una versión del mismo proceso. Los
+        ID copiados se reemplazan por ID nuevos.
+    EvidenceExpectationInput:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        registryDefinitionId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        applicability:
+          $ref: '#/components/schemas/ApplicabilityMode'
+        cardinality:
+          $ref: '#/components/schemas/Cardinality'
+        order:
+          type: integer
+          minimum: 0
+      required:
+      - registryDefinitionId
+      - applicability
+      - cardinality
+      - order
+      description: id ausente crea un uso nuevo; id existente en la misma versión lo conserva. Tipo y nomenclatura
+        se leen del catálogo. La cantidad se configura en cardinality; para pedir varios tickets se usa una
+        única entrada TICKET con MULTIPLE, no entradas TICKET duplicadas.
+    ActivityInput:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+        responsible:
+          type: string
+        instructions:
+          type: string
+          minLength: 1
+        etaText:
+          type: string
+        order:
+          type: integer
+          minimum: 0
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidenceExpectationInput'
+      required:
+      - name
+      - instructions
+      - order
+      - records
+    MacroActivityInput:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        order:
+          type: integer
+          minimum: 0
+        inputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidenceExpectationInput'
+        activities:
+          type: array
+          items:
+            $ref: '#/components/schemas/ActivityInput'
+        outputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidenceExpectationInput'
+      required:
+      - name
+      - order
+      - inputs
+      - activities
+      - outputs
+    ProcessPolicyInput:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        order:
+          type: integer
+          minimum: 0
+        text:
+          type: string
+          minLength: 1
+      required:
+      - order
+      - text
+    SaveDraftRequest:
+      type: object
+      properties:
+        revision:
+          type: integer
+          minimum: 0
+        officialVersion:
+          type: string
+          minLength: 1
+        versionDate:
+          type: string
+          format: date
+        objective:
+          type: string
+          minLength: 1
+        owner:
+          type: string
+          minLength: 1
+        policies:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessPolicyInput'
+        macroActivities:
+          type: array
+          items:
+            $ref: '#/components/schemas/MacroActivityInput'
+      required:
+      - revision
+      - officialVersion
+      - versionDate
+      - objective
+      - owner
+      - policies
+      - macroActivities
+      description: Reemplazo completo y atómico del borrador. IDs omitidos crean elementos; IDs anteriores
+        omitidos se eliminan. Solo DRAFT. revision controla ediciones concurrentes. En este MVP cada
+        macroactividad admite como máximo una entrada TICKET; ONE/MULTIPLE de esa entrada define la cantidad
+        solicitada al verificar. Si no hay entrada TICKET pero sí un registro o salida TICKET, el backend
+        presenta igualmente un selector para esa macroactividad.
+    EvidenceExpectation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        registryDefinitionId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        evidenceType:
+          $ref: '#/components/schemas/EvidenceType'
+        officialNomenclature:
+          type: string
+        applicability:
+          $ref: '#/components/schemas/ApplicabilityMode'
+        cardinality:
+          $ref: '#/components/schemas/Cardinality'
+        location:
+          $ref: '#/components/schemas/EvidenceLocation'
+        order:
+          type: integer
+      required:
+      - id
+      - registryDefinitionId
+      - displayName
+      - evidenceType
+      - applicability
+      - cardinality
+      - location
+      - order
+    Activity:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        responsible:
+          type: string
+        instructions:
+          type: string
+        etaText:
+          type: string
+        order:
+          type: integer
+        records:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidenceExpectation'
+      required:
+      - id
+      - name
+      - instructions
+      - order
+      - records
+    MacroActivity:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        order:
+          type: integer
+        inputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidenceExpectation'
+        activities:
+          type: array
+          items:
+            $ref: '#/components/schemas/Activity'
+        outputs:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidenceExpectation'
+      required:
+      - id
+      - name
+      - order
+      - inputs
+      - activities
+      - outputs
+    ProcessPolicy:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        order:
+          type: integer
+        text:
+          type: string
+      required:
+      - id
+      - order
+      - text
+    ProcessVersion:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        processId:
+          type: string
+          format: uuid
+        officialVersion:
+          type: string
+        versionDate:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/ProcessStatus'
+        revision:
+          type: integer
+        objective:
+          type: string
+        owner:
+          type: string
+        policies:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProcessPolicy'
+        macroActivities:
+          type: array
+          items:
+            $ref: '#/components/schemas/MacroActivity'
+        publishedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+      required:
+      - id
+      - processId
+      - officialVersion
+      - versionDate
+      - status
+      - revision
+      - objective
+      - owner
+      - policies
+      - macroActivities
+      - createdAt
+      description: Las versiones publicadas no se editan; la ejecución referencia siempre este ID.
+    ServiceProcess:
+      type: object
+      properties:
+        processVersionId:
+          type: string
+          format: uuid
+        processId:
+          type: string
+          format: uuid
+        processName:
+          type: string
+        officialVersion:
+          type: string
+        m2Enabled:
+          type: boolean
+      required:
+      - processVersionId
+      - processId
+      - processName
+      - officialVersion
+      - m2Enabled
+    ServiceSource:
+      type: object
+      properties:
+        driveFolderId:
+          type: string
+        driveFolderName:
+          type: string
+        redmineProjectId:
+          type: string
+        redmineProjectName:
+          type: string
+      description: ID externos elegidos de los selectores. No contiene secretos.
+    Service:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        client:
+          type: string
+        serviceType:
+          $ref: '#/components/schemas/ServiceType'
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - INACTIVE
+        revision:
+          type: integer
+        processes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ServiceProcess'
+        sources:
+          $ref: '#/components/schemas/ServiceSource'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required:
+      - id
+      - name
+      - client
+      - serviceType
+      - status
+      - revision
+      - processes
+      - sources
+      - createdAt
+      - updatedAt
+    ServiceWriteRequest:
+      type: object
+      properties:
+        revision:
+          type: integer
+          minimum: 0
+          description: Omitir al crear; obligatorio al reemplazar.
+        name:
+          type: string
+          minLength: 1
+        client:
+          type: string
+          minLength: 1
+        serviceType:
+          $ref: '#/components/schemas/ServiceType'
+        status:
+          type: string
+          enum:
+          - ACTIVE
+          - INACTIVE
+        processVersionIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+          uniqueItems: true
+        driveFolderId:
+          type: string
+        redmineProjectId:
+          type: string
+      required:
+      - name
+      - client
+      - serviceType
+      - status
+      - processVersionIds
+      description: Calidad y Mejora Continua no se asigna a servicios en esta entrega. Se rechazan versiones
+        no publicadas y dos versiones diferentes del mismo proceso. Los ID de fuente deben ser accesibles
+        para la identidad técnica.
+    VerifiableProcess:
+      type: object
+      properties:
+        processVersionId:
+          type: string
+          format: uuid
+        processName:
+          type: string
+        officialVersion:
+          type: string
+        macroActivities:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+              name:
+                type: string
+            required:
+            - id
+            - name
+      required:
+      - processVersionId
+      - processName
+      - officialVersion
+      - macroActivities
+    VerificationTarget:
+      type: object
+      properties:
+        serviceId:
+          type: string
+          format: uuid
+        processVersionId:
+          type: string
+          format: uuid
+        scope:
+          $ref: '#/components/schemas/VerificationScope'
+        macroActivityId:
+          type: string
+          format: uuid
+        note:
+          type: string
+          maxLength: 1000
+      required:
+      - serviceId
+      - processVersionId
+      - scope
+      description: macroActivityId obligatorio solo si scope=MACRO_ACTIVITY; prohibido si scope=PROCESS. La
+        versión debe estar publicada, asignada al servicio y habilitada en M2.
+    TicketSelectionGroup:
+      type: object
+      properties:
+        id:
+          type: string
+        macroActivityId:
+          type: string
+          format: uuid
+        label:
+          type: string
+        cardinality:
+          $ref: '#/components/schemas/Cardinality'
+        inputExpectationIds:
+          type: array
+          maxItems: 1
+          description: La entrada TICKET de la macroactividad, cuando exista. MULTIPLE se configura en la
+            cardinalidad de esa única entrada y no creando varias entradas iguales.
+          items:
+            type: string
+            format: uuid
+        relatedExpectationIds:
+          type: array
+          description: Expectativas que usan los tickets seleccionados. Incluye controles TICKET y puede
+            incluir una evidencia no TICKET cuya aplicabilidad depende del ticket, como Orden de transporte.
+          items:
+            type: string
+            format: uuid
+        required:
+          type: boolean
+      required:
+      - id
+      - macroActivityId
+      - label
+      - cardinality
+      - inputExpectationIds
+      - relatedExpectationIds
+      - required
+      description: >-
+        Regla del MVP: un grupo de selección de tickets por macroactividad incluida en el alcance.
+        Si existe una entrada TICKET, su cardinalidad determina el selector; ONE exige exactamente un ID y
+        MULTIPLE admite uno o más. Los registros y salidas TICKET de la misma macroactividad reutilizan los
+        IDs elegidos y aparecen en relatedExpectationIds, sin pedirlos de nuevo. Una evidencia documental
+        puede figurar en ese grupo solo para recibir contexto de aplicabilidad; se evalúa una vez a nivel
+        del servicio y no se exige un documento por ticket. Si no existe entrada TICKET
+        pero sí registros o salidas TICKET, se crea igualmente un grupo usando su cantidad configurada.
+        El borrador no se publica si contiene dos entradas TICKET distintas o cardinalidades TICKET
+        diferentes dentro de una misma macroactividad. No se
+        admiten dos conjuntos independientes de tickets dentro de una macroactividad en este MVP. El
+        frontend utiliza id y relatedExpectationIds devueltos por preview; no infiere relaciones por nombre.
+    PreviewExpectation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        macroActivityId:
+          type: string
+          format: uuid
+        activityId:
+          type: string
+          format: uuid
+        location:
+          $ref: '#/components/schemas/EvidenceLocation'
+        displayName:
+          type: string
+        evidenceType:
+          $ref: '#/components/schemas/EvidenceType'
+        applicability:
+          $ref: '#/components/schemas/ApplicabilityMode'
+        cardinality:
+          $ref: '#/components/schemas/Cardinality'
+        ticketSelectionGroupId:
+          type: string
+          description: ID del grupo de tickets devuelto por preview cuyos IDs se usan para esta expectativa.
+            También puede aparecer en una evidencia no TICKET cuando su aplicabilidad requiere el contexto
+            de los tickets seleccionados; por ejemplo, Orden de transporte.
+      required:
+      - id
+      - macroActivityId
+      - location
+      - displayName
+      - evidenceType
+      - applicability
+      - cardinality
+    VerificationPreview:
+      type: object
+      properties:
+        serviceId:
+          type: string
+          format: uuid
+        serviceRevision:
+          type: integer
+        processVersionId:
+          type: string
+          format: uuid
+        scope:
+          $ref: '#/components/schemas/VerificationScope'
+        macroActivityId:
+          type: string
+          format: uuid
+        expectations:
+          type: array
+          items:
+            $ref: '#/components/schemas/PreviewExpectation'
+        ticketSelectionGroups:
+          type: array
+          items:
+            $ref: '#/components/schemas/TicketSelectionGroup'
+      required:
+      - serviceId
+      - serviceRevision
+      - processVersionId
+      - scope
+      - expectations
+      - ticketSelectionGroups
+    TicketSelection:
+      type: object
+      properties:
+        groupId:
+          type: string
+        ticketIds:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          uniqueItems: true
+      required:
+      - groupId
+      - ticketIds
+    StartVerificationRequest:
+      type: object
+      properties:
+        serviceId:
+          type: string
+          format: uuid
+        serviceRevision:
+          type: integer
+          minimum: 0
+        processVersionId:
+          type: string
+          format: uuid
+        scope:
+          $ref: '#/components/schemas/VerificationScope'
+        macroActivityId:
+          type: string
+          format: uuid
+        note:
+          type: string
+          maxLength: 1000
+        ticketSelections:
+          type: array
+          items:
+            $ref: '#/components/schemas/TicketSelection'
+      required:
+      - serviceId
+      - serviceRevision
+      - processVersionId
+      - scope
+      - ticketSelections
+      description: Se envían exactamente los grupos devueltos por preview que requieren selección. ONE exige
+        1 ID; MULTIPLE 1 o más. Backend vuelve a validar grupo, pertenencia al proyecto y revisión del servicio.
+    RunProgress:
+      type: object
+      properties:
+        total:
+          type: integer
+          minimum: 0
+        processed:
+          type: integer
+          minimum: 0
+        reviewRequired:
+          type: integer
+          minimum: 0
+      required:
+      - total
+      - processed
+      - reviewRequired
+    VerificationRun:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        serviceId:
+          type: string
+          format: uuid
+        serviceNameSnapshot:
+          type: string
+          description: Nombre del servicio al iniciar la ejecución; permanece estable en el historial.
+        serviceTypeSnapshot:
+          $ref: '#/components/schemas/ServiceType'
+        serviceRevisionSnapshot:
+          type: integer
+          minimum: 0
+          description: Revisión del servicio leída al crear esta ejecución; no cambia si el servicio se edita luego.
+        processVersionId:
+          type: string
+          format: uuid
+        processNameSnapshot:
+          type: string
+          description: Nombre del proceso al iniciar la ejecución.
+        processOfficialVersionSnapshot:
+          type: string
+          description: Versión oficial del proceso utilizada.
+        sourceSnapshot:
+          $ref: '#/components/schemas/ServiceSource'
+        scope:
+          $ref: '#/components/schemas/VerificationScope'
+        macroActivityId:
+          type: string
+          format: uuid
+        macroActivityNameSnapshot:
+          type: string
+          description: Nombre histórico de la macroactividad cuando el alcance es MACRO_ACTIVITY.
+        note:
+          type: string
+        status:
+          $ref: '#/components/schemas/RunStatus'
+        progress:
+          $ref: '#/components/schemas/RunProgress'
+        startedBy:
+          type: string
+          format: uuid
+        startedAt:
+          type: string
+          format: date-time
+        finishedAt:
+          type: string
+          format: date-time
+        failureMessage:
+          type: string
+        ticketSelections:
+          type: array
+          items:
+            $ref: '#/components/schemas/TicketSelection'
+      required:
+      - id
+      - serviceId
+      - serviceNameSnapshot
+      - serviceTypeSnapshot
+      - serviceRevisionSnapshot
+      - processVersionId
+      - processNameSnapshot
+      - processOfficialVersionSnapshot
+      - sourceSnapshot
+      - scope
+      - status
+      - progress
+      - startedBy
+      - startedAt
+      - ticketSelections
+      description: Una ejecución nueva nunca modifica resultados de ejecuciones anteriores. Conserva tipo y
+        revisión del servicio, fuentes y versión del proceso utilizados; no hay comparación ni reverificación
+        especial. serviceRevisionSnapshot debe coincidir con serviceRevision recibido al iniciar la ejecución.
+    EvidenceReference:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/EvidenceType'
+        source:
+          $ref: '#/components/schemas/SourceType'
+        externalId:
+          type: string
+        displayName:
+          type: string
+        webUrl:
+          type: string
+          format: uri
+        observedAt:
+          type: string
+          format: date-time
+        ticketId:
+          type: string
+      required:
+      - kind
+      - source
+      - externalId
+      - displayName
+      - observedAt
+      description: Referencia y metadatos de la evidencia; nunca contenido documental, adjuntos de Redmine
+        o credenciales.
+    ApplicabilityAssessment:
+      type: object
+      properties:
+        decision:
+          $ref: '#/components/schemas/ApplicabilityDecision'
+        origin:
+          $ref: '#/components/schemas/DecisionOrigin'
+        rationale:
+          type: string
+        limitations:
+          type: array
+          items:
+            type: string
+      required:
+      - decision
+      - origin
+      - rationale
+      - limitations
+    HumanDecisionEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        decisionType:
+          $ref: '#/components/schemas/HumanDecisionType'
+        applicabilityDecision:
+          $ref: '#/components/schemas/HumanApplicabilityDecision'
+        finalStatus:
+          $ref: '#/components/schemas/ResultStatus'
+        rationale:
+          type: string
+        decidedBy:
+          type: string
+          format: uuid
+        decidedAt:
+          type: string
+          format: date-time
+      required:
+      - id
+      - decisionType
+      - rationale
+      - decidedBy
+      - decidedAt
+      description: Evento inmutable. APPLICABILITY exige applicabilityDecision y omite finalStatus;
+        RESULT_STATUS exige finalStatus y omite applicabilityDecision. Los eventos se devuelven del más
+        antiguo al más reciente; una corrección agrega un evento nuevo.
+    VerificationResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        runId:
+          type: string
+          format: uuid
+        expectationId:
+          type: string
+          format: uuid
+        macroActivityId:
+          type: string
+          format: uuid
+        activityId:
+          type: string
+          format: uuid
+        displayName:
+          type: string
+        evidenceType:
+          $ref: '#/components/schemas/EvidenceType'
+        location:
+          $ref: '#/components/schemas/EvidenceLocation'
+        subjectTicketId:
+          type: string
+          description: Si la expectativa de tipo TICKET se evalúa por varios tickets, se crea un resultado
+            independiente por cada uno. Una evidencia documental por servicio, aunque use contexto de tickets
+            para decidir aplicabilidad, omite este campo y produce un solo resultado.
+        applicability:
+          $ref: '#/components/schemas/ApplicabilityAssessment'
+        proposedStatus:
+          $ref: '#/components/schemas/ResultStatus'
+        effectiveStatus:
+          $ref: '#/components/schemas/ResultStatus'
+        rationale:
+          type: string
+        limitations:
+          type: array
+          items:
+            type: string
+        evidence:
+          type: array
+          items:
+            $ref: '#/components/schemas/EvidenceReference'
+        humanDecisions:
+          type: array
+          items:
+            $ref: '#/components/schemas/HumanDecisionEvent'
+          description: Historial de decisiones humanas de aplicabilidad y de estado final; vacío si no hubo ninguna.
+        revision:
+          type: integer
+          minimum: 0
+      required:
+      - id
+      - runId
+      - expectationId
+      - macroActivityId
+      - displayName
+      - evidenceType
+      - location
+      - applicability
+      - proposedStatus
+      - effectiveStatus
+      - rationale
+      - limitations
+      - evidence
+      - humanDecisions
+      - revision
+      description: Un resultado por uso de evidencia; para controles de Ticket sobre selección múltiple, un
+        resultado por ticket. Una evidencia documental por servicio se evalúa una vez, aunque se reutilice
+        su referencia.
+    ResolveApplicabilityRequest:
+      type: object
+      properties:
+        revision:
+          type: integer
+          minimum: 0
+        decision:
+          $ref: '#/components/schemas/HumanApplicabilityDecision'
+        rationale:
+          type: string
+          minLength: 1
+      required:
+      - revision
+      - decision
+      - rationale
+      description: Solo ADMIN, run COMPLETED y expectativa CASE_DEPENDENT con aplicabilidad UNDETERMINED. APPLIES
+        reintenta la comprobación de esa evidencia; falla de fuente produce REVIEW_REQUIRED.
+    DecideResultRequest:
+      type: object
+      properties:
+        revision:
+          type: integer
+          minimum: 0
+        finalStatus:
+          $ref: '#/components/schemas/ResultStatus'
+        rationale:
+          type: string
+          minLength: 1
+      required:
+      - revision
+      - finalStatus
+      - rationale
+      description: Confirma o corrige el resultado con fundamento y auditoría. NOT_APPLICABLE solo si la expectativa
+        es CASE_DEPENDENT y su aplicabilidad fue resuelta como NOT_APPLICABLE.
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token emitido por /auth/login. No contiene credenciales de Drive/Redmine.
+  parameters:
+    processId:
+      name: processId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    versionId:
+      name: versionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    serviceId:
+      name: serviceId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    runId:
+      name: runId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    resultId:
+      name: resultId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    size:
+      name: size
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20

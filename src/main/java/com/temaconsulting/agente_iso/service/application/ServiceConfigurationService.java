@@ -16,6 +16,8 @@ import com.temaconsulting.agente_iso.service.domain.ServiceSources;
 import com.temaconsulting.agente_iso.service.domain.error.ServiceValidationException;
 import com.temaconsulting.agente_iso.shared.application.error.ApiException;
 import org.springframework.beans.factory.ObjectProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 import java.util.ArrayList;
@@ -26,6 +28,7 @@ import java.util.UUID;
 
 @org.springframework.stereotype.Service
 public class ServiceConfigurationService {
+    private static final Logger log = LoggerFactory.getLogger(ServiceConfigurationService.class);
     private final ServiceRepository services;
     private final ProcessAssignmentReader processes;
     private final ObjectProvider<ServiceSourceResolver> sourceResolvers;
@@ -61,6 +64,8 @@ public class ServiceConfigurationService {
                     command.status(), assignments, sources, clock.instant()
             );
             services.insert(service);
+            log.info("service_created serviceId={} processAssignments={}",
+                    service.id(), assignments.size());
             return queries.get(service.id());
         } catch (ServiceValidationException ex) {
             throw ServiceErrors.invalid(ex.field(), ex.getMessage());
@@ -89,6 +94,8 @@ public class ServiceConfigurationService {
             if (!services.replace(next, command.revision())) {
                 throw ServiceErrors.stale();
             }
+            log.info("service_updated serviceId={} revision={} processAssignments={}",
+                    id, next.revision(), assignments.size());
             return queries.get(id);
         } catch (ServiceValidationException ex) {
             throw ServiceErrors.invalid(ex.field(), ex.getMessage());

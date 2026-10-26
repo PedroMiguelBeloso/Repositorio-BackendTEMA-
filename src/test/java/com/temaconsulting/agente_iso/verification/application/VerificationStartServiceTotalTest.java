@@ -36,6 +36,7 @@ class VerificationStartServiceTotalTest {
         var services = mock(ServiceSnapshotReader.class);
         var validator = mock(TicketSelectionValidator.class);
         var runs = mock(VerificationRunRepository.class);
+        when(runs.create(any())).thenReturn(mock(com.temaconsulting.agente_iso.verification.application.model.CreatedVerificationRun.class));
         var start = new VerificationStartService(scopes, services, validator, runs);
         UUID serviceId = UUID.randomUUID();
         UUID versionId = UUID.randomUUID();

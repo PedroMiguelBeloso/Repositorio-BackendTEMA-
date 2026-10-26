@@ -12,12 +12,15 @@ import com.temaconsulting.agente_iso.verification.domain.VerificationTarget;
 import com.temaconsulting.agente_iso.verification.domain.VerificationPreview;
 import com.temaconsulting.agente_iso.verification.domain.ValidatedTicketSelections;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.UUID;
 
 @Service
 public class VerificationStartService {
+    private static final Logger log = LoggerFactory.getLogger(VerificationStartService.class);
     private final VerificationScopeResolver scopeResolver;
     private final ServiceSnapshotReader services;
     private final TicketSelectionValidator ticketSelectionValidator;
@@ -69,7 +72,7 @@ public class VerificationStartService {
                     .orElseThrow(() -> new IllegalStateException("Validated ticket group is missing"))
                     .ticketIds().size();
         }).reduce(0, Math::addExact);
-        return runs.create(new VerificationRunDraft(
+        CreatedVerificationRun run = runs.create(new VerificationRunDraft(
                 UUID.randomUUID(),
                 target.serviceId(),
                 serviceRevision,
@@ -81,5 +84,8 @@ public class VerificationStartService {
                 validated,
                 total
         ));
+        log.info("verification_queued runId={} serviceId={} versionId={} total={}",
+                run.id(), run.serviceId(), run.processVersionId(), run.total());
+        return run;
     }
 }

@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.slf4j.MDC;
+import java.util.Map;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -24,6 +26,18 @@ public class VerificationAsyncConfig {
         executor.setMaxPoolSize(1);
         executor.setQueueCapacity(queueCapacity);
         executor.setThreadNamePrefix("verification-");
+        executor.setTaskDecorator(task -> {
+            Map<String, String> context = MDC.getCopyOfContextMap();
+            return () -> {
+                Map<String, String> previous = MDC.getCopyOfContextMap();
+                try {
+                    if (context == null) MDC.clear(); else MDC.setContextMap(context);
+                    task.run();
+                } finally {
+                    if (previous == null) MDC.clear(); else MDC.setContextMap(previous);
+                }
+            };
+        });
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.AbortPolicy());
         executor.setWaitForTasksToCompleteOnShutdown(true);
         executor.setAwaitTerminationSeconds(30);

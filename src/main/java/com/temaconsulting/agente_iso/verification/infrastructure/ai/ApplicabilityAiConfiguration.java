@@ -5,6 +5,8 @@ import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.temaconsulting.agente_iso.verification.application.model.AiApplicabilityAssessment;
 import com.temaconsulting.agente_iso.verification.application.port.ApplicabilityAiPort;
+import com.temaconsulting.agente_iso.verification.application.port.TicketEvidenceAiPort;
+import com.temaconsulting.agente_iso.verification.domain.ResultStatus;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,6 +19,31 @@ import java.util.Locale;
 /** Exactly one AI port is active. Missing credentials leave case-dependent results for human review. */
 @Configuration
 public class ApplicabilityAiConfiguration {
+    @Bean
+    TicketEvidenceAiPort ticketEvidenceAiPort(
+            RestClient.Builder builder,
+            @Value("${tema.ai.provider:GEMINI}") String provider,
+            @Value("${tema.gemini.api-key:}") String key,
+            @Value("${tema.gemini.model:gemini-2.5-flash}") String model,
+            @Value("${tema.gemini.timeout:PT20S}") Duration timeout,
+            @Value("${tema.gemini.api-base-url:https://generativelanguage.googleapis.com}") String baseUrl
+    ) {
+        if (!"GEMINI".equalsIgnoreCase(provider.trim()) || key == null || key.isBlank()) {
+            return (name, canonical, nomenclature, policies, instructions, ticket) ->
+                    new TicketEvidenceAiPort.Assessment(ResultStatus.REVIEW_REQUIRED,
+                            "No hay un proveedor configurado para interpretar tickets.",
+                            java.util.List.of("Configure Gemini para interpretar el estado y los campos del ticket."),
+                            java.util.List.of(), null, null);
+        }
+        validateTimeout(timeout, "tema.gemini.timeout");
+        SimpleClientHttpRequestFactory requests = new SimpleClientHttpRequestFactory();
+        requests.setConnectTimeout(timeout);
+        requests.setReadTimeout(timeout);
+        RestClient client = builder.clone().baseUrl(baseUrl.trim())
+                .defaultHeader("x-goog-api-key", key.trim()).requestFactory(requests).build();
+        return new GeminiTicketEvidenceAdapter(client, model, new ObjectMapper());
+    }
+
     @Bean
     ApplicabilityAiPort applicabilityAiPort(
             RestClient.Builder restClientBuilder,
