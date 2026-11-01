@@ -6,7 +6,11 @@ import com.temaconsulting.agente_iso.catalog.domain.EvidenceType;
 import com.temaconsulting.agente_iso.catalog.domain.RegistryDefinition;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -16,8 +20,12 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
+@AutoConfigureMockMvc
 @Testcontainers
 class RegistryPaginationIntegrationTest {
     @Container
@@ -35,6 +43,18 @@ class RegistryPaginationIntegrationTest {
 
     @Autowired
     RegistryDefinitionController controller;
+
+    @Autowired
+    MockMvc mockMvc;
+
+    @Test
+    void registryCreationReturnsCreated() throws Exception {
+        mockMvc.perform(post("/api/v1/registry-definitions")
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"canonicalName\":\"Registro de prueba\",\"evidenceType\":\"TICKET\"}"))
+                .andExpect(status().isCreated());
+    }
 
     @Test
     void reportsActualTotalsForTwoRecordsAndFilteredResults() {

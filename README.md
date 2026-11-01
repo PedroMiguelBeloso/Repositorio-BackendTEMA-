@@ -22,14 +22,16 @@ No se generan nombres ni tickets ficticios en el perfil de ejecución normal.
 ## Disponibilidad general de fuentes M1
 
 `GET /api/v1/integrations/status` devuelve el último estado conocido de Google
-Drive y Redmine. `POST /api/v1/integrations/test` solicita una prueba nueva de
-lectura para cada fuente. Ambos endpoints requieren un JWT de Administrador y
+Drive, Redmine y Gemini. `POST /api/v1/integrations/test` solicita una prueba nueva de
+lectura para Drive y Redmine, y una generación mínima real para Gemini sin datos de TEMA.
+Ambos endpoints requieren un JWT de Administrador y
 devuelven `source`, `status`, `checkedAt` y un `message` sin datos sensibles.
 El estado general no comprueba el acceso a una carpeta, proyecto o ticket de
 un servicio particular.
 
 La variable opcional `TEMA_INTEGRATION_PROBE_TIMEOUT` controla el tiempo máximo
-por fuente en formato ISO-8601 (`PT3S` por defecto; máximo `PT30S`). No se
+por fuente en formato ISO-8601 (`PT15S` por defecto; máximo `PT30S`). La prueba
+de Gemini hace una generación real y puede superar tres segundos. No se
 necesitan variables de Drive ni Redmine para arrancar el backend. Configurar
 credenciales por sí solo nunca produce `AVAILABLE`: ese estado exige una lectura
 exitosa. `NOT_CONFIGURED` sigue siendo el estado inicial para una fuente sin
@@ -58,7 +60,7 @@ Para habilitarlo, configurar:
 
 - `TEMA_REDMINE_ENABLED=true`
 - `TEMA_REDMINE_API_BASE_URL=http://<host>:<port>/redmine`
-- `TEMA_REDMINE_API_KEY=<clave del usuario del servicio>
+- `TEMA_REDMINE_API_KEY=<clave del usuario del servicio>`
 - `TEMA_REDMINE_TIMEOUT=PT5S` (o un valor ISO-8601 válido entre 1 ms y 30 s)
 
 `POST /api/v1/integrations/test` ejecuta una prueba real de lectura; un
@@ -186,16 +188,45 @@ El run y sus filas de `verification_ticket_selections` se guardan en una transac
 ## IA para aplicabilidad condicionada: Gemini
 
 El proveedor predeterminado ahora es Gemini. Se conserva OpenAI como opción, pero no se
-necesita su clave para ejecutar M2. Gemini solo interpreta evidencias `CASE_DEPENDENT`
-cuando la regla programada no resuelve la aplicabilidad. Sin clave, el backend arranca
+necesita su clave para ejecutar M2. Gemini interpreta las evidencias `CASE_DEPENDENT`
+a partir de los hechos del caso; `ALWAYS` se resuelve sin IA. Sin clave, el backend arranca
 y devuelve `UNDETERMINED` para revisión humana.
 
 ```powershell
 $env:TEMA_AI_PROVIDER='GEMINI'
 $env:GEMINI_API_KEY='<clave-entregada-por-TEMA>'
-# Opcional: $env:TEMA_GEMINI_MODEL='gemini-2.5-flash'
+# Opcional: $env:TEMA_GEMINI_MODEL='gemini-3.5-flash-lite'
 .\mvnw.cmd spring-boot:run
 ```
+
+El modelo predeterminado es `gemini-3.5-flash-lite`. Se comprobó que una clave
+del proyecto podía listar `gemini-2.5-flash` y `gemini-2.5-flash-lite`, pero
+`generateContent` devolvía HTTP 404 para ambos; con la misma clave,
+`gemini-3.5-flash-lite` respondió correctamente. [Google limita el acceso a
+los modelos 2.5 para proyectos nuevos](https://ai.google.dev/gemini-api/docs/models).
+Si Integraciones devuelve
+`GEMINI: UNAVAILABLE`, revisá el modelo y probá una generación, no solo el
+listado. Para listar los modelos sin imprimir la clave:
+
+```powershell
+$models = Invoke-RestMethod -Uri 'https://generativelanguage.googleapis.com/v1beta/models' -Headers @{'x-goog-api-key'=$env:GEMINI_API_KEY}
+$models.models | Where-Object { $_.supportedGenerationMethods -contains 'generateContent' } | Select-Object -ExpandProperty name
+```
+
+Usá el nombre sin el prefijo `models/` en `TEMA_GEMINI_MODEL` y reiniciá el
+backend. Si ningún modelo genera contenido, revisá el acceso de la clave a
+Gemini API y el código HTTP de la prueba directa.
+
+La evaluación de aplicabilidad solicita una salida JSON con esquema y valida
+las referencias contra los hechos enviados. Si Gemini responde pero el
+resultado no pasa esa validación, el log `gemini_applicability` indica una
+categoría segura (`MAX_TOKENS`, `JSON_INVALID`, `REFERENCE_INVALID`, etc.) y
+el número de intento. No registra el texto generado, los hechos ni la clave.
+Tras dos rechazos, la aplicabilidad queda `UNDETERMINED` para revisión humana.
+Los fallos transitorios HTTP 429/5xx o de transporte permiten un reintento acotado.
+Cuando un documento figura como registro de actividad y salida de la misma
+macroactividad, ambos resultados usan una sola propuesta de aplicabilidad para
+evitar decisiones contradictorias. El fundamento específico de la IA queda en el resultado.
 
 La clave debe permanecer fuera de Git. La configuración y los límites de seguridad están
 en [docs/7.2.1-gemini-integration.md](docs/7.2.1-gemini-integration.md).
@@ -386,6 +417,19 @@ histórico desde la migración V10.
 
 Ver [comportamiento y matriz de pruebas](docs/m1-m2-hardening.md) y el
 [contrato OpenAPI actualizado](docs/tema-m1-m2-openapi.yaml).
+
+## Reintento de interpretación con Gemini
+
+Un Administrador puede usar `POST /api/v1/verifications/{runId}/results/{resultId}/ai-retry`
+con `{"revision": 1}` para releer el ticket seleccionado de Redmine y pedir una nueva
+interpretación cuando el resultado usa evidencia de tipo `TICKET` o tiene
+aplicabilidad pendiente. Se requiere `TEMA_AI_PROVIDER=GEMINI` y `GEMINI_API_KEY`.
+La revisión optimista evita sobrescribir una decisión concurrente. Si ya hubo una
+decisión humana, el reintento conserva su estado efectivo y solo actualiza la
+propuesta automática. `GET /api/v1/verifications/{runId}/results/{resultId}/ai-retries`
+devuelve hasta 100 intentos con fecha, copia del ticket observado y resultado
+anterior completo; este historial contiene datos del ticket y solo está disponible
+para Administradores. Los reintentos se guardan en la migración V11.
 
 ## Organización del código
 

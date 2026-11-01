@@ -11,6 +11,7 @@ import com.temaconsulting.agente_iso.process.domain.EvidenceExpectation;
 import com.temaconsulting.agente_iso.process.domain.EvidenceLocation;
 import com.temaconsulting.agente_iso.process.domain.MacroActivity;
 import com.temaconsulting.agente_iso.process.domain.ProcessStatus;
+import com.temaconsulting.agente_iso.process.domain.ProcessPolicy;
 import com.temaconsulting.agente_iso.process.domain.ProcessVersion;
 import org.junit.jupiter.api.Test;
 
@@ -35,7 +36,7 @@ class PublicationValidatorTest {
 
         assertThat(validator.validate(draft, List.of()))
                 .extracting(Violation::field)
-                .contains("objective", "owner", "macroActivities");
+                .contains("objective", "owner", "macroActivities", "policies", "evidence");
     }
 
     @Test
@@ -100,6 +101,30 @@ class PublicationValidatorTest {
         assertThat(validator.validate(draft, List.of(ticketDefinition(registryId)))).isEmpty();
     }
 
+    @Test
+    void rejectsVersionWithActivitiesButNoEvidence() {
+        ProcessVersion draft = validDraft(List.of(), List.of());
+        assertThat(validator.validate(draft, List.of()))
+                .extracting(Violation::field)
+                .contains("evidence");
+    }
+
+    @Test
+    void rejectsVersionWithEvidenceButNoPolicy() {
+        UUID registryId = UUID.randomUUID();
+        ProcessVersion populated = validDraft(
+                List.of(new EvidenceSpec(registryId, EvidenceLocation.INPUT, Cardinality.ONE)), List.of());
+        ProcessVersion withoutPolicies = new ProcessVersion(populated.id(), populated.processId(),
+                populated.officialVersion(), populated.versionDate(), populated.status(), populated.revision(),
+                populated.objective(), populated.owner(), List.of(), populated.macroActivities(),
+                populated.publishedAt(), populated.createdAt());
+
+        assertThat(validator.validate(withoutPolicies, List.of(ticketDefinition(registryId))))
+                .extracting(Violation::field)
+                .contains("policies")
+                .doesNotContain("evidence");
+    }
+
     private static ProcessVersion validDraft(List<EvidenceSpec> inputs, List<EvidenceSpec> outputs) {
         UUID versionId = UUID.randomUUID();
         UUID macroId = UUID.randomUUID();
@@ -141,7 +166,7 @@ class PublicationValidatorTest {
                 2,
                 "Objective",
                 "Owner",
-                List.of(),
+                List.of(new ProcessPolicy(UUID.randomUUID(), 0, "Policy")),
                 List.of(macro),
                 null,
                 Instant.parse("2026-09-30T03:00:00Z")

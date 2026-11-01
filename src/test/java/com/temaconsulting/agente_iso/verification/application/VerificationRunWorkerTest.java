@@ -84,6 +84,47 @@ class VerificationRunWorkerTest {
     }
 
     @Test
+    void repeatedDocumentInOneMacroKeepsSeparateResultsWithOneApplicabilityDecision() {
+        UUID runId = UUID.randomUUID();
+        UUID macroId = UUID.randomUUID();
+        UUID registryId = UUID.randomUUID();
+        UUID recordId = UUID.randomUUID();
+        UUID outputId = UUID.randomUUID();
+        VerificationRunSnapshot run = run(runId, new ValidatedTicketSelections(List.of()), 2);
+        var registry = new VerificationContext.RegistryContext(registryId, "ARIBA", "Funcionalidades Ariba",
+                EvidenceType.DOCUMENT, "Funcionalidades Ariba");
+        var record = new VerificationContext.ExpectationContext(recordId, 1, macroId, UUID.randomUUID(),
+                EvidenceLocation.ACTIVITY_RECORD, "Funcionalidades Ariba (si aplica)",
+                ApplicabilityMode.CASE_DEPENDENT, Cardinality.ONE, registry, null);
+        var output = new VerificationContext.ExpectationContext(outputId, 2, macroId, null,
+                EvidenceLocation.OUTPUT, "Funcionalidades Ariba (si aplica)",
+                ApplicabilityMode.CASE_DEPENDENT, Cardinality.ONE, registry, null);
+        when(runs.markRunning(runId)).thenReturn(true);
+        when(runs.findById(runId)).thenReturn(java.util.Optional.of(run));
+        when(loader.load(run)).thenReturn(new VerificationRunWorkLoader.Work(service(run), List.of(), List.of(
+                new VerificationRunWorkLoader.WorkItem(record, List.of("Relevar Ariba")),
+                new VerificationRunWorkLoader.WorkItem(output, List.of()))));
+        when(applicability.assess(any())).thenReturn(ApplicabilityAssessment.deterministic(
+                ApplicabilityDecision.APPLIES, "El caso requiere Ariba"));
+        when(checks.assess(any(), any(), eq(ApplicabilityDecision.APPLIES), eq(null), any(), any()))
+                .thenAnswer(call -> new ProgrammedEvidenceCheckService.Assessment(
+                        ((VerificationContext.ExpectationContext) call.getArgument(0)).expectationId(),
+                        null, ResultStatus.COMPLIES, "Documento encontrado", List.of(), List.of()));
+        when(results.progress(runId)).thenReturn(new VerificationResultProgress(2, 2));
+        when(runs.markCompleted(runId)).thenReturn(true);
+
+        worker.process(runId);
+
+        verify(applicability, times(1)).assess(any());
+        var saved = org.mockito.Mockito.mockingDetails(results).getInvocations().stream()
+                .filter(invocation -> invocation.getMethod().getName().equals("saveEvaluatedResult"))
+                .map(invocation -> (VerificationResultWriteCommand) invocation.getArgument(0)).toList();
+        assertThat(saved).extracting(VerificationResultWriteCommand::expectationId)
+                .containsExactly(recordId, outputId);
+        verify(runs).markCompleted(runId);
+    }
+
+    @Test
     void internalFailureLeavesRunFailedWithAlreadyPersistedProgress() {
         UUID runId = UUID.randomUUID();
         VerificationRunSnapshot run = run(runId, new ValidatedTicketSelections(List.of()), 1);

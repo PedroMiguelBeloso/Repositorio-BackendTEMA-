@@ -24,7 +24,7 @@ public class ApplicabilityAiConfiguration {
             RestClient.Builder builder,
             @Value("${tema.ai.provider:GEMINI}") String provider,
             @Value("${tema.gemini.api-key:}") String key,
-            @Value("${tema.gemini.model:gemini-2.5-flash}") String model,
+            @Value("${tema.gemini.model:gemini-3.5-flash-lite}") String model,
             @Value("${tema.gemini.timeout:PT20S}") Duration timeout,
             @Value("${tema.gemini.api-base-url:https://generativelanguage.googleapis.com}") String baseUrl
     ) {
@@ -49,7 +49,7 @@ public class ApplicabilityAiConfiguration {
             RestClient.Builder restClientBuilder,
             @Value("${tema.ai.provider:GEMINI}") String provider,
             @Value("${tema.gemini.api-key:}") String geminiApiKey,
-            @Value("${tema.gemini.model:gemini-2.5-flash}") String geminiModel,
+            @Value("${tema.gemini.model:gemini-3.5-flash-lite}") String geminiModel,
             @Value("${tema.gemini.timeout:PT20S}") Duration geminiTimeout,
             @Value("${tema.gemini.api-base-url:https://generativelanguage.googleapis.com}") String geminiBaseUrl,
             @Value("${tema.openai.enabled:false}") boolean openAiEnabled,

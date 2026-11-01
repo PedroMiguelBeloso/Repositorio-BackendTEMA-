@@ -175,7 +175,7 @@ class GoogleDriveEvidenceSearchTest {
         assertThat(adapter(true).search(request(Kind.DOCUMENT, "", Cardinality.ONE)).problem())
                 .isEqualTo(Problem.INVALID_EXPECTATION);
         assertThat(adapter(true).search(new SearchRequest("missing", Kind.DOCUMENT,
-                "Highlights.xls", Cardinality.ONE)).problem()).isEqualTo(Problem.MISSING_FOLDER);
+                "Highlights.xls", Cardinality.ONE)).problem()).isEqualTo(Problem.FOLDER_INACCESSIBLE);
         assertThat(queries).isEmpty();
     }
 

@@ -22,6 +22,8 @@ public record VerificationResultResponse(
         ApplicabilityAssessmentResponse applicability,
         ResultStatus proposedStatus,
         ResultStatus effectiveStatus,
+        ReviewReasonCode reviewReason,
+        EvidenceSearchStatus searchStatus,
         String rationale,
         List<String> limitations,
         List<EvidenceReferenceResponse> evidence,

@@ -231,7 +231,8 @@ class ProgrammedEvidenceCheckServiceTest {
                     ApplicabilityDecision.APPLIES, null);
 
             assertThat(result.proposedStatus()).as(type.name()).isEqualTo(ResultStatus.REVIEW_REQUIRED);
-            assertThat(result.limitations()).anyMatch(text -> text.contains(type.name()));
+            assertThat(result.rationale()).contains("Requiere revisión humana").doesNotContain(type.name());
+            assertThat(result.limitations()).anyMatch(text -> text.contains("No se consultó"));
         }
         assertThat(search.calls).isZero();
         assertThat(tickets.calls).isZero();

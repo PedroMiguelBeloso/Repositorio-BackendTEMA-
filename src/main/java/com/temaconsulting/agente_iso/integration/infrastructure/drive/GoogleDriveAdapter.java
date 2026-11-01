@@ -18,6 +18,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 import java.util.ArrayDeque;
@@ -33,6 +35,7 @@ import java.util.Set;
 
 @Component
 public class GoogleDriveAdapter implements DriveFolderCatalog, DriveEvidenceSearch, IntegrationProbe {
+    private static final Logger log = LoggerFactory.getLogger(GoogleDriveAdapter.class);
     private static final String FOLDER_MIME = "application/vnd.google-apps.folder";
     private static final String SHORTCUT_MIME = "application/vnd.google-apps.shortcut";
     private static final String FOLDER_QUERY = "mimeType = '" + FOLDER_MIME + "' and trashed = false";
@@ -161,7 +164,10 @@ public class GoogleDriveAdapter implements DriveFolderCatalog, DriveEvidenceSear
 
         try {
             DriveFile root = getFile(request.rootFolderId(), true);
-            if (root == null || !request.rootFolderId().equals(root.id())
+            // Drive can return 404 both for a deleted folder and for one hidden by permissions.
+            // The service still has a folder configured, so neither case proves missing setup.
+            if (root == null) return SearchResult.notCheckable(Problem.FOLDER_INACCESSIBLE);
+            if (!request.rootFolderId().equals(root.id())
                     || !FOLDER_MIME.equals(root.mimeType()) || Boolean.TRUE.equals(root.trashed())) {
                 return SearchResult.notCheckable(Problem.MISSING_FOLDER);
             }
@@ -291,8 +297,9 @@ public class GoogleDriveAdapter implements DriveFolderCatalog, DriveEvidenceSear
     }
 
     private DriveListResponse listPage(String query, String pageToken, int pageSize) {
+        long started = System.nanoTime();
         try {
-            return client.get().uri(uri -> {
+            DriveListResponse response = client.get().uri(uri -> {
                         uri.path("/files")
                                 .queryParam("q", query)
                                 .queryParam("fields", LIST_FIELDS)
@@ -303,29 +310,53 @@ public class GoogleDriveAdapter implements DriveFolderCatalog, DriveEvidenceSear
                         return uri.build();
                     }).headers(headers -> headers.setBearerAuth(tokens.accessToken()))
                     .retrieve().body(DriveListResponse.class);
+            log.debug("drive_read operation=LIST outcome=SUCCESS durationMs={}", elapsed(started));
+            return response;
         } catch (DriveReadException ex) {
+            log.warn("drive_read operation=LIST outcome={} durationMs={}", ex.health(), elapsed(started));
             throw ex;
         } catch (RestClientException ex) {
+            log.warn("drive_read operation=LIST outcome=HTTP_ERROR httpStatus={} durationMs={}",
+                    httpStatus(ex), elapsed(started));
             throw translate(ex);
         }
     }
 
     private DriveFile getFile(String id, boolean missingIsNull) {
+        long started = System.nanoTime();
         try {
-            return client.get().uri(uri -> uri.path("/files/{id}")
+            DriveFile file = client.get().uri(uri -> uri.path("/files/{id}")
                             .queryParam("fields", FILE_FIELDS)
                             .queryParam("supportsAllDrives", true)
                             .build(id))
                     .headers(headers -> headers.setBearerAuth(tokens.accessToken()))
                     .retrieve().body(DriveFile.class);
+            log.debug("drive_read operation=GET_FILE outcome=SUCCESS durationMs={}", elapsed(started));
+            return file;
         } catch (RestClientResponseException ex) {
-            if (missingIsNull && ex.getStatusCode().value() == 404) return null;
+            if (missingIsNull && ex.getStatusCode().value() == 404) {
+                log.debug("drive_read operation=GET_FILE outcome=NOT_FOUND durationMs={}", elapsed(started));
+                return null;
+            }
+            log.warn("drive_read operation=GET_FILE outcome=HTTP_ERROR httpStatus={} durationMs={}",
+                    ex.getStatusCode().value(), elapsed(started));
             throw translate(ex);
         } catch (DriveReadException ex) {
+            log.warn("drive_read operation=GET_FILE outcome={} durationMs={}", ex.health(), elapsed(started));
             throw ex;
         } catch (RestClientException ex) {
+            log.warn("drive_read operation=GET_FILE outcome=UNAVAILABLE causeType={} durationMs={}",
+                    ex.getClass().getSimpleName(), elapsed(started));
             throw translate(ex);
         }
+    }
+
+    private static int httpStatus(RestClientException ex) {
+        return ex instanceof RestClientResponseException response ? response.getStatusCode().value() : 0;
+    }
+
+    private static long elapsed(long started) {
+        return (System.nanoTime() - started) / 1_000_000;
     }
 
     private ExternalFolder toFolder(DriveFile file, Map<String, DriveFile> cache) {

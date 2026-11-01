@@ -5,6 +5,8 @@ import com.temaconsulting.agente_iso.verification.api.dto.VerificationRunRespons
 import com.temaconsulting.agente_iso.verification.application.model.CreatedVerificationRun;
 import com.temaconsulting.agente_iso.verification.application.VerificationRunDispatchService;
 import com.temaconsulting.agente_iso.verification.application.VerificationRunQueryService;
+import com.temaconsulting.agente_iso.verification.application.VerificationWorkStatusQueryService;
+import com.temaconsulting.agente_iso.verification.api.mapper.VerificationResultApiMapper;
 import com.temaconsulting.agente_iso.verification.application.model.VerificationRunSnapshot;
 import com.temaconsulting.agente_iso.verification.application.VerificationStartService;
 import com.temaconsulting.agente_iso.shared.api.mapper.PageMapper;
@@ -33,13 +35,19 @@ public class VerificationRunController {
     private final VerificationStartService starts;
     private final VerificationRunDispatchService dispatcher;
     private final VerificationRunQueryService queries;
+    private final VerificationWorkStatusQueryService workStatuses;
+    private final VerificationResultApiMapper resultMapper;
 
     public VerificationRunController(VerificationStartService starts,
                                      VerificationRunDispatchService dispatcher,
-                                     VerificationRunQueryService queries) {
+                                     VerificationRunQueryService queries,
+                                     VerificationWorkStatusQueryService workStatuses,
+                                     VerificationResultApiMapper resultMapper) {
         this.starts = starts;
         this.dispatcher = dispatcher;
         this.queries = queries;
+        this.workStatuses = workStatuses;
+        this.resultMapper = resultMapper;
     }
 
     @GetMapping
@@ -112,6 +120,21 @@ public class VerificationRunController {
     public VerificationRunResponse get(@PathVariable UUID runId) {
         return toResponse(queries.get(runId));
     }
+
+    @GetMapping("/{runId}/work-items")
+    @PreAuthorize("hasAnyRole('ADMIN', 'READER')")
+    public List<WorkItemResponse> workItems(@PathVariable UUID runId) {
+        return workStatuses.list(runId).stream().map(item -> {
+            var result = item.result() == null ? null : resultMapper.toResponse(item.result());
+            return new WorkItemResponse(item.expectationId(), item.displayName(), item.ticketId(),
+                    item.inProgress() ? "IN_PROGRESS" : result == null ? "NOT_ATTEMPTED"
+                            : result.searchStatus().name(),
+                    result == null ? null : result.effectiveStatus().name());
+        }).toList();
+    }
+
+    public record WorkItemResponse(UUID expectationId, String displayName, String subjectTicketId,
+                                   String searchStatus, String resultStatus) { }
 
     private VerificationRunResponse toResponse(VerificationRunQueryService.RunWithProgress state) {
         VerificationRunSnapshot run = state.run();

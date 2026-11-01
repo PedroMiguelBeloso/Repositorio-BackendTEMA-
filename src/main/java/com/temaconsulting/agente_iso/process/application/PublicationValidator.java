@@ -36,6 +36,12 @@ public class PublicationValidator {
         if (version.macroActivities().isEmpty()) {
             violations.add(new Violation("macroActivities", "At least one macroactivity is required before publication"));
         }
+        if (version.policies().isEmpty()) {
+            violations.add(new Violation("policies", "Antes de publicar, agregá al menos una política del proceso"));
+        }
+        if (version.macroActivities().stream().flatMap(macro -> allExpectations(macro).stream()).findAny().isEmpty()) {
+            violations.add(new Violation("evidence", "Antes de publicar, agregá al menos una entrada, registro o salida"));
+        }
 
         for (int macroIndex = 0; macroIndex < version.macroActivities().size(); macroIndex++) {
             MacroActivity macro = version.macroActivities().get(macroIndex);

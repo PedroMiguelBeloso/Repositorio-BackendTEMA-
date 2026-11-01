@@ -176,7 +176,7 @@ public class ProgrammedEvidenceCheckService {
             return result(expectation, selectedTicketId, ResultStatus.REVIEW_REQUIRED,
                     "El snapshot de Redmine no conserva el ID del ticket seleccionado o el proyecto configurado.",
                     List.of("La identidad del ticket devuelto no coincide con la consulta; revisar la referencia."),
-                    List.of(reference));
+                    List.of(reference), ticket, observedAt);
         }
 
         String rule = normalize(expectation.displayName() + " " + expectation.registry().canonicalName());
@@ -184,7 +184,8 @@ public class ProgrammedEvidenceCheckService {
                 && !rule.contains("actualiz") && !rule.contains("cerrad") && !rule.contains("valid")) {
             return result(expectation, selectedTicketId, ResultStatus.COMPLIES,
                     "El ticket #" + selectedTicketId + " existe en el proyecto Redmine vinculado al servicio.",
-                    List.of("Se comprobó existencia e identidad; no se evaluó contenido ni estado."), List.of(reference));
+                    List.of("Se comprobó existencia e identidad; no se evaluó contenido ni estado."),
+                    List.of(reference), ticket, observedAt);
         }
         if (ticketAi != null) {
             TicketEvidenceAiPort.Assessment proposal = ticketAi.assess(expectation.displayName(),
@@ -212,7 +213,7 @@ public class ProgrammedEvidenceCheckService {
             return result(expectation, selectedTicketId, status,
                     "Propuesta IA: " + proposal.rationale() + " Campos citados: " + proposal.citedFields()
                             + "." + provenance,
-                    proposal.limitations(), List.of(reference));
+                    proposal.limitations(), List.of(reference), ticket, observedAt);
         }
 
         String rationale = "Se consultó el ticket #" + selectedTicketId + " del proyecto "
@@ -226,7 +227,7 @@ public class ProgrammedEvidenceCheckService {
                 + "identifica qué comentario, campo o cambio constituiría esa señal.";
         return result(expectation, selectedTicketId, ResultStatus.REVIEW_REQUIRED, rationale,
                 List.of("No hay una regla programable que identifique el campo, valor o cambio exigido por esta expectativa."),
-                List.of(reference));
+                List.of(reference), ticket, observedAt);
     }
 
     private Assessment assessToolRecord(ExpectationContext expectation, ServiceContext service) {
@@ -276,11 +277,12 @@ public class ProgrammedEvidenceCheckService {
 
     private Assessment unsupportedSource(ExpectationContext expectation) {
         String sourceName = expectation.registry().evidenceType() == EvidenceType.IMPUTATIONS
-                ? "IMPUTATIONS" : "TOOL_RECORD";
+                ? "las imputaciones de la herramienta de gestión de horas"
+                : "este registro de herramienta";
         return result(expectation, null, ResultStatus.REVIEW_REQUIRED,
-                "No se pudo comprobar la expectativa porque la fuente " + sourceName
-                        + " no tiene un lector operativo disponible.",
-                List.of("La fuente " + sourceName + " no está conectada a un puerto de lectura programado."),
+                "No se puede comprobar automáticamente " + sourceName
+                        + " porque todavía no existe una conexión de lectura. Requiere revisión humana.",
+                List.of("No se consultó la herramienta externa. No se asumió ausencia ni cumplimiento."),
                 List.of());
     }
 
@@ -301,10 +303,18 @@ public class ProgrammedEvidenceCheckService {
             List<String> limitations,
             List<EvidenceReference> references
     ) {
+        return result(expectation, selectedTicketId, status, rationale, limitations, references, null, null);
+    }
+
+    private Assessment result(
+            ExpectationContext expectation, String selectedTicketId, ResultStatus status,
+            String rationale, List<String> limitations, List<EvidenceReference> references,
+            TicketSnapshot observedTicket, Instant observedAt
+    ) {
         String subjectTicketId = expectation.registry().evidenceType() == EvidenceType.TICKET
                 ? selectedTicketId : null;
         return new Assessment(expectation.expectationId(), subjectTicketId, status, rationale,
-                limitations, references);
+                limitations, references, observedTicket, observedAt);
     }
 
     private static String observedStatus(TicketSnapshot ticket) {
@@ -338,14 +348,25 @@ public class ProgrammedEvidenceCheckService {
             ResultStatus proposedStatus,
             String rationale,
             List<String> limitations,
-            List<EvidenceReference> evidenceReferences
+            List<EvidenceReference> evidenceReferences,
+            TicketSnapshot observedTicket,
+            Instant observedAt
     ) {
+        public Assessment(UUID expectationId, String subjectTicketId, ResultStatus proposedStatus,
+                          String rationale, List<String> limitations, List<EvidenceReference> evidenceReferences) {
+            this(expectationId, subjectTicketId, proposedStatus, rationale, limitations, evidenceReferences,
+                    null, null);
+        }
+
         public Assessment {
             Objects.requireNonNull(expectationId);
             Objects.requireNonNull(proposedStatus);
             Objects.requireNonNull(rationale);
             limitations = List.copyOf(limitations);
             evidenceReferences = List.copyOf(evidenceReferences);
+            if ((observedTicket == null) != (observedAt == null)) {
+                throw new IllegalArgumentException("Ticket observation and timestamp must be provided together");
+            }
         }
     }
 }

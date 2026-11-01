@@ -29,6 +29,7 @@ public interface DriveEvidenceSearch {
     enum Problem {
         NOT_CONFIGURED,
         MISSING_FOLDER,
+        FOLDER_INACCESSIBLE,
         INVALID_EXPECTATION,
         AUTH_ERROR,
         PERMISSION_ERROR,

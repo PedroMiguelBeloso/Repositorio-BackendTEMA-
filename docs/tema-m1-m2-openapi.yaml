@@ -224,7 +224,7 @@ paths:
       tags:
       - Integraciones
       operationId: getIntegrationStatus
-      summary: Consultar estado de Drive y Redmine
+      summary: Consultar estado de Drive, Redmine y Gemini
       responses:
         '200':
           description: OK
@@ -274,7 +274,7 @@ paths:
             application/problem+json:
               schema:
                 $ref: '#/components/schemas/ProblemDetail'
-      description: ADMIN. Prueba lectura; no modifica las fuentes.
+      description: ADMIN. Prueba lectura en Drive y Redmine y una generación mínima en Gemini; no modifica las fuentes.
   /integrations/drive/folders:
     get:
       tags:
@@ -1236,6 +1236,42 @@ paths:
       parameters:
       - $ref: '#/components/parameters/runId'
       description: Polling recomendado cada 2-3 s hasta COMPLETED/FAILED; no lanzar consultas superpuestas.
+  /verifications/{runId}/work-items:
+    get:
+      tags:
+      - Verificaciones M2
+      operationId: listVerificationWorkItems
+      summary: Consultar el estado de cada evidencia durante una ejecución
+      description: Disponible también en QUEUED y RUNNING. NOT_ATTEMPTED significa que todavía no se consultó la fuente; IN_PROGRESS identifica la evidencia que está procesando el trabajador.
+      parameters:
+      - $ref: '#/components/parameters/runId'
+      responses:
+        '200':
+          description: Evidencias en el orden del proceso publicado
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  required: [expectationId, displayName, searchStatus]
+                  properties:
+                    expectationId:
+                      type: string
+                      format: uuid
+                    displayName:
+                      type: string
+                    subjectTicketId:
+                      type: string
+                      nullable: true
+                    searchStatus:
+                      type: string
+                      enum: [NOT_ATTEMPTED, IN_PROGRESS, FOUND, NOT_FOUND, INCOMPLETE, UNKNOWN]
+                    resultStatus:
+                      type: string
+                      nullable: true
+        '404':
+          description: Ejecución inexistente
   /verifications/{runId}/results:
     get:
       tags:
@@ -1344,6 +1380,97 @@ paths:
       description: ADMIN. Solo para CASE_DEPENDENT con UNDETERMINED. Agrega un evento humano de tipo
         APPLICABILITY al historial del resultado sin borrar la propuesta previa. Si APPLIES, el backend
         reevalúa esta evidencia, sin crear nueva ejecución.
+  /verifications/{runId}/results/{resultId}/ai-retry:
+    post:
+      tags:
+      - Verificaciones M2
+      operationId: retryResultWithGemini
+      summary: Volver a interpretar un resultado con Gemini
+      description: ADMIN. Vuelve a leer el ticket de Redmine y guarda una propuesta nueva con copia
+        auditada de los datos observados. Conserva la decisión humana efectiva si existe. Requiere
+        la revisión actual del resultado y Gemini configurado.
+      parameters:
+      - $ref: '#/components/parameters/runId'
+      - $ref: '#/components/parameters/resultId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AiRetryRequest'
+      responses:
+        '200':
+          description: Resultado actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerificationResult'
+        '401':
+          description: Falta autenticación
+        '403':
+          description: Solo ADMIN
+        '404':
+          description: Ejecución o resultado inexistente
+        '409':
+          description: Revisión obsoleta o ejecución no finalizada
+        '422':
+          description: Resultado sin interpretación de IA reintentable
+        '503':
+          description: Gemini no configurado o fuente temporalmente inaccesible
+  /verifications/{runId}/results/{resultId}/ai-retries:
+    get:
+      tags:
+      - Verificaciones M2
+      operationId: listResultAiRetries
+      summary: Consultar auditoría de reintentos de IA
+      description: ADMIN exclusivamente. Incluye copias del ticket observado y su historial.
+      parameters:
+      - $ref: '#/components/parameters/runId'
+      - $ref: '#/components/parameters/resultId'
+      responses:
+        '200':
+          description: Hasta 100 intentos, del más nuevo al más antiguo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AiRetryAttempt'
+        '401':
+          description: Falta autenticación
+        '403':
+          description: Solo ADMIN
+        '404':
+          description: Ejecución o resultado inexistente
+  /verifications/{runId}/results/{resultId}/ticket-observation:
+    get:
+      tags:
+      - Verificaciones M2
+      operationId: getInitialTicketObservation
+      summary: Consultar el ticket leído para el resultado original
+      description: Solo ADMIN. Devuelve los campos e historial leídos inicialmente; los resultados anteriores a esta función pueden no tener copia.
+      parameters:
+      - $ref: '#/components/parameters/runId'
+      - $ref: '#/components/parameters/resultId'
+      responses:
+        '200':
+          description: Copia de solo lectura del ticket observado
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [observedAt, ticket]
+                properties:
+                  observedAt:
+                    type: string
+                    format: date-time
+                  ticket:
+                    type: object
+                    additionalProperties: true
+        '403':
+          description: Solo ADMIN
+        '404':
+          description: No se conservó una copia para ese resultado
   /verifications/{runId}/results/{resultId}/decision:
     put:
       tags:
@@ -1699,6 +1826,7 @@ components:
           enum:
           - DRIVE
           - REDMINE
+          - GEMINI
         status:
           $ref: '#/components/schemas/SourceHealth'
         checkedAt:
@@ -2672,6 +2800,15 @@ components:
           $ref: '#/components/schemas/ResultStatus'
         effectiveStatus:
           $ref: '#/components/schemas/ResultStatus'
+        reviewReason:
+          type: string
+          nullable: true
+          description: Motivo estable de la propuesta REVIEW_REQUIRED; no reemplaza el fundamento detallado.
+          enum: [APPLICABILITY_PENDING, MISSING_TICKET_SELECTION, SOURCE_NOT_CONFIGURED, SOURCE_UNAVAILABLE, SOURCE_DATA_INVALID, SEARCH_INCOMPLETE, MULTIPLE_MATCHES, RULE_NOT_DEFINED, AI_INCONCLUSIVE, UNSUPPORTED_SOURCE, OTHER]
+        searchStatus:
+          type: string
+          description: Estado de consulta de la fuente, independiente del cumplimiento. UNKNOWN evita inferir una búsqueda a partir de datos históricos insuficientes.
+          enum: [NOT_ATTEMPTED, FOUND, NOT_FOUND, INCOMPLETE, UNKNOWN]
         rationale:
           type: string
         limitations:
@@ -2701,6 +2838,7 @@ components:
       - applicability
       - proposedStatus
       - effectiveStatus
+      - searchStatus
       - rationale
       - limitations
       - evidence
@@ -2709,6 +2847,71 @@ components:
       description: Un resultado por uso de evidencia; para controles de Ticket sobre selección múltiple, un
         resultado por ticket. Una evidencia documental por servicio se evalúa una vez, aunque se reutilice
         su referencia.
+    AiRetryRequest:
+      type: object
+      properties:
+        revision:
+          type: integer
+          minimum: 1
+      required:
+      - revision
+    AiRetryAttempt:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        requestedBy:
+          type: string
+          format: uuid
+        attemptedAt:
+          type: string
+          format: date-time
+        ticketSnapshot:
+          type: array
+          description: Copia de los tickets Redmine usados; accesible solo por ADMIN.
+          items:
+            type: object
+            additionalProperties: true
+        previousResult:
+          type: object
+          description: Estado completo del resultado antes del reintento, conservado para auditoría.
+          additionalProperties: true
+        previousRevision:
+          type: integer
+        previousProposedStatus:
+          $ref: '#/components/schemas/ResultStatus'
+        previousEffectiveStatus:
+          $ref: '#/components/schemas/ResultStatus'
+        proposedStatus:
+          $ref: '#/components/schemas/ResultStatus'
+        effectiveStatus:
+          $ref: '#/components/schemas/ResultStatus'
+        applicabilityDecision:
+          $ref: '#/components/schemas/ApplicabilityDecision'
+        rationale:
+          type: string
+        outcome:
+          type: string
+          enum: [APPLIED, HUMAN_PRESERVED, NO_CHANGE]
+        model:
+          type: string
+        responseId:
+          type: string
+      required:
+      - id
+      - requestedBy
+      - attemptedAt
+      - ticketSnapshot
+      - previousResult
+      - previousRevision
+      - previousProposedStatus
+      - previousEffectiveStatus
+      - proposedStatus
+      - effectiveStatus
+      - applicabilityDecision
+      - rationale
+      - outcome
     ResolveApplicabilityRequest:
       type: object
       properties:

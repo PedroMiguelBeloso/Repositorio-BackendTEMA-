@@ -2,7 +2,8 @@ package com.temaconsulting.agente_iso.integration.domain;
 
 public enum IntegrationSource {
     DRIVE("Google Drive"),
-    REDMINE("Redmine");
+    REDMINE("Redmine"),
+    GEMINI("Gemini");
 
     private final String displayName;
 

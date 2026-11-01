@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class VerificationResultApiMapper {
     public VerificationResultResponse toResponse(VerificationResult result) {
+        var reviewReason = VerificationResultDiagnostics.reviewReason(result);
         return new VerificationResultResponse(
                 result.id(),
                 result.runId(),
@@ -24,6 +25,8 @@ public class VerificationResultApiMapper {
                         .from(result.applicability()),
                 result.proposedStatus(),
                 result.effectiveStatus(),
+                reviewReason,
+                VerificationResultDiagnostics.searchStatus(result, reviewReason),
                 result.rationale(),
                 result.limitations(),
                 result.evidence().stream()

@@ -8,6 +8,8 @@ import com.temaconsulting.agente_iso.shared.api.mapper.PageMapper;
 import com.temaconsulting.agente_iso.shared.application.model.Page;
 import com.temaconsulting.agente_iso.shared.api.dto.PageResponse;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -33,6 +35,7 @@ public class RegistryDefinitionController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public RegistryDefinitionResponse create(@Valid @RequestBody CreateRegistryRequest request) {
         RegistryDefinition created = catalogService.create(request);
         return toResponse(created);

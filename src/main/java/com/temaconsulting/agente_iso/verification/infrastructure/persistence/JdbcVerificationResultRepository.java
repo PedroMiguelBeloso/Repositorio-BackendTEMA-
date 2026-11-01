@@ -1,5 +1,7 @@
 package com.temaconsulting.agente_iso.verification.infrastructure.persistence;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.temaconsulting.agente_iso.catalog.domain.EvidenceType;
 import com.temaconsulting.agente_iso.integration.domain.IntegrationSource;
 import com.temaconsulting.agente_iso.process.domain.ApplicabilityMode;
@@ -13,6 +15,7 @@ import com.temaconsulting.agente_iso.verification.application.model.Verification
 import com.temaconsulting.agente_iso.verification.application.port.VerificationResultRepository;
 import com.temaconsulting.agente_iso.verification.application.error.VerificationResultValidationException;
 import com.temaconsulting.agente_iso.verification.application.model.VerificationResultWriteCommand;
+import com.temaconsulting.agente_iso.verification.application.model.TicketObservation;
 import com.temaconsulting.agente_iso.verification.domain.ApplicabilityDecision;
 import com.temaconsulting.agente_iso.verification.domain.DecisionOrigin;
 import com.temaconsulting.agente_iso.verification.domain.HumanApplicabilityDecision;
@@ -59,6 +62,7 @@ public class JdbcVerificationResultRepository implements VerificationResultRepos
                     );
 
     private final JdbcTemplate jdbc;
+    private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
     public JdbcVerificationResultRepository(JdbcTemplate jdbc) {
         this.jdbc = jdbc;
@@ -221,6 +225,17 @@ public class JdbcVerificationResultRepository implements VerificationResultRepos
         List<UUID> ids = jdbc.query("SELECT id FROM verification_results WHERE run_id = ? AND id = ?",
                 (rs, rowNum) -> rs.getObject(1, UUID.class), runId, resultId);
         return ids.isEmpty() ? Optional.empty() : Optional.of(loadResults(ids).getFirst());
+    }
+
+    @Override
+    public Optional<TicketObservation> findTicketObservation(UUID runId, UUID resultId) {
+        return jdbc.query("""
+                SELECT observed_at, ticket_snapshot::text AS ticket_snapshot
+                FROM verification_result_ticket_observations
+                WHERE run_id = ? AND result_id = ?
+                """, (rs, rowNum) -> new TicketObservation(
+                rs.getTimestamp("observed_at").toInstant(), rs.getString("ticket_snapshot")),
+                runId, resultId).stream().findFirst();
     }
 
     @Override
@@ -459,6 +474,18 @@ public class JdbcVerificationResultRepository implements VerificationResultRepos
     }
 
     private void insertRelatedRows(UUID resultId, VerificationResultWriteCommand command) {
+        if (command.observedTicket() != null) {
+            try {
+                jdbc.update("""
+                        INSERT INTO verification_result_ticket_observations
+                            (result_id, run_id, observed_at, ticket_snapshot)
+                        VALUES (?, ?, ?, ?::jsonb)
+                        """, resultId, command.runId(), Timestamp.from(command.ticketObservedAt()),
+                        objectMapper.writeValueAsString(command.observedTicket()));
+            } catch (JsonProcessingException ex) {
+                throw new IllegalStateException("Ticket observation could not be stored", ex);
+            }
+        }
         for (int index = 0; index < command.limitations().size(); index++) {
             jdbc.update(
                     """

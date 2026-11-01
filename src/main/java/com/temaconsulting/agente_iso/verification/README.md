@@ -90,30 +90,22 @@ Errores funcionales reales en `VerificationErrors`:
 La política es conservadora y separada de la comprobación de cumplimiento:
 
 - `ALWAYS` => `APPLIES`, resultado determinista sin IA.
-- `CASE_DEPENDENT` => se intenta resolver primero con hechos estructurados del caso.
-- Si no hay coincidencia clara, se usa `ApplicabilityAiPort` como fallback.
+- `CASE_DEPENDENT` => los hechos y la nota del caso se interpretan por `ApplicabilityAiPort`.
+- No se decide con palabras sueltas: «sin desarrollo» no es una señal positiva de desarrollo.
 - Si la IA no puede resolverlo o la información es insuficiente, se devuelve `UNDETERMINED`.
 
 La implementación real en `DefaultApplicabilityPolicy.assess(EvaluationContext)`:
 
 1. Si `context.applicability() == ALWAYS`, devuelve `ApplicabilityAssessment.deterministic(APPLIES, ...)`.
 2. Si no es `CASE_DEPENDENT`, devuelve `UNDETERMINED` con `DecisionOrigin.NOT_EVALUATED`.
-3. Ejecuta `evaluateStructuredFacts(context)`.
-4. Normaliza labels y valores (`Normalizer`, stripping diacritics y lowercase) y busca tokens positivos y negativos.
-5. Regla estructurada explícita:
-   - positivos: `desarrollo`, `configuración`, `corrección`, `implementación`, `ajuste`, `cambio`, etc.
-   - negativos: `no hubo`, `sin desarrollo`, `no aplica`, `no requiere`, `no se requiere`, etc.
-   - si hay positivo y no negativo => `APPLIES`.
-   - si hay negativo y no positivo => `NOT_APPLICABLE`.
-   - si hay ambos o no hay ninguno => `UNDETERMINED` / fallback o revisión.
-6. Si la regla estructurada no resuelve, y existe un `ApplicabilityAiPort`, arma un `AiApplicabilityRequest` con los hechos autorizados del caso.
-7. `OpenAiApplicabilityAdapter` valida que la respuesta:
+3. Si existe un `ApplicabilityAiPort`, arma un `AiApplicabilityRequest` con los hechos autorizados del caso. Los hechos actuales son texto libre, no valores tipados que permitan una decisión determinista segura.
+4. Los adaptadores de IA validan que la respuesta:
    - pertenezca a la misma `expectationId`;
    - use solo referencias del caso recibido;
    - no invente `evidenceRefs`;
    - no devuelva respuestas estructuradas inválidas; y
    - requiera `evidenceRefs` para `APPLIES` y `NOT_APPLICABLE`.
-8. Si la IA falla o responde inválida, la decisión queda `UNDETERMINED`.
+5. Si no hay IA, faltan hechos o la respuesta es inválida, la decisión queda `UNDETERMINED` y requiere revisión humana.
 
 Qué nunca se envía a la IA:
 - credenciales;
@@ -203,8 +195,8 @@ flowchart TD
 - La aplicabilidad es una pregunta previa al cumplimiento. No se sustituyen una por la otra.
 - El contexto que procesa la IA debe ser de `CASE_DEPENDENT`; si no lo es, se rechaza explícitamente.
 - La política requiere hechos autorizados y no inferencias amplias del texto libre.
-- La IA es un fallback, no la fuente de verdad del dominio ni una forma de “corregir” la lógica determinista.
-- Si el caso tiene contradictorias señales positivas y negativas, o no hay datos suficientes, la decisión final queda en `UNDETERMINED` o revisión.
+- La IA propone la aplicabilidad de las evidencias condicionadas; no sustituye la decisión humana ni determina cumplimiento.
+- Si no hay datos suficientes o la IA no puede interpretarlos de forma confiable, la decisión final queda en `UNDETERMINED` para revisión.
 - La salida estructurada de OpenAI se valida estrictamente para evitar respuestas truncadas o inventadas.
 - La comprobación documental sigue siendo un componente posterior: la política de aplicabilidad no decide sobre contenido ni aprobación documental.
 
