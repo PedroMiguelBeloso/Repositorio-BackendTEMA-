@@ -25,6 +25,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClientResponseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.time.Duration;
@@ -38,6 +40,7 @@ import java.util.Objects;
 @Component
 public class RedmineAdapter implements IntegrationProbe, RedmineProjectCatalog, ServiceSourceResolver,
         ServiceTicketSearch, RedmineTicketReader {
+    private static final Logger log = LoggerFactory.getLogger(RedmineAdapter.class);
     private final boolean enabled;
     private final String baseUrl;
     private final String apiKey;
@@ -305,6 +308,7 @@ public class RedmineAdapter implements IntegrationProbe, RedmineProjectCatalog, 
     }
 
     private JsonNode getJson(String path, String... params) {
+        long started = System.nanoTime();
         try {
             String requestPath = path;
             for (int index = 0; index < params.length; index += 2) {
@@ -333,15 +337,28 @@ public class RedmineAdapter implements IntegrationProbe, RedmineProjectCatalog, 
                     .headers(headers -> headers.set("X-Redmine-API-Key", apiKey))
                     .retrieve()
                     .body(String.class);
-            return objectMapper.readTree(raw);
+            JsonNode response = objectMapper.readTree(raw);
+            log.debug("redmine_read operation={} outcome=SUCCESS durationMs={}",
+                    path, elapsed(started));
+            return response;
         } catch (IOException ex) {
+            log.warn("redmine_read operation={} outcome=INVALID_RESPONSE durationMs={}",
+                    path, elapsed(started));
             throw new ApiException(ProblemCode.SOURCE_UNAVAILABLE, HttpStatus.SERVICE_UNAVAILABLE,
                     "La respuesta de Redmine no pudo leerse", List.of());
         } catch (RestClientResponseException ex) {
+            log.warn("redmine_read operation={} outcome=HTTP_ERROR httpStatus={} durationMs={}",
+                    path, ex.getStatusCode().value(), elapsed(started));
             throw translate(ex);
         } catch (RestClientException ex) {
+            log.warn("redmine_read operation={} outcome=UNAVAILABLE causeType={} durationMs={}",
+                    path, ex.getClass().getSimpleName(), elapsed(started));
             throw new RedmineReadException(SourceHealth.UNAVAILABLE, ex);
         }
+    }
+
+    private static long elapsed(long started) {
+        return (System.nanoTime() - started) / 1_000_000;
     }
 
     private static String text(JsonNode node) {

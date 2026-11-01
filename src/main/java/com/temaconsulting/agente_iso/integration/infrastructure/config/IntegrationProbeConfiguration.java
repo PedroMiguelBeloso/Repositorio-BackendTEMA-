@@ -15,8 +15,8 @@ public class IntegrationProbeConfiguration {
     public ExecutorService integrationProbeExecutor() {
         AtomicInteger sequence = new AtomicInteger();
         return new ThreadPoolExecutor(
-                2, 2, 0, TimeUnit.MILLISECONDS,
-                new ArrayBlockingQueue<>(4),
+                3, 3, 0, TimeUnit.MILLISECONDS,
+                new ArrayBlockingQueue<>(6),
                 task -> {
                     Thread thread = new Thread(task, "integration-probe-" + sequence.incrementAndGet());
                     thread.setDaemon(true);

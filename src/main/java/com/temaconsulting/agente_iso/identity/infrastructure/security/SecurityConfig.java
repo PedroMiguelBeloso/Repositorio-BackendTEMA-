@@ -8,6 +8,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,6 +30,7 @@ import java.util.Base64;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final String jwtSecretBase64;
@@ -76,9 +78,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/services/*/tickets").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/verifications/preview").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/verifications").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/verifications/*/results/*/ai-retry").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/verifications/*/results/*/ai-retries").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/verifications/*/results/*/ticket-observation").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/verifications")
                                 .hasAnyAuthority("ROLE_ADMIN", "ROLE_READER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/verifications/*/results")
+                                .hasAnyAuthority("ROLE_ADMIN", "ROLE_READER")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/verifications/*/work-items")
                                 .hasAnyAuthority("ROLE_ADMIN", "ROLE_READER")
                         .requestMatchers(HttpMethod.GET, "/api/v1/verifications/*")
                                 .hasAnyAuthority("ROLE_ADMIN", "ROLE_READER")

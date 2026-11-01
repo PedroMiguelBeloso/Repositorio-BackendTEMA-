@@ -12,6 +12,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -30,6 +33,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 @Service
 public class IntegrationHealthService {
+    private static final Logger log = LoggerFactory.getLogger(IntegrationHealthService.class);
     private final Map<IntegrationSource, IntegrationProbe> probes;
     private final Clock clock;
     private final ExecutorService executor;
@@ -40,7 +44,7 @@ public class IntegrationHealthService {
             List<IntegrationProbe> probes,
             Clock clock,
             @Qualifier("integrationProbeExecutor") ExecutorService executor,
-            @Value("${tema.integrations.probe-timeout:PT3S}") String timeoutText
+            @Value("${tema.integrations.probe-timeout:PT15S}") String timeoutText
     ) {
         this.probes = indexProbes(probes);
         this.clock = clock;
@@ -68,16 +72,25 @@ public class IntegrationHealthService {
     }
 
     public List<IntegrationStatus> testAll() {
+        long started = System.nanoTime();
         Instant checkedAt = clock.instant();
+        Map<String, String> callerContext = MDC.getCopyOfContextMap();
         Map<IntegrationSource, Future<IntegrationStatus>> pending = new EnumMap<>(IntegrationSource.class);
         Map<IntegrationSource, IntegrationStatus> immediate = new EnumMap<>(IntegrationSource.class);
 
-        // Launch both checks before awaiting either one so a slow source cannot prevent
+        // Launch all checks before awaiting any one so a slow source cannot prevent
         // the other source from being checked.
         for (IntegrationSource source : IntegrationSource.values()) {
             try {
                 IntegrationProbe probe = probes.get(source);
-                pending.put(source, executor.submit(() -> check(probe, checkedAt)));
+                pending.put(source, executor.submit(() -> {
+                    if (callerContext != null) MDC.setContextMap(callerContext);
+                    try {
+                        return check(probe, checkedAt);
+                    } finally {
+                        MDC.clear();
+                    }
+                }));
             } catch (RejectedExecutionException ex) {
                 immediate.put(source, status(source, SourceHealth.UNAVAILABLE, checkedAt));
             }
@@ -95,6 +108,11 @@ public class IntegrationHealthService {
         }
         List<IntegrationStatus> snapshot = List.copyOf(results);
         knownStatuses.set(snapshot);
+        long durationMs = (System.nanoTime() - started) / 1_000_000;
+        for (IntegrationStatus result : snapshot) {
+            log.info("integration_probe source={} status={} durationMs={}",
+                    result.source(), result.status(), durationMs);
+        }
         return snapshot;
     }
 
@@ -107,7 +125,9 @@ public class IntegrationHealthService {
             probe.checkReadable();
             return status(source, SourceHealth.AVAILABLE, checkedAt);
         } catch (SourceProbeException ex) {
-            return status(source, ex.status(), checkedAt);
+            IntegrationStatus generic = status(source, ex.status(), checkedAt);
+            return ex.safeMessage() == null ? generic
+                    : new IntegrationStatus(source, ex.status(), checkedAt, ex.safeMessage());
         }
     }
 

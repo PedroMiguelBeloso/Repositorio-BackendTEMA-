@@ -130,6 +130,7 @@ public class DriveDocumentaryAssessmentService {
         return switch (problem) {
             case NOT_CONFIGURED -> "La conexión de Google Drive no está configurada.";
             case MISSING_FOLDER -> "No hay una carpeta válida de Drive asociada al servicio.";
+            case FOLDER_INACCESSIBLE -> "No se pudo acceder a la carpeta de Drive configurada para el servicio; puede faltar permiso o la carpeta ya no existir.";
             case INVALID_EXPECTATION -> "La expectativa documental no tiene una configuración válida.";
             case AUTH_ERROR -> "Google Drive rechazó la autenticación.";
             case PERMISSION_ERROR -> "La cuenta conectada no tiene permiso para consultar la carpeta.";

@@ -56,12 +56,18 @@ public final class GeminiTicketEvidenceAdapter implements TicketEvidenceAiPort {
                     "instructions", instructions.stream().limit(20).map(s -> clip(s, 2000)).toList(),
                     "ticket", ticket));
             if (input.length() > 30_000) return unavailable("El ticket excede el tamaño admitido para la IA.");
+            Map<String, Object> generation = model.equals("gemini-2.5-flash")
+                    ? Map.of("responseMimeType", "application/json", "maxOutputTokens", 2400,
+                            "temperature", 0, "thinkingConfig", Map.of("thinkingBudget", 256))
+                    : model.startsWith("gemini-3.")
+                            ? Map.of("responseMimeType", "application/json", "maxOutputTokens", 2400)
+                            : Map.of("responseMimeType", "application/json", "maxOutputTokens", 2400,
+                                    "temperature", 0);
             String raw = client.post().uri("/v1beta/models/{model}:generateContent", model)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(Map.of("systemInstruction", Map.of("parts", List.of(Map.of("text", INSTRUCTIONS))),
                             "contents", List.of(Map.of("role", "user", "parts", List.of(Map.of("text", input)))),
-                            "generationConfig", Map.of("responseMimeType", "application/json",
-                                    "maxOutputTokens", 1200, "temperature", 0)))
+                            "generationConfig", generation))
                     .retrieve().body(String.class);
             if (raw == null || raw.length() > 32_000) return unavailable("Gemini no devolvió una respuesta válida.");
             JsonNode root = mapper.readTree(raw);
@@ -92,6 +98,9 @@ public final class GeminiTicketEvidenceAdapter implements TicketEvidenceAiPort {
             return new Assessment(status, reason, limits, refs, model, root.path("responseId").asText(null));
         } catch (RestClientResponseException ex) {
             log.warn("ticket_ai_failed status={} durationMs={}", ex.getStatusCode().value(), elapsed(started));
+            if (ex.getStatusCode().value() == 404) {
+                return unavailable("Gemini respondió 404: no se encontró el modelo o recurso solicitado.");
+            }
             return unavailable("Gemini rechazó o no pudo procesar la solicitud (HTTP " + ex.getStatusCode().value() + ").");
         } catch (RestClientException ex) {
             log.warn("ticket_ai_failed type={} durationMs={}", ex.getClass().getSimpleName(), elapsed(started));

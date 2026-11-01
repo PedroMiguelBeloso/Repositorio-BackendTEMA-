@@ -39,7 +39,7 @@ class GeminiTicketEvidenceAdapterTest {
         server.start();
         var adapter = new GeminiTicketEvidenceAdapter(RestClient.builder()
                 .baseUrl("http://127.0.0.1:" + server.getAddress().getPort()).build(),
-                "gemini-2.5-flash", new ObjectMapper());
+                "gemini-3.5-flash-lite", new ObjectMapper());
         var ticket = new TicketSnapshot("42", "9", "TEMA", "Entrega", "Closed", "5", "Closed",
                 true, "Solución", null, Instant.parse("2026-10-26T12:00:00Z"),
                 Instant.parse("2026-10-25T12:00:00Z"),
@@ -52,6 +52,6 @@ class GeminiTicketEvidenceAdapterTest {
         assertThat(result.status()).isEqualTo(ResultStatus.COMPLIES);
         assertThat(result.citedFields()).containsExactly("customFields");
         assertThat(body.get()).contains("Validación de solución", "Aprobada", "journals")
-                .doesNotContain("x-goog-api-key");
+                .doesNotContain("x-goog-api-key", "thinkingBudget", "temperature");
     }
 }

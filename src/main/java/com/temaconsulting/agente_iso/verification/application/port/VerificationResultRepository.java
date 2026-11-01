@@ -4,6 +4,7 @@ import com.temaconsulting.agente_iso.verification.application.model.Verification
 import com.temaconsulting.agente_iso.verification.application.model.VerificationResultProgress;
 import com.temaconsulting.agente_iso.verification.application.model.VerificationResultRecheck;
 import com.temaconsulting.agente_iso.verification.application.model.VerificationResultWriteCommand;
+import com.temaconsulting.agente_iso.verification.application.model.TicketObservation;
 
 import com.temaconsulting.agente_iso.shared.application.model.Page;
 import com.temaconsulting.agente_iso.verification.domain.ResultStatus;
@@ -29,6 +30,8 @@ public interface VerificationResultRepository {
     Optional<VerificationResultDecisionTarget> lockDecisionTarget(UUID runId, UUID resultId);
 
     Optional<VerificationResult> findByRunAndId(UUID runId, UUID resultId);
+
+    Optional<TicketObservation> findTicketObservation(UUID runId, UUID resultId);
 
     VerificationResult saveApplicabilityDecision(UUID runId, UUID resultId, int expectedRevision,
             com.temaconsulting.agente_iso.verification.domain.ApplicabilityDecision decision,

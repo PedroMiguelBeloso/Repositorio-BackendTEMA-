@@ -2,6 +2,7 @@ package com.temaconsulting.agente_iso.verification.application.model;
 
 import com.temaconsulting.agente_iso.catalog.domain.EvidenceType;
 import com.temaconsulting.agente_iso.integration.domain.IntegrationSource;
+import com.temaconsulting.agente_iso.integration.domain.TicketSnapshot;
 import com.temaconsulting.agente_iso.verification.domain.ApplicabilityDecision;
 import com.temaconsulting.agente_iso.verification.domain.DecisionOrigin;
 import com.temaconsulting.agente_iso.verification.domain.ResultStatus;
@@ -25,8 +26,21 @@ public record VerificationResultWriteCommand(
         ResultStatus proposedStatus,
         String rationale,
         List<String> limitations,
-        List<EvidenceReference> evidence
+        List<EvidenceReference> evidence,
+        TicketSnapshot observedTicket,
+        Instant ticketObservedAt
 ) {
+    public VerificationResultWriteCommand(UUID runId, UUID expectationId, UUID macroActivityId,
+            UUID activityId, String displayName, String subjectTicketId,
+            ApplicabilityDecision applicabilityDecision, DecisionOrigin applicabilityOrigin,
+            String applicabilityRationale, List<String> applicabilityLimitations,
+            ResultStatus proposedStatus, String rationale, List<String> limitations,
+            List<EvidenceReference> evidence) {
+        this(runId, expectationId, macroActivityId, activityId, displayName, subjectTicketId,
+                applicabilityDecision, applicabilityOrigin, applicabilityRationale, applicabilityLimitations,
+                proposedStatus, rationale, limitations, evidence, null, null);
+    }
+
     public VerificationResultWriteCommand {
         Objects.requireNonNull(runId, "runId");
         Objects.requireNonNull(expectationId, "expectationId");
@@ -43,6 +57,9 @@ public record VerificationResultWriteCommand(
         displayName = normalizeRequiredText(displayName, "displayName");
         applicabilityRationale = normalizeRequiredText(applicabilityRationale, "applicabilityRationale");
         rationale = normalizeRequiredText(rationale, "rationale");
+        if ((observedTicket == null) != (ticketObservedAt == null)) {
+            throw new IllegalArgumentException("Ticket observation and timestamp must be provided together");
+        }
     }
 
     private static List<String> limitationValues(List<String> values) {

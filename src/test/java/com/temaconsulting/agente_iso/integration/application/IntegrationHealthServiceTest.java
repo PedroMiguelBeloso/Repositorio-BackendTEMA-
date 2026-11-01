@@ -44,9 +44,11 @@ class IntegrationHealthServiceTest {
         });
         IntegrationHealthService service = service(drive, redmine, "PT1S");
 
-        assertEquals(List.of(SourceHealth.NOT_CONFIGURED, SourceHealth.NOT_CONFIGURED),
+        assertEquals(List.of(SourceHealth.NOT_CONFIGURED, SourceHealth.NOT_CONFIGURED,
+                        SourceHealth.NOT_CONFIGURED),
                 service.knownStatuses().stream().map(IntegrationStatus::status).toList());
-        assertEquals(List.of(SourceHealth.NOT_CONFIGURED, SourceHealth.NOT_CONFIGURED),
+        assertEquals(List.of(SourceHealth.NOT_CONFIGURED, SourceHealth.NOT_CONFIGURED,
+                        SourceHealth.NOT_CONFIGURED),
                 service.testAll().stream().map(IntegrationStatus::status).toList());
         assertEquals(0, drive.reads.get());
         assertEquals(0, redmine.reads.get());
@@ -63,9 +65,9 @@ class IntegrationHealthServiceTest {
         clock.current = Instant.parse("2026-10-03T14:31:00Z");
         List<IntegrationStatus> result = service.testAll();
 
-        assertEquals(List.of(IntegrationSource.DRIVE, IntegrationSource.REDMINE),
+        assertEquals(List.of(IntegrationSource.DRIVE, IntegrationSource.REDMINE, IntegrationSource.GEMINI),
                 result.stream().map(IntegrationStatus::source).toList());
-        assertEquals(List.of(SourceHealth.AVAILABLE, SourceHealth.AVAILABLE),
+        assertEquals(List.of(SourceHealth.AVAILABLE, SourceHealth.AVAILABLE, SourceHealth.NOT_CONFIGURED),
                 result.stream().map(IntegrationStatus::status).toList());
         assertEquals(clock.current, result.getFirst().checkedAt());
         assertSame(result, service.knownStatuses());
@@ -147,7 +149,8 @@ class IntegrationHealthServiceTest {
     }
 
     private IntegrationHealthService service(FakeProbe drive, FakeProbe redmine, String timeout) {
-        return new IntegrationHealthService(List.of(drive, redmine), clock, executor, timeout);
+        return new IntegrationHealthService(List.of(drive, redmine,
+                new FakeProbe(IntegrationSource.GEMINI, false, () -> {})), clock, executor, timeout);
     }
 
     private static final class FakeProbe implements IntegrationProbe {

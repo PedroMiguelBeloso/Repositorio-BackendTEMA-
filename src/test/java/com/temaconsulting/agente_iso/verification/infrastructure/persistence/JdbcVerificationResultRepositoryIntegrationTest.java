@@ -20,6 +20,9 @@ import com.temaconsulting.agente_iso.verification.application.VerificationResult
 import com.temaconsulting.agente_iso.verification.application.VerificationApplicabilityService;
 import com.temaconsulting.agente_iso.verification.application.error.VerificationResultDecisionFailure;
 import com.temaconsulting.agente_iso.verification.application.model.VerificationResultRecheck;
+import com.temaconsulting.agente_iso.verification.application.model.AiRetryAttempt;
+import com.temaconsulting.agente_iso.verification.application.model.ApplicabilityAssessment;
+import com.temaconsulting.agente_iso.verification.application.port.AiRetryRepository;
 import com.temaconsulting.agente_iso.verification.application.port.VerificationResultPort;
 import com.temaconsulting.agente_iso.verification.application.model.VerificationResultProgress;
 import com.temaconsulting.agente_iso.verification.application.error.VerificationResultQueryFailure;
@@ -30,6 +33,7 @@ import com.temaconsulting.agente_iso.verification.application.port.VerificationR
 import com.temaconsulting.agente_iso.verification.application.VerificationRunQueryService;
 import com.temaconsulting.agente_iso.verification.application.model.VerificationRunSnapshot;
 import com.temaconsulting.agente_iso.verification.application.VerificationRunWorker;
+import com.temaconsulting.agente_iso.verification.application.VerificationActiveWork;
 import com.temaconsulting.agente_iso.verification.application.ProgrammedEvidenceCheckService;
 import com.temaconsulting.agente_iso.verification.domain.ApplicabilityDecision;
 import com.temaconsulting.agente_iso.verification.domain.DecisionOrigin;
@@ -127,6 +131,109 @@ class JdbcVerificationResultRepositoryIntegrationTest {
 
     @Autowired
     JdbcVerificationResultRepository resultRepository;
+
+    @Autowired
+    AiRetryRepository aiRetries;
+
+    @Autowired
+    VerificationActiveWork activeWork;
+
+    @Test
+    void exposesNotAttemptedActiveAndCompletedEvidenceIndividually() throws Exception {
+        Fixture fixture = createFixture();
+        UUID expectationId = fixture.documentExpectations().getFirst();
+        var request = get("/api/v1/verifications/{runId}/work-items", fixture.runId())
+                .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN")));
+        mockMvc.perform(request).andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].searchStatus").value("NOT_ATTEMPTED"));
+        activeWork.begin(fixture.runId(), expectationId, null);
+        try {
+            mockMvc.perform(get("/api/v1/verifications/{runId}/work-items", fixture.runId())
+                            .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$[0].searchStatus").value("IN_PROGRESS"));
+        } finally {
+            activeWork.clear(fixture.runId());
+        }
+        results.saveEvaluatedResult(command(fixture, expectationId, null,
+                ResultStatus.DOES_NOT_COMPLY, ApplicabilityDecision.APPLIES,
+                List.of(), List.of(), List.of()));
+        mockMvc.perform(get("/api/v1/verifications/{runId}/work-items", fixture.runId())
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_READER"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].searchStatus").value("NOT_FOUND"))
+                .andExpect(jsonPath("$[1].searchStatus").value("NOT_ATTEMPTED"));
+    }
+
+    @Test
+    void aiRetryKeepsHumanDecisionAndStoresRestrictedTicketSnapshot() throws Exception {
+        Fixture fixture = createFixture();
+        VerificationResult initial = results.saveEvaluatedResult(command(
+                fixture, fixture.documentExpectations().getFirst(), null,
+                ResultStatus.REVIEW_REQUIRED, ApplicabilityDecision.APPLIES,
+                List.of(), List.of(), List.of()));
+        completeRun(fixture.runId());
+        VerificationResult human = resultDecisions.decide(fixture.runId(), initial.id(), 1,
+                ResultStatus.COMPLIES, "Confirmado por Administrador.", fixture.userId());
+        var attempt = new AiRetryAttempt(UUID.randomUUID(), fixture.runId(), initial.id(),
+                fixture.userId(), DECISION_TIME, "[{\"id\":\"42\",\"subject\":\"Ticket observado\"}]",
+                "{\"rationale\":\"Propuesta anterior\"}",
+                human.revision(), human.proposedStatus(), human.effectiveStatus(),
+                ResultStatus.DOES_NOT_COMPLY, human.effectiveStatus(), ApplicabilityDecision.APPLIES,
+                "Nueva propuesta basada en Redmine.", "HUMAN_PRESERVED", "gemini-test", "response-1");
+        VerificationResult updated = aiRetries.save(attempt,
+                new ApplicabilityAssessment(ApplicabilityDecision.APPLIES,
+                        DecisionOrigin.AI_APPLICABILITY, "Aplica según ticket.", List.of()),
+                List.of("Requiere revisión de un campo."), List.of());
+        assertThat(updated.proposedStatus()).isEqualTo(ResultStatus.DOES_NOT_COMPLY);
+        assertThat(updated.effectiveStatus()).isEqualTo(ResultStatus.COMPLIES);
+        assertThat(updated.humanDecisions()).hasSize(1);
+        assertThat(aiRetries.list(fixture.runId(), initial.id())).singleElement()
+                .satisfies(saved -> {
+                    assertThat(saved.ticketSnapshotJson()).contains("Ticket observado");
+                    assertThat(saved.previousResultJson()).contains("Propuesta anterior");
+                    assertThat(saved.previousRevision()).isEqualTo(human.revision());
+                });
+        mockMvc.perform(get("/api/v1/verifications/{runId}/results/{resultId}/ai-retries",
+                        fixture.runId(), initial.id())
+                        .with(jwt().jwt(token -> token.subject(fixture.userId().toString()))
+                                .authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].ticketSnapshot[0].subject").value("Ticket observado"))
+                .andExpect(jsonPath("$[0].previousResult.rationale").value("Propuesta anterior"));
+        assertThrows(VerificationResultDecisionFailure.class, () ->
+                aiRetries.save(attempt, updated.applicability(), List.of(), List.of()));
+    }
+
+    @Test
+    void aiRetryAuditIsAdminOnlyAndGeminiMustBeConfigured() throws Exception {
+        Fixture fixture = createFixture();
+        VerificationResult result = results.saveEvaluatedResult(command(
+                fixture, fixture.ticketExpectation(), "204",
+                ResultStatus.REVIEW_REQUIRED, ApplicabilityDecision.APPLIES,
+                List.of(), List.of(), List.of()));
+        completeRun(fixture.runId());
+        String retryPath = "/api/v1/verifications/{runId}/results/{resultId}/ai-retry";
+        String historyPath = "/api/v1/verifications/{runId}/results/{resultId}/ai-retries";
+        mockMvc.perform(post(retryPath, fixture.runId(), result.id())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"revision\":1}"))
+                .andExpect(status().isUnauthorized());
+        mockMvc.perform(post(retryPath, fixture.runId(), result.id())
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_READER")))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"revision\":1}"))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post(retryPath, fixture.runId(), result.id())
+                        .with(jwt().jwt(token -> token.subject(fixture.userId().toString()))
+                                .authorities(new SimpleGrantedAuthority("ROLE_ADMIN")))
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"revision\":1}"))
+                .andExpect(status().isServiceUnavailable());
+        mockMvc.perform(get(historyPath, fixture.runId(), result.id())
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_READER"))))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get(historyPath, fixture.runId(), result.id())
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                .andExpect(status().isOk());
+    }
 
     @Autowired
     VerificationResultQueryService resultQueries;
@@ -1479,6 +1586,35 @@ class JdbcVerificationResultRepositoryIntegrationTest {
     private List<VerificationResult> resultsForCompletedFixture(Fixture fixture) {
         completeRun(fixture.runId());
         return resultQueries.findCompletedRunResults(fixture.runId(), 0, 100).items();
+    }
+
+    @Test
+    void storesTheInitialRedmineTicketAndRestrictsItsSnapshotToAdministrators() throws Exception {
+        Fixture fixture = createFixture();
+        var base = command(fixture, fixture.ticketExpectation(), "204", ResultStatus.COMPLIES,
+                ApplicabilityDecision.APPLIES, List.of(), List.of(), List.of());
+        var observedAt = Instant.parse("2026-10-26T12:00:00Z");
+        var ticket = new TicketSnapshot("204", "1", "Proyecto", "Solicitud de cambio", "Open", "1",
+                "Abierto", false, "Descripción revisada", "Equipo", observedAt, observedAt,
+                List.of(new TicketSnapshot.CustomField("7", "Prioridad", "Alta")), List.of());
+        var withObservation = new VerificationResultWriteCommand(base.runId(), base.expectationId(),
+                base.macroActivityId(), base.activityId(), base.displayName(), base.subjectTicketId(),
+                base.applicabilityDecision(), base.applicabilityOrigin(), base.applicabilityRationale(),
+                base.applicabilityLimitations(), base.proposedStatus(), base.rationale(), base.limitations(),
+                base.evidence(), ticket, observedAt);
+        var saved = results.saveEvaluatedResult(withObservation);
+
+        assertThat(resultRepository.findTicketObservation(fixture.runId(), saved.id())).isPresent();
+        mockMvc.perform(get("/api/v1/verifications/{runId}/results/{resultId}/ticket-observation",
+                        fixture.runId(), saved.id())
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_ADMIN"))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.ticket.subject").value("Solicitud de cambio"))
+                .andExpect(jsonPath("$.ticket.customFields[0].value").value("Alta"));
+        mockMvc.perform(get("/api/v1/verifications/{runId}/results/{resultId}/ticket-observation",
+                        fixture.runId(), saved.id())
+                        .with(jwt().authorities(new SimpleGrantedAuthority("ROLE_READER"))))
+                .andExpect(status().isForbidden());
     }
 
     private VerificationResultWriteCommand command(

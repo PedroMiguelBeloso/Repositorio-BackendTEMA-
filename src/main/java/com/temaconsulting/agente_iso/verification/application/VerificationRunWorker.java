@@ -19,10 +19,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.scheduling.annotation.Async;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /** One bounded executor processes runs; each result is committed independently by TC-176. */
@@ -35,16 +38,26 @@ public class VerificationRunWorker {
     private final ProgrammedEvidenceCheckService checks;
     private final VerificationResultPort results;
     private final RedmineTicketReader tickets;
+    private final VerificationActiveWork activeWork;
 
     public VerificationRunWorker(VerificationRunRepository runs, VerificationRunWorkLoader loader,
                                  ApplicabilityPolicy applicability, ProgrammedEvidenceCheckService checks,
                                  VerificationResultPort results, RedmineTicketReader tickets) {
+        this(runs, loader, applicability, checks, results, tickets, new VerificationActiveWork());
+    }
+
+    @Autowired
+    public VerificationRunWorker(VerificationRunRepository runs, VerificationRunWorkLoader loader,
+                                 ApplicabilityPolicy applicability, ProgrammedEvidenceCheckService checks,
+                                 VerificationResultPort results, RedmineTicketReader tickets,
+                                 VerificationActiveWork activeWork) {
         this.runs = runs;
         this.loader = loader;
         this.applicability = applicability;
         this.checks = checks;
         this.results = results;
         this.tickets = tickets;
+        this.activeWork = activeWork;
     }
 
     @Async("verificationTaskExecutor")
@@ -59,6 +72,7 @@ public class VerificationRunWorker {
             VerificationRunSnapshot run = runs.findById(runId)
                     .orElseThrow(() -> new IllegalStateException("Run disappeared after transition"));
             VerificationRunWorkLoader.Work work = loader.load(run);
+            Map<ApplicabilityKey, ApplicabilityAssessment> applicabilityByEvidence = new HashMap<>();
             for (VerificationRunWorkLoader.WorkItem item : work.items()) {
                 ExpectationContext expectation = item.expectation();
                 if (expectation.registry().evidenceType() == EvidenceType.TICKET) {
@@ -66,10 +80,14 @@ public class VerificationRunWorker {
                             .filter(group -> group.groupId().equals(expectation.ticketSelectionGroupId()))
                             .findFirst().orElseThrow(() -> new IllegalStateException("Ticket selection is missing"));
                     for (String ticketId : selection.ticketIds()) {
-                        evaluate(run, work, item, ticketId);
+                        activeWork.begin(runId, expectation.expectationId(), ticketId);
+                        evaluate(run, work, item, ticketId, applicabilityByEvidence);
+                        activeWork.clear(runId);
                     }
                 } else {
-                    evaluate(run, work, item, null);
+                    activeWork.begin(runId, expectation.expectationId(), null);
+                    evaluate(run, work, item, null, applicabilityByEvidence);
+                    activeWork.clear(runId);
                 }
             }
             VerificationResultProgress progress = results.progress(runId);
@@ -81,12 +99,15 @@ public class VerificationRunWorker {
         } catch (Exception ex) {
             log.error("verification_failed runId={} errorType={}", runId, ex.getClass().getSimpleName());
             runs.markFailed(runId, "La verificación no pudo completarse por un error interno.");
+        } finally {
+            activeWork.clear(runId);
         }
         }
     }
 
     private void evaluate(VerificationRunSnapshot run, VerificationRunWorkLoader.Work work,
-                          VerificationRunWorkLoader.WorkItem item, String ticketId) {
+                          VerificationRunWorkLoader.WorkItem item, String ticketId,
+                          Map<ApplicabilityKey, ApplicabilityAssessment> applicabilityByEvidence) {
         ExpectationContext expectation = item.expectation();
         List<AiApplicabilityRequest.Fact> facts = new ArrayList<>();
         if (run.note() != null && !run.note().isBlank()) {
@@ -136,10 +157,20 @@ public class VerificationRunWorker {
                 }
             }
         }
-        ApplicabilityAssessment decision = applicability.assess(new EvaluationContext(
-                expectation.expectationId(), expectation.displayName(), expectation.applicability(),
-                run.serviceTypeSnapshot().name(), work.policies(), item.instructions(), facts
-        ));
+        // A document can appear as an activity record and again as a macro output.
+        // They remain separate results, but the same evidence in the same macro and run
+        // must not receive contradictory applicability proposals from separate AI calls.
+        ApplicabilityKey key = expectation.applicability() == ApplicabilityMode.CASE_DEPENDENT
+                && expectation.registry().evidenceType() == EvidenceType.DOCUMENT
+                ? new ApplicabilityKey(expectation.macroActivityId(), expectation.registry().id()) : null;
+        ApplicabilityAssessment decision = key == null ? null : applicabilityByEvidence.get(key);
+        if (decision == null) {
+            decision = applicability.assess(new EvaluationContext(
+                    expectation.expectationId(), expectation.displayName(), expectation.applicability(),
+                    run.serviceTypeSnapshot().name(), work.policies(), item.instructions(), facts
+            ));
+            if (key != null) applicabilityByEvidence.put(key, decision);
+        }
         ProgrammedEvidenceCheckService.Assessment assessment = checks.assess(
                 expectation, work.service(), decision.decision(), ticketId,
                 work.policies(), item.instructions()
@@ -156,7 +187,8 @@ public class VerificationRunWorker {
                 run.id(), expectation.expectationId(), expectation.macroActivityId(), expectation.activityId(),
                 expectation.displayName(), ticketId, decision.decision(), decision.origin(),
                 decision.rationale(), decision.limitations(), assessment.proposedStatus(),
-                assessment.rationale(), assessment.limitations(), evidence
+                assessment.rationale(), assessment.limitations(), evidence,
+                assessment.observedTicket(), assessment.observedAt()
         ));
         log.info("verification_result_saved runId={} expectationId={} ticketId={} proposedStatus={}",
                 run.id(), expectation.expectationId(), ticketId, assessment.proposedStatus());
@@ -169,4 +201,6 @@ public class VerificationRunWorker {
                     label + " #" + ticketId, value.length() > 2000 ? value.substring(0, 2000) : value));
         }
     }
+
+    private record ApplicabilityKey(UUID macroActivityId, UUID registryDefinitionId) {}
 }

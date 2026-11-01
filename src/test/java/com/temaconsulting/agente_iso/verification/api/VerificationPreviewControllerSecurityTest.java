@@ -21,6 +21,8 @@ import com.temaconsulting.agente_iso.verification.application.error.Verification
 import com.temaconsulting.agente_iso.verification.application.VerificationStartService;
 import com.temaconsulting.agente_iso.verification.application.VerificationRunDispatchService;
 import com.temaconsulting.agente_iso.verification.application.VerificationRunQueryService;
+import com.temaconsulting.agente_iso.verification.application.VerificationWorkStatusQueryService;
+import com.temaconsulting.agente_iso.verification.api.mapper.VerificationResultApiMapper;
 import com.temaconsulting.agente_iso.verification.application.model.VerificationRunSnapshot;
 import com.temaconsulting.agente_iso.verification.application.model.VerificationResultProgress;
 import com.temaconsulting.agente_iso.verification.application.error.VerificationResultQueryFailure;
@@ -83,6 +85,12 @@ class VerificationPreviewControllerSecurityTest {
 
     @MockitoBean
     VerificationRunQueryService queries;
+
+    @MockitoBean
+    VerificationWorkStatusQueryService workStatuses;
+
+    @MockitoBean
+    VerificationResultApiMapper resultMapper;
 
     @Test
     void adminCanRequestPreview() throws Exception {
